@@ -106,6 +106,7 @@ class PhotoManager: ObservableObject {
     let backgroundRemover = BackgroundRemover()
     
     func fetchRandomPhoto(completion: @escaping (UIImage?, PhotoRetrievalMethod) -> Void) {
+        print("🔍 DEBUG: fetchRandomPhoto() started")
         fetchRandomPhotoWithFallback(preferredMethod: currentMethod, completion: completion)
     }
     
@@ -154,11 +155,14 @@ class PhotoManager: ObservableObject {
     }
     
     private func fetchRandomRecentPhoto(completion: @escaping (UIImage?) -> Void) {
+        print("🔍 DEBUG: fetchRandomRecentPhoto() started")
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.fetchLimit = 50
         
+        print("🔍 DEBUG: About to call PHAsset.fetchAssets")
         let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
         guard fetchResult.count > 0 else {
             completion(nil)
@@ -168,18 +172,21 @@ class PhotoManager: ObservableObject {
         var attempts = 0
         let maxAttempts = 20
         
+        print("🔍 DEBUG: Starting while loop to find unused asset")
         while attempts < maxAttempts {
             let randomIndex = Int.random(in: 0..<fetchResult.count)
             let randomAsset = fetchResult.object(at: randomIndex)
             
             if !randomAsset.mediaSubtypes.contains(.photoScreenshot) && 
                !usedAssetIds.contains(randomAsset.localIdentifier) {
+                print("🔍 DEBUG: Found valid asset, calling loadPhoto")
                 loadPhoto(asset: randomAsset, completion: completion)
                 usedAssetIds.insert(randomAsset.localIdentifier)
                 return
             }
             attempts += 1
         }
+        print("🔍 DEBUG: No valid asset found after \(maxAttempts) attempts")
         completion(nil)
     }
     
@@ -326,8 +333,11 @@ class PhotoManager: ObservableObject {
             }
         }
         
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        try? handler.perform([request])
+        // Perform face detection on background queue to avoid blocking UI
+        DispatchQueue.global(qos: .userInitiated).async {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
     }
     
     private func cropFaceFromImage(_ image: UIImage, faceObservation: VNFaceObservation) -> UIImage? {
@@ -725,26 +735,16 @@ struct RandomPhotoView: View {
                     Spacer()
                     Button(action: requestPhotoPermission) {
                         HStack(spacing: 8) {
-                            if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: authorizationStatus == .denied ? "arrow.trianglehead.counterclockwise" : "photo.on.rectangle")
-                            }
-                            
-                            Text(isLoading ? "Loading..." : buttonTitle)
+                            Image(systemName: authorizationStatus == .denied ? "arrow.trianglehead.counterclockwise" : "photo.on.rectangle")
+                            Text(buttonTitle)
                         }
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
-                        .padding(.horizontal, isLoading ? 24 : 32)
+                        .padding(.horizontal, 32)
                         .padding(.vertical, 16)
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: isLoading ? [
-                                    Color(red: 0.6, green: 0.75, blue: 0.9),
-                                    Color(red: 0.4, green: 0.65, blue: 0.85)
-                                ] : [
+                                gradient: Gradient(colors: [
                                     Color(red: 0.7, green: 0.85, blue: 1.0),
                                     Color(red: 0.5, green: 0.75, blue: 0.95)
                                 ]),
@@ -756,12 +756,26 @@ struct RandomPhotoView: View {
                         .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                         .shadow(color: Color.white.opacity(0.8), radius: 1, x: 0, y: 1)
                     }
-                    .disabled(authorizationStatus == .restricted || isLoading)
+                    .disabled(authorizationStatus == .restricted)
                     .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * addButtonScale)
-                    .opacity(((authorizationStatus == .restricted || isLoading) ? 0.8 : 1.0) * addButtonOpacity)
-                    .animation(.easeInOut(duration: 0.2), value: isLoading)
+                    .opacity((authorizationStatus == .restricted ? 0.8 : 1.0) * addButtonOpacity)
                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: addButtonScale)
                     .animation(.easeInOut(duration: 0.3), value: addButtonOpacity)
+                    .padding(.bottom, 120)
+                    
+                    // Simple test button
+                    Button(action: {
+                        print("Test button tapped!")
+                        addTestElement()
+                    }) {
+                        Text("Test Button")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Color.red)
+                            .cornerRadius(8)
+                    }
                     .padding(.bottom, 50)
                 }
                 
@@ -983,6 +997,28 @@ struct RandomPhotoView: View {
                             }
                         }
                 }
+                
+                // Screen center loading indicator
+                if isLoading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                        
+                        Text("Adding photo...")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    .padding(24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.black.opacity(0.7))
+                            .blur(radius: 1)
+                    )
+                    .scaleEffect(isLoading ? 1.0 : 0.8)
+                    .opacity(isLoading ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isLoading)
+                }
             }
         }
         .sheet(isPresented: $showShareSheet) {
@@ -1040,11 +1076,44 @@ struct RandomPhotoView: View {
         }
     }
     
+    private func addTestElement() {
+        print("🔍 DEBUG: addTestElement() called - START")
+        
+        // Just add a simple text element to test UI responsiveness
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+        
+        print("🔍 DEBUG: About to create test image")
+        
+        // Create a simple colored square as a test image
+        let size = CGSize(width: 100, height: 100)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let testImage = renderer.image { context in
+            UIColor.green.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        
+        print("🔍 DEBUG: Test image created, about to create PhotoItem")
+        
+        let testPhotoItem = PhotoItem(
+            image: testImage,
+            position: CGPoint(x: randomX, y: randomY),
+            frameShape: nil,
+            size: 100
+        )
+        
+        print("🔍 DEBUG: PhotoItem created, about to append to array")
+        
+        photoItems.append(testPhotoItem)
+        
+        print("🔍 DEBUG: PhotoItem appended - END")
+    }
+    
     private func fetchRandomPhoto() {
         photoManager.fetchRandomPhoto { image, actualMethod in
             DispatchQueue.main.async {
-                self.isLoading = false
-                
                 if let image = image {
                     // Remove background from the image first
                     self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
@@ -1082,12 +1151,16 @@ struct RandomPhotoView: View {
                         )
                         self.photoItems.append(photoItem)
                         
+                        // Loading complete - photo successfully added
+                        self.isLoading = false
+                        
                         // Play random Mario success sound
                         self.playMarioSuccessSound()
                     }
                 } else {
                     // This should never happen now due to fallback system
                     print("No photos found even after fallback - check photo library permissions")
+                    self.isLoading = false
                 }
             }
         }
