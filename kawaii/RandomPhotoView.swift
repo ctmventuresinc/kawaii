@@ -1079,36 +1079,66 @@ struct RandomPhotoView: View {
     private func addTestElement() {
         print("🔍 DEBUG: addTestElement() called - START")
         
-        // Just add a simple text element to test UI responsiveness
-        let screenWidth = UIScreen.main.bounds.width
-        let screenHeight = UIScreen.main.bounds.height
-        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+        // Move ALL Photos framework operations to background queue
+        DispatchQueue.global(qos: .userInitiated).async {
+            print("🔍 DEBUG: Now on background queue")
+            
+            // Get the most recent photo in the simplest way possible
+            print("🔍 DEBUG: About to create fetch options")
+            let fetchOptions = PHFetchOptions()
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            fetchOptions.fetchLimit = 1 // Just get the most recent
+            
+            print("🔍 DEBUG: About to call PHAsset.fetchAssets")
+            let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+            print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
-        print("🔍 DEBUG: About to create test image")
-        
-        // Create a simple colored square as a test image
-        let size = CGSize(width: 100, height: 100)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let testImage = renderer.image { context in
-            UIColor.green.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
+        guard fetchResult.count > 0 else {
+            print("🔍 DEBUG: No photos found")
+            return
         }
         
-        print("🔍 DEBUG: Test image created, about to create PhotoItem")
+        let mostRecentAsset = fetchResult.object(at: 0)
+        print("🔍 DEBUG: Got most recent asset, about to request image")
         
-        let testPhotoItem = PhotoItem(
-            image: testImage,
-            position: CGPoint(x: randomX, y: randomY),
-            frameShape: nil,
-            size: 100
-        )
+        // Request the image
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
         
-        print("🔍 DEBUG: PhotoItem created, about to append to array")
-        
-        photoItems.append(testPhotoItem)
-        
-        print("🔍 DEBUG: PhotoItem appended - END")
+        PHImageManager.default().requestImage(
+            for: mostRecentAsset,
+            targetSize: CGSize(width: 200, height: 200),
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            print("🔍 DEBUG: Image request completed")
+            DispatchQueue.main.async {
+                print("🔍 DEBUG: Back on main queue")
+                guard let image = image else {
+                    print("🔍 DEBUG: No image returned")
+                    return
+                }
+                
+                print("🔍 DEBUG: Got image, creating PhotoItem")
+                let screenWidth = UIScreen.main.bounds.width
+                let screenHeight = UIScreen.main.bounds.height
+                let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+                let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+                
+                let testPhotoItem = PhotoItem(
+                    image: image,
+                    position: CGPoint(x: randomX, y: randomY),
+                    frameShape: nil,
+                    size: 150
+                )
+                
+                print("🔍 DEBUG: About to append PhotoItem")
+                self.photoItems.append(testPhotoItem)
+                print("🔍 DEBUG: PhotoItem appended - END")
+            }
+        }
+        }
     }
     
     private func fetchRandomPhoto() {
