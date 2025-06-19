@@ -529,6 +529,8 @@ struct RandomPhotoView: View {
     @State private var shareGlowOpacity: Double = 0.0
     @State private var showShareSheet = false
     @State private var shareImage: UIImage?
+    @State private var addButtonScale: CGFloat = 1.0
+    @State private var addButtonOpacity: Double = 1.0
     
     private let soundImagePairs: [SoundImagePair] = [
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
@@ -755,9 +757,11 @@ struct RandomPhotoView: View {
                         .shadow(color: Color.white.opacity(0.8), radius: 1, x: 0, y: 1)
                     }
                     .disabled(authorizationStatus == .restricted || isLoading)
-                    .scaleEffect(authorizationStatus == .restricted ? 0.9 : 1.0)
-                    .opacity((authorizationStatus == .restricted || isLoading) ? 0.8 : 1.0)
+                    .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * addButtonScale)
+                    .opacity(((authorizationStatus == .restricted || isLoading) ? 0.8 : 1.0) * addButtonOpacity)
                     .animation(.easeInOut(duration: 0.2), value: isLoading)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: addButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: addButtonOpacity)
                     .padding(.bottom, 50)
                 }
                 
@@ -857,6 +861,8 @@ struct RandomPhotoView: View {
                         starButtonScale = 1.0
                         shareButtonOpacity = 1.0
                         shareButtonScale = 1.0
+                        addButtonOpacity = 0.0
+                        addButtonScale = 0.8
                     } else {
                         trashBinOpacity = 0.0
                         trashBinScale = 0.8
@@ -864,6 +870,8 @@ struct RandomPhotoView: View {
                         starButtonScale = 0.8
                         shareButtonOpacity = 0.0
                         shareButtonScale = 0.8
+                        addButtonOpacity = 1.0
+                        addButtonScale = 1.0
                     }
                 }
                 
