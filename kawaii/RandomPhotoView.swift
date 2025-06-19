@@ -522,6 +522,13 @@ struct RandomPhotoView: View {
     @State private var isHoveringOverStar = false
     @State private var sparkleScale: CGFloat = 0.0
     @State private var sparkleOpacity: Double = 0.0
+    @State private var shareButtonScale: CGFloat = 1.0
+    @State private var shareButtonOpacity: Double = 0.0
+    @State private var isHoveringOverShare = false
+    @State private var shareGlowScale: CGFloat = 0.0
+    @State private var shareGlowOpacity: Double = 0.0
+    @State private var showShareSheet = false
+    @State private var shareImage: UIImage?
     
     private let soundImagePairs: [SoundImagePair] = [
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
@@ -616,12 +623,13 @@ struct RandomPhotoView: View {
                                         isDraggingAny = true
                                     }
                                     
-                                    // Check if currently over trash bin or star button
+                                    // Check if currently over trash bin, star button, or share button
                                     let currentPosition = CGPoint(
                                         x: photoItem.position.x + value.translation.width,
                                         y: photoItem.position.y + value.translation.height
                                     )
                                     isHoveringOverTrash = isOverTrashBin(position: currentPosition, photoItem: photoItem, geometry: geometry)
+                                    isHoveringOverShare = isOverShareButton(position: currentPosition, photoItem: photoItem, geometry: geometry)
                                     
                                     // Only activate star if dragging a frameless photo
                                     if photoItem.frameShape == nil {
@@ -638,7 +646,7 @@ struct RandomPhotoView: View {
                                         y: photoItem.position.y + value.translation.height
                                     )
                                     
-                                    // Check if dropped on trash bin or star button
+                                    // Check if dropped on trash bin, share button, or star button
                                     if isOverTrashBin(position: finalPosition, photoItem: photoItem, geometry: geometry) {
                                         // Keep the item in its dragged position for deletion animation
                                         photoItems[index].position.x += value.translation.width
@@ -656,6 +664,24 @@ struct RandomPhotoView: View {
                                         withAnimation(.easeOut(duration: 0.2)) {
                                             trashBinOpacity = 0.0
                                             trashBinScale = 0.8
+                                        }
+                                    } else if isOverShareButton(position: finalPosition, photoItem: photoItem, geometry: geometry) {
+                                        // Share photo functionality
+                                        photoItems[index].position.x += value.translation.width
+                                        photoItems[index].position.y += value.translation.height
+                                        photoItems[index].dragOffset = .zero
+                                        photoItems[index].isDragging = false
+                                        
+                                        // Export and share photo
+                                        sharePhotoItem(photoItem)
+                                        
+                                        // Reset drag states and animate share button out
+                                        isDraggingAny = false
+                                        isHoveringOverShare = false
+                                        
+                                        withAnimation(.easeOut(duration: 0.2)) {
+                                            shareButtonOpacity = 0.0
+                                            shareButtonScale = 0.8
                                         }
                                     } else if isOverStarButton(position: finalPosition, photoItem: photoItem, geometry: geometry) && photoItem.frameShape == nil {
                                         // Convert frameless photo to framed photo
@@ -686,6 +712,7 @@ struct RandomPhotoView: View {
                                         isDraggingAny = false
                                         isHoveringOverTrash = false
                                         isHoveringOverStar = false
+                                        isHoveringOverShare = false
                                     }
                                 }
                             }
@@ -828,11 +855,15 @@ struct RandomPhotoView: View {
                         trashBinScale = 1.0
                         starButtonOpacity = 1.0
                         starButtonScale = 1.0
+                        shareButtonOpacity = 1.0
+                        shareButtonScale = 1.0
                     } else {
                         trashBinOpacity = 0.0
                         trashBinScale = 0.8
                         starButtonOpacity = 0.0
                         starButtonScale = 0.8
+                        shareButtonOpacity = 0.0
+                        shareButtonScale = 0.8
                     }
                 }
                 
@@ -881,6 +912,51 @@ struct RandomPhotoView: View {
                     }
                 }
                 
+                // Share button in bottom center
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        ZStack {
+                            // Share button background
+                            Circle()
+                                .fill((isHoveringOverShare ? Color.blue : Color.gray).gradient)
+                                .frame(width: 60, height: 60)
+                                .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
+                            
+                            // Share icon
+                            Image(systemName: "square.and.arrow.up.fill")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            // Glow effect
+                            if shareGlowOpacity > 0 {
+                                ZStack {
+                                    // Multiple glow particles
+                                    ForEach(0..<6, id: \.self) { index in
+                                        Circle()
+                                            .fill(Color.blue.opacity(0.6))
+                                            .frame(width: 10, height: 10)
+                                            .offset(
+                                                x: cos(Double(index) * .pi / 3) * 35 * shareGlowScale,
+                                                y: sin(Double(index) * .pi / 3) * 35 * shareGlowScale
+                                            )
+                                    }
+                                }
+                                .scaleEffect(shareGlowScale)
+                                .opacity(shareGlowOpacity)
+                            }
+                        }
+                        .scaleEffect(shareButtonScale)
+                        .opacity(shareButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: shareButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: shareButtonOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: isHoveringOverShare)
+                        .padding(.bottom, 20)
+                        Spacer()
+                    }
+                }
+                
                 // Image overlay for sound feedback
                 if showImageOverlay && !currentImageName.isEmpty {
                     Image(currentImageName)
@@ -899,6 +975,11 @@ struct RandomPhotoView: View {
                             }
                         }
                 }
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let shareImage = shareImage {
+                ShareSheet(activityItems: [shareImage])
             }
         }
         .onAppear {
@@ -1121,6 +1202,115 @@ struct RandomPhotoView: View {
         return distance <= totalRadius
     }
     
+    private func isOverShareButton(position: CGPoint, photoItem: PhotoItem, geometry: GeometryProxy) -> Bool {
+        let shareButtonCenter = CGPoint(x: geometry.size.width / 2, y: geometry.size.height - 50) // Center horizontally, same vertical position
+        let shareButtonRadius: CGFloat = 30 // Half of share button size (60/2)
+        
+        // Calculate PhotoItem's effective radius
+        let photoItemRadius: CGFloat
+        if photoItem.frameShape != nil {
+            // Face crops with frames
+            photoItemRadius = (photoItem.size + 60) / 2
+        } else {
+            // Regular photos
+            photoItemRadius = photoItem.size / 2
+        }
+        
+        let distance = sqrt(pow(position.x - shareButtonCenter.x, 2) + pow(position.y - shareButtonCenter.y, 2))
+        let totalRadius = shareButtonRadius + photoItemRadius - 5 // Same tolerance as other buttons
+        
+        return distance <= totalRadius
+    }
+    
+    private func sharePhotoItem(_ photoItem: PhotoItem) {
+        // Trigger glow animation
+        withAnimation(.easeOut(duration: 0.4)) {
+            shareGlowScale = 1.0
+            shareGlowOpacity = 1.0
+        }
+        
+        // Scale effect for share button
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
+            shareButtonScale = 1.1
+        }
+        
+        // Generate image to share
+        Task {
+            await generateShareImage(from: photoItem)
+        }
+        
+        // Hide glow effect after animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                shareGlowScale = 0.0
+                shareGlowOpacity = 0.0
+                shareButtonScale = 1.0
+            }
+        }
+    }
+    
+    @MainActor
+    private func generateShareImage(from photoItem: PhotoItem) async {
+        // Create a renderer to generate the image
+        let renderer = ImageRenderer(content: 
+            Group {
+                if let frameShape = photoItem.frameShape {
+                    // Face crops with exciting frames
+                    switch frameShape {
+                    case .irregularBurst:
+                        ZStack {
+                            // Outermost stroke using color combination
+                            Image(photoItem.shapeName)
+                                .renderingMode(.template)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: photoItem.size + 160, height: photoItem.size + 160)
+                                .foregroundColor(photoItem.strokeColor)
+                                .shadow(color: photoItem.strokeColor.opacity(0.6), radius: 12, x: 0, y: 0)
+                            
+                            // Background shape using color combination
+                            Image(photoItem.shapeName)
+                                .renderingMode(.template)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: photoItem.size + 120, height: photoItem.size + 120)
+                                .foregroundColor(photoItem.backgroundColor)
+                                .shadow(color: photoItem.backgroundColor.opacity(0.6), radius: 12, x: 0, y: 0)
+                            
+                            // Photo on top - masked by outer stroke shape with color filter
+                            Image(uiImage: photoItem.image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: photoItem.size, height: photoItem.size)
+                                .applyPhotoFilter(photoItem.photoFilter)
+                                .mask(
+                                    Image(photoItem.shapeName)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: photoItem.size + 160, height: photoItem.size + 160)
+                                )
+                                .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                        }
+                    }
+                } else {
+                    // Regular photos with rounded corners
+                    Image(uiImage: photoItem.image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: photoItem.size, height: photoItem.size)
+                        .cornerRadius(16)
+                }
+            }
+        )
+        
+        renderer.scale = 3.0 // High resolution for sharing
+        
+        if let uiImage = renderer.uiImage {
+            shareImage = uiImage
+            showShareSheet = true
+        }
+    }
+    
     private func convertToFramedPhoto(at index: Int) {
         guard index < photoItems.count else { return }
         
@@ -1220,6 +1410,17 @@ struct RandomPhotoView: View {
             }
         }
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

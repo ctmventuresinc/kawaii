@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		191FDE9C2E030FCC00D2AF6D /* kawaii.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kawaii.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kawaiiapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		191FDE9D2E030FCC00D2AF6D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				191FDE9C2E030FCC00D2AF6D /* kawaii.app */,
+				191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */,
 				191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */,
 				191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */,
 			);
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		191FDE9B2E030FCC00D2AF6D /* kawaii */ = {
+		191FDE9B2E030FCC00D2AF6D /* kawaiiapp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 191FDEC02E030FCD00D2AF6D /* Build configuration list for PBXNativeTarget "kawaii" */;
+			buildConfigurationList = 191FDEC02E030FCD00D2AF6D /* Build configuration list for PBXNativeTarget "kawaiiapp" */;
 			buildPhases = (
 				191FDE982E030FCC00D2AF6D /* Sources */,
 				191FDE992E030FCC00D2AF6D /* Frameworks */,
@@ -110,11 +110,11 @@
 			fileSystemSynchronizedGroups = (
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 			);
-			name = kawaii;
+			name = kawaiiapp;
 			packageProductDependencies = (
 			);
 			productName = kawaii;
-			productReference = 191FDE9C2E030FCC00D2AF6D /* kawaii.app */;
+			productReference = 191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		191FDEAB2E030FCD00D2AF6D /* kawaiiTests */ = {
@@ -200,7 +200,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				191FDE9B2E030FCC00D2AF6D /* kawaii */,
+				191FDE9B2E030FCC00D2AF6D /* kawaiiapp */,
 				191FDEAB2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB52E030FCD00D2AF6D /* kawaiiUITests */,
 			);
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		191FDEAE2E030FCD00D2AF6D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 191FDE9B2E030FCC00D2AF6D /* kawaii */;
+			target = 191FDE9B2E030FCC00D2AF6D /* kawaiiapp */;
 			targetProxy = 191FDEAD2E030FCD00D2AF6D /* PBXContainerItemProxy */;
 		};
 		191FDEB82E030FCD00D2AF6D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 191FDE9B2E030FCC00D2AF6D /* kawaii */;
+			target = 191FDE9B2E030FCC00D2AF6D /* kawaiiapp */;
 			targetProxy = 191FDEB72E030FCD00D2AF6D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -538,7 +538,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		191FDEC02E030FCD00D2AF6D /* Build configuration list for PBXNativeTarget "kawaii" */ = {
+		191FDEC02E030FCD00D2AF6D /* Build configuration list for PBXNativeTarget "kawaiiapp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				191FDEC12E030FCD00D2AF6D /* Debug */,
