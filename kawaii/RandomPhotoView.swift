@@ -771,14 +771,9 @@ struct RandomPhotoView: View {
                         print("Test button tapped!")
                         addTestElement()
                     }) {
-                        Text("Test Button")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(Color.red)
-                            .cornerRadius(8)
+                        Text("Button")
                     }
+                    .buttonStyle(GlossyStartButtonStyle())
                     .padding(.bottom, 50)
                 }
                 
@@ -1546,6 +1541,34 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+struct GlossyStartButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 22, weight: .bold))
+            .foregroundColor(.black)
+            .padding(.horizontal, 40)
+            .padding(.vertical, 12)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.white, Color(red: 0.88, green: 0.92, blue: 0.96)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 30)
+                                .stroke(Color.cyan, lineWidth: 2)
+                        )
+                        .shadow(color: Color.gray.opacity(0.2), radius: 1, x: 0, y: 1)
+                }
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+    }
 }
 
 #Preview {
