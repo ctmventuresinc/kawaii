@@ -1146,13 +1146,17 @@ struct RandomPhotoView: View {
                     let randomX = CGFloat.random(in: 100...(screenWidth - 100))
                     let randomY = CGFloat.random(in: 100...(screenHeight - 200))
                     
+                    // Add SVG frames like regular Add button
+                    let frameShape = FaceFrameShape.allCases.randomElement()
+                    print("🔍 DEBUG: Added SVG frame: \(frameShape != nil ? "irregularBurst" : "none")")
+                    
                     // Use same size range as regular Add button
                     let size: CGFloat = CGFloat.random(in: 153...234)
                     
                     let testPhotoItem = PhotoItem(
                         image: finalImage,
                         position: CGPoint(x: randomX, y: randomY),
-                        frameShape: nil,
+                        frameShape: frameShape,
                         size: size
                     )
                     
