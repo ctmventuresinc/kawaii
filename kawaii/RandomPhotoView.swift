@@ -155,14 +155,16 @@ class PhotoManager: ObservableObject {
     }
     
     private func fetchRandomRecentPhoto(completion: @escaping (UIImage?) -> Void) {
-        print("🔍 DEBUG: fetchRandomRecentPhoto() started")
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.fetchLimit = 50
-        
-        print("🔍 DEBUG: About to call PHAsset.fetchAssets")
-        let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
-        print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
+        // Move ALL Photos framework operations to background queue
+        DispatchQueue.global(qos: .userInitiated).async {
+            print("🔍 DEBUG: fetchRandomRecentPhoto() started on background queue")
+            let fetchOptions = PHFetchOptions()
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            fetchOptions.fetchLimit = 50
+            
+            print("🔍 DEBUG: About to call PHAsset.fetchAssets")
+            let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+            print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
         guard fetchResult.count > 0 else {
             completion(nil)
@@ -178,16 +180,17 @@ class PhotoManager: ObservableObject {
             let randomAsset = fetchResult.object(at: randomIndex)
             
             if !randomAsset.mediaSubtypes.contains(.photoScreenshot) && 
-               !usedAssetIds.contains(randomAsset.localIdentifier) {
+               !self.usedAssetIds.contains(randomAsset.localIdentifier) {
                 print("🔍 DEBUG: Found valid asset, calling loadPhoto")
-                loadPhoto(asset: randomAsset, completion: completion)
-                usedAssetIds.insert(randomAsset.localIdentifier)
+                self.loadPhoto(asset: randomAsset, completion: completion)
+                self.usedAssetIds.insert(randomAsset.localIdentifier)
                 return
             }
             attempts += 1
         }
         print("🔍 DEBUG: No valid asset found after \(maxAttempts) attempts")
         completion(nil)
+        }
     }
     
     private func fetchRandomFaceCrop(timeframe: TimeFrame, completion: @escaping (UIImage?) -> Void) {
@@ -1143,10 +1146,10 @@ struct RandomPhotoView: View {
     
     private func fetchRandomPhoto() {
         photoManager.fetchRandomPhoto { image, actualMethod in
-            DispatchQueue.main.async {
-                if let image = image {
-                    // Remove background from the image first
-                    self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
+            // Keep background removal and PhotoItem creation off main thread
+            if let image = image {
+                // Remove background from the image first
+                self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
                         let finalImage = processedImage ?? image // Use original if background removal fails
                         
                         let screenWidth = UIScreen.main.bounds.width
@@ -1179,17 +1182,22 @@ struct RandomPhotoView: View {
                             frameShape: frameShape,
                             size: size
                         )
-                        self.photoItems.append(photoItem)
                         
-                        // Loading complete - photo successfully added
-                        self.isLoading = false
-                        
-                        // Play random Mario success sound
-                        self.playMarioSuccessSound()
+                        // Only UI updates on main thread
+                        DispatchQueue.main.async {
+                            self.photoItems.append(photoItem)
+                            
+                            // Loading complete - photo successfully added
+                            self.isLoading = false
+                            
+                            // Play random Mario success sound
+                            self.playMarioSuccessSound()
+                        }
                     }
-                } else {
-                    // This should never happen now due to fallback system
-                    print("No photos found even after fallback - check photo library permissions")
+            } else {
+                // This should never happen now due to fallback system
+                print("No photos found even after fallback - check photo library permissions")
+                DispatchQueue.main.async {
                     self.isLoading = false
                 }
             }
