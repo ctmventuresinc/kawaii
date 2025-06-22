@@ -544,6 +544,7 @@ struct RandomPhotoView: View {
     @State private var shareImage: UIImage?
     @State private var addButtonScale: CGFloat = 1.0
     @State private var addButtonOpacity: Double = 1.0
+    @State private var testButtonLoading = false
     
     private let soundImagePairs: [SoundImagePair] = [
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
@@ -557,8 +558,10 @@ struct RandomPhotoView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Strong blue background
-                Color.blue
+                // Wallpaper background
+                Image("wallpaper")
+                    .resizable()
+//                    .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
                 
                 // Burst pattern background - commented out temporarily
@@ -768,12 +771,16 @@ struct RandomPhotoView: View {
                     
                     // Simple test button
                     Button(action: {
-                        print("Test button tapped!")
-                        addTestElement()
+                        if !testButtonLoading {
+                            print("Test button tapped!")
+                            testButtonLoading = true
+                            addTestElement()
+                        }
                     }) {
                         Text("Button")
                     }
-                    .buttonStyle(GlossyStartButtonStyle())
+                    .buttonStyle(LoadingGlossyButtonStyle(isLoading: testButtonLoading))
+                    .disabled(testButtonLoading)
                     .padding(.bottom, 50)
                 }
                 
@@ -1093,6 +1100,9 @@ struct RandomPhotoView: View {
         
         guard fetchResult.count > 0 else {
             print("🔍 DEBUG: No photos found")
+            DispatchQueue.main.async {
+                self.testButtonLoading = false
+            }
             return
         }
         
@@ -1113,6 +1123,9 @@ struct RandomPhotoView: View {
             print("🔍 DEBUG: Image request completed")
             guard let image = image else {
                 print("🔍 DEBUG: No image returned")
+                DispatchQueue.main.async {
+                    self.testButtonLoading = false
+                }
                 return
             }
             
@@ -1138,6 +1151,9 @@ struct RandomPhotoView: View {
                     
                     print("🔍 DEBUG: About to append PhotoItem with cut-out background")
                     self.photoItems.append(testPhotoItem)
+                    
+                    // Reset loading state
+                    self.testButtonLoading = false
                     print("🔍 DEBUG: PhotoItem appended - END")
                 }
             }
@@ -1568,6 +1584,46 @@ struct GlossyStartButtonStyle: ButtonStyle {
                 }
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+    }
+}
+
+struct LoadingGlossyButtonStyle: ButtonStyle {
+    let isLoading: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                    .scaleEffect(0.8)
+            } else {
+                configuration.label
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.black)
+            }
+        }
+        .frame(width: isLoading ? 60 : nil, height: 46)
+        .padding(.horizontal, isLoading ? 0 : 40)
+        .padding(.vertical, 12)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.white, Color(red: 0.88, green: 0.92, blue: 0.96)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.cyan, lineWidth: 2)
+                    )
+                    .shadow(color: Color.gray.opacity(0.2), radius: 1, x: 0, y: 1)
+            }
+        )
+        .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isLoading)
     }
 }
 
