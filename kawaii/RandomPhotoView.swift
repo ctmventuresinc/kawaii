@@ -1116,29 +1116,35 @@ struct RandomPhotoView: View {
             options: options
         ) { image, _ in
             print("🔍 DEBUG: Image request completed")
-            DispatchQueue.main.async {
-                print("🔍 DEBUG: Back on main queue")
-                guard let image = image else {
-                    print("🔍 DEBUG: No image returned")
-                    return
+            guard let image = image else {
+                print("🔍 DEBUG: No image returned")
+                return
+            }
+            
+            print("🔍 DEBUG: Got image, applying background removal")
+            // Apply background removal to make it transparent/cut out
+            self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
+                print("🔍 DEBUG: Background removal completed")
+                let finalImage = processedImage ?? image // Use original if background removal fails
+                
+                DispatchQueue.main.async {
+                    print("🔍 DEBUG: Back on main queue with processed image")
+                    let screenWidth = UIScreen.main.bounds.width
+                    let screenHeight = UIScreen.main.bounds.height
+                    let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+                    let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+                    
+                    let testPhotoItem = PhotoItem(
+                        image: finalImage,
+                        position: CGPoint(x: randomX, y: randomY),
+                        frameShape: nil,
+                        size: 150
+                    )
+                    
+                    print("🔍 DEBUG: About to append PhotoItem with cut-out background")
+                    self.photoItems.append(testPhotoItem)
+                    print("🔍 DEBUG: PhotoItem appended - END")
                 }
-                
-                print("🔍 DEBUG: Got image, creating PhotoItem")
-                let screenWidth = UIScreen.main.bounds.width
-                let screenHeight = UIScreen.main.bounds.height
-                let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-                let randomY = CGFloat.random(in: 100...(screenHeight - 200))
-                
-                let testPhotoItem = PhotoItem(
-                    image: image,
-                    position: CGPoint(x: randomX, y: randomY),
-                    frameShape: nil,
-                    size: 150
-                )
-                
-                print("🔍 DEBUG: About to append PhotoItem")
-                self.photoItems.append(testPhotoItem)
-                print("🔍 DEBUG: PhotoItem appended - END")
             }
         }
         }
