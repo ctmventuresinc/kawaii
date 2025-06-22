@@ -1028,7 +1028,8 @@ struct RandomPhotoView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let shareImage = shareImage {
-                ShareSheet(activityItems: [shareImage])
+                ActivityView(activityItems: [shareImage])
+                    .presentationDetents([.fraction(0.5), .large])
             }
         }
         .onAppear {
@@ -1559,14 +1560,13 @@ struct RandomPhotoView: View {
     }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
+struct ActivityView: UIViewControllerRepresentable {
     let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        return controller
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
     }
-    
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
