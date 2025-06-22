@@ -1109,14 +1109,18 @@ struct RandomPhotoView: View {
         let mostRecentAsset = fetchResult.object(at: 0)
         print("🔍 DEBUG: Got most recent asset, about to request image")
         
-        // Request the image
+        // Request the image at high quality (matching regular Add button)
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
         
+        // Load at display resolution (450px max) * 2 for retina * screen scale
+        let maxDisplaySize: CGFloat = 450 // Same as regular Add button
+        let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
+        
         PHImageManager.default().requestImage(
             for: mostRecentAsset,
-            targetSize: CGSize(width: 200, height: 200),
+            targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
             contentMode: .aspectFit,
             options: options
         ) { image, _ in
@@ -1142,11 +1146,14 @@ struct RandomPhotoView: View {
                     let randomX = CGFloat.random(in: 100...(screenWidth - 100))
                     let randomY = CGFloat.random(in: 100...(screenHeight - 200))
                     
+                    // Use same size range as regular Add button
+                    let size: CGFloat = CGFloat.random(in: 153...234)
+                    
                     let testPhotoItem = PhotoItem(
                         image: finalImage,
                         position: CGPoint(x: randomX, y: randomY),
                         frameShape: nil,
-                        size: 150
+                        size: size
                     )
                     
                     print("🔍 DEBUG: About to append PhotoItem with cut-out background")
