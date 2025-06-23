@@ -78,9 +78,42 @@ cmd+r
 4. **Extract sound management** (~50 lines) to separate file
 5. **Break down main view** into smaller, focused components
 
+## 🏛️ Architectural Patterns & Options
+
+When implementing new features, **ALWAYS CONSIDER REFACTORING FIRST** using these patterns:
+
+### Core Patterns
+- **Manager classes** - Current approach for business logic
+- **Coordinator pattern** - Navigation and flow control
+- **Service layer** - External dependencies and APIs
+- **ViewModels (MVVM)** - UI state and business logic separation
+- **Use Cases / Interactors** - Clean Architecture business logic
+- **Repository pattern** - Data access abstraction
+- **Dependency injection containers** - Loose coupling
+
+### Organization Patterns
+- **Feature modules** - Group related functionality
+- **Extensions folders** (e.g. UIView+Extensions.swift)
+- **Constants/Config files** - Centralized configuration
+- **Protocol-oriented abstractions** - Interface segregation
+- **Utilities/Helpers folder** - Reusable utilities
+- **Resources grouping** (Assets, Strings, etc.)
+
+### Infrastructure Patterns
+- **Environment/Build configurations** - Different environments
+- **AppDelegate/SceneDelegate separation** - App lifecycle
+- **Network layer abstraction** (e.g. APIClient)
+- **Error handling layer** - Centralized error management
+- **Logging/Analytics wrappers** - Observability
+
+### Testing Patterns
+- **Unit test targets per module** - Modular testing
+- **Mock/Stub classes for testing** - Test isolation
+
 ## 💡 Development Philosophy
 
 **"We are not junior juvenile devs"** - Always consider:
+- **Refactoring opportunities FIRST** using patterns above
 - **Separation of concerns** before adding code
 - **Reusability** of components  
 - **File organization** and architecture
