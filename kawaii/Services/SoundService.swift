@@ -126,7 +126,7 @@ class SoundService: ObservableObject {
         }
     }
     
-    func playSound(_ soundType: SoundType) {
+    func playSound(_ soundType: SoundType, delay: TimeInterval = 0) {
         let fileName = soundType.fileName
         guard let path = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
             print("Could not find \(fileName).mp3")
@@ -135,15 +135,33 @@ class SoundService: ObservableObject {
         
         let url = URL(fileURLWithPath: path)
         
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-            
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-        } catch {
-            print("Could not play \(fileName) sound: \(error)")
+        let playAction = {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try AVAudioSession.sharedInstance().setActive(true)
+                
+                self.audioPlayer = try AVAudioPlayer(contentsOf: url)
+                self.audioPlayer?.prepareToPlay()
+                self.audioPlayer?.play()
+            } catch {
+                print("Could not play \(fileName) sound: \(error)")
+            }
+        }
+        
+        if delay > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                playAction()
+            }
+        } else {
+            playAction()
+        }
+    }
+    
+    func playLoadingSoundIfStillLoading(isLoadingCheck: @escaping () -> Bool, delay: TimeInterval = 0.7) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            if isLoadingCheck() {
+                self.playSound(.loading)
+            }
         }
     }
 }
