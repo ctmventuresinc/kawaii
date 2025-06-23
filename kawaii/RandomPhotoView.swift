@@ -21,6 +21,7 @@ struct RandomPhotoView: View {
     @State private var colorPhase: Double = 0
     @State private var testButtonLoading = false
     @State private var blinkingOpacity: Double = 0.0
+    @State private var hasBeenTapped = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -40,8 +41,12 @@ struct RandomPhotoView: View {
                 
                 Color.clear
                     .contentShape(Rectangle())
+                    .onTapGesture {
+                        handleScreenTap()
+                    }
                 
-                // DANGER TESTING indicator at top
+                // DANGER TESTING indicator at top - HIDDEN
+                /*
                 VStack {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -54,6 +59,7 @@ struct RandomPhotoView: View {
                     .padding(.top, 50)
                     Spacer()
                 }
+                */
                 
                 ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
@@ -99,14 +105,19 @@ struct RandomPhotoView: View {
                     .padding(.bottom, 120)
                 */
                 
-                // Blinking instruction text in center of screen
+                // Blinking instruction text in center of screen and buttons
                 VStack {
                     Spacer()
-                    Text("Touch the Touch Screen to continue.")
-                        .font(.system(size: 19, weight: .medium))
-                        .foregroundColor(.black)
-                        .opacity(blinkingOpacity)
-                        .animation(.easeInOut(duration: 0.55).repeatForever(autoreverses: true), value: blinkingOpacity)
+                    
+                    // Conditional instruction text
+                    if !hasBeenTapped {
+                        Text("Touch the Touch Screen to continue.")
+                            .font(.system(size: 19, weight: .medium))
+                            .foregroundColor(.black)
+                            .opacity(blinkingOpacity)
+                            .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: blinkingOpacity)
+                    }
+                    
                     Spacer()
                     
                     // Button layout with centered main button and right-aligned envelope
@@ -426,6 +437,22 @@ struct RandomPhotoView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.2)) {
                 self.dragViewModel.starButtonScale = 1.0
+            }
+        }
+    }
+    
+    private func handleScreenTap() {
+        // Hide the instruction text on first tap
+        if !hasBeenTapped {
+            hasBeenTapped = true
+        }
+        
+        // Execute same action as "Button"
+        if !testButtonLoading {
+            print("Screen tapped!")
+            testButtonLoading = true
+            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService) { success in
+                self.testButtonLoading = false
             }
         }
     }
