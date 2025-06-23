@@ -27,6 +27,7 @@
 		191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kawaiiapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		195A410D2E0922960017536C /* kawaiiapp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "kawaiiapp-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		191FDE932E030FCC00D2AF6D = {
 			isa = PBXGroup;
 			children = (
+				195A410D2E0922960017536C /* kawaiiapp-Info.plist */,
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 				191FDEAF2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB92E030FCD00D2AF6D /* kawaiiUITests */,
@@ -399,6 +401,7 @@
 				DEVELOPMENT_TEAM = 852G82KW89;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "kawaiiapp-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "This is Your Life";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "we use your photo library to bring you your memories";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -433,6 +436,7 @@
 				DEVELOPMENT_TEAM = 852G82KW89;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "kawaiiapp-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "This is Your Life";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "we use your photo library to bring you your memories";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -101,8 +101,8 @@ class SoundService: ObservableObject {
     }
     
     func playNandeskaSound() {
-        guard let path = Bundle.main.path(forResource: "nandeska", ofType: "mp3") else {
-            print("Could not find nandeska.mp3")
+        guard let path = Bundle.main.path(forResource: "intro", ofType: "mp3") else {
+            print("Could not find intro.mp3")
             return
         }
         
@@ -116,7 +116,7 @@ class SoundService: ObservableObject {
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
         } catch {
-            print("Could not play nandeska sound: \(error)")
+            print("Could not play intro sound: \(error)")
         }
     }
 }
