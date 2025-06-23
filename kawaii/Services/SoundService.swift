@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 @MainActor
-class SoundManager: ObservableObject {
+class SoundService: ObservableObject {
     @Published var audioPlayer: AVAudioPlayer?
     @Published var backgroundAudioPlayer: AVAudioPlayer?
     @Published var currentImageName: String = ""

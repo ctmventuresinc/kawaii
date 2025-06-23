@@ -9,7 +9,7 @@ import SwiftUI
 
 // Drag interaction manager to handle all photo drag states and actions
 @MainActor
-class DragInteractionManager: ObservableObject {
+class DragInteractionViewModel: ObservableObject {
     @Published var isDraggingAny = false
     @Published var isHoveringOverTrash = false
     @Published var isHoveringOverStar = false

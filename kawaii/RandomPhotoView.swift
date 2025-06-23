@@ -21,11 +21,11 @@ import Vision
 
 
 struct RandomPhotoView: View {
-    @StateObject private var photoManager = PhotoManager()
-    @StateObject private var dragManager = DragInteractionManager()
-    @StateObject private var soundManager = SoundManager()
-    @StateObject private var animationManager = AnimationManager()
-    @StateObject private var photoItemsManager = PhotoItemsManager()
+    @StateObject private var photoViewModel = PhotoViewModel()
+    @StateObject private var dragViewModel = DragInteractionViewModel()
+    @StateObject private var soundService = SoundService()
+    @StateObject private var animationViewModel = AnimationViewModel()
+    @StateObject private var photoItemsViewModel = PhotoItemsViewModel()
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
     @State private var isLoading = false
@@ -52,12 +52,12 @@ struct RandomPhotoView: View {
                 Color.clear
                     .contentShape(Rectangle())
                 
-                ForEach(photoItemsManager.photoItems) { photoItem in
+                ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
                         photoItem: photoItem,
                         geometry: geometry,
-                        photoItems: $photoItemsManager.photoItems,
-                        dragManager: dragManager
+                        photoItems: $photoItemsViewModel.photoItems,
+                        dragViewModel: dragViewModel
                     )
                 }
                 
@@ -87,10 +87,10 @@ struct RandomPhotoView: View {
                         .shadow(color: Color.white.opacity(0.8), radius: 1, x: 0, y: 1)
                     }
                     .disabled(authorizationStatus == .restricted)
-                    .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * animationManager.addButtonScale)
-                    .opacity((authorizationStatus == .restricted ? 0.8 : 1.0) * animationManager.addButtonOpacity)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationManager.addButtonScale)
-                    .animation(.easeInOut(duration: 0.3), value: animationManager.addButtonOpacity)
+                    .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * animationViewModel.addButtonScale)
+                    .opacity((authorizationStatus == .restricted ? 0.8 : 1.0) * animationViewModel.addButtonOpacity)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                     .padding(.bottom, 120)
                     
                     // Button row with test button and envelope button
@@ -100,7 +100,7 @@ struct RandomPhotoView: View {
                             if !testButtonLoading {
                             print("Test button tapped!")
                             testButtonLoading = true
-                            photoItemsManager.addTestPhotoItem(backgroundRemover: photoManager.backgroundRemover) { success in
+                            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover) { success in
                                     self.testButtonLoading = false
                             }
                         }
@@ -129,13 +129,13 @@ struct RandomPhotoView: View {
                         Menu {
                             ForEach(PhotoRetrievalMethod.allCases, id: \.self) { method in
                                 Button(action: {
-                                    photoManager.currentMethod = method
+                                    photoViewModel.currentMethod = method
                                 }) {
                                     HStack {
                                         Image(systemName: method.iconName)
                                         Text(method.displayName)
                                         Spacer()
-                                        if photoManager.currentMethod == method {
+                                        if photoViewModel.currentMethod == method {
                                             Image(systemName: "checkmark.circle.fill")
                                                 .foregroundColor(.green)
                                         }
@@ -144,9 +144,9 @@ struct RandomPhotoView: View {
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                Image(systemName: photoManager.currentMethod.iconName)
+                                Image(systemName: photoViewModel.currentMethod.iconName)
                                     .foregroundColor(.white)
-                                Text(photoManager.currentMethod.displayName)
+                                Text(photoViewModel.currentMethod.displayName)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.white)
                                 Image(systemName: "chevron.down")
@@ -172,7 +172,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Trash bin background
                             Circle()
-                                .fill((dragManager.isHoveringOverTrash ? Color.red : Color.gray).gradient)
+                                .fill((dragViewModel.isHoveringOverTrash ? Color.red : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -182,7 +182,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Poof effect
-                            if animationManager.poofOpacity > 0 {
+                            if animationViewModel.poofOpacity > 0 {
                                 ZStack {
                                     // Multiple poof particles
                                     ForEach(0..<8, id: \.self) { index in
@@ -190,29 +190,29 @@ struct RandomPhotoView: View {
                                             .fill(Color.white.opacity(0.8))
                                             .frame(width: 6, height: 6)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 4) * 30 * animationManager.poofScale,
-                                                y: sin(Double(index) * .pi / 4) * 30 * animationManager.poofScale
+                                                x: cos(Double(index) * .pi / 4) * 30 * animationViewModel.poofScale,
+                                                y: sin(Double(index) * .pi / 4) * 30 * animationViewModel.poofScale
                                             )
                                     }
                                 }
-                                .scaleEffect(animationManager.poofScale)
-                                .opacity(animationManager.poofOpacity)
+                                .scaleEffect(animationViewModel.poofScale)
+                                .opacity(animationViewModel.poofOpacity)
                             }
                         }
-                        .scaleEffect(dragManager.trashBinScale)
-                        .opacity(dragManager.trashBinOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.trashBinScale)
-                        .animation(.easeInOut(duration: 0.3), value: dragManager.trashBinOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverTrash)
+                        .scaleEffect(dragViewModel.trashBinScale)
+                        .opacity(dragViewModel.trashBinOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.trashBinScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragViewModel.trashBinOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragViewModel.isHoveringOverTrash)
                         .padding(.leading, 40)
                         .padding(.bottom, 20)
                         
                         Spacer()
                     }
                 }
-                .onChange(of: dragManager.isDraggingAny) { isDragging in
-                    dragManager.updateDragStates(isDragging: isDragging)
-                    animationManager.updateAddButtonVisibility(isDragging: isDragging)
+                .onChange(of: dragViewModel.isDraggingAny) { isDragging in
+                    dragViewModel.updateDragStates(isDragging: isDragging)
+                    animationViewModel.updateAddButtonVisibility(isDragging: isDragging)
                 }
                 
                 // Star button in bottom right corner
@@ -223,7 +223,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Star button background
                             Circle()
-                                .fill((dragManager.isHoveringOverStar ? Color.yellow : Color.gray).gradient)
+                                .fill((dragViewModel.isHoveringOverStar ? Color.yellow : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -233,7 +233,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Sparkle effect
-                            if animationManager.sparkleOpacity > 0 {
+                            if animationViewModel.sparkleOpacity > 0 {
                                 ZStack {
                                     // Multiple sparkle particles
                                     ForEach(0..<12, id: \.self) { index in
@@ -241,20 +241,20 @@ struct RandomPhotoView: View {
                                             .font(.system(size: 8, weight: .bold))
                                             .foregroundColor(.yellow)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 6) * 40 * animationManager.sparkleScale,
-                                                y: sin(Double(index) * .pi / 6) * 40 * animationManager.sparkleScale
+                                                x: cos(Double(index) * .pi / 6) * 40 * animationViewModel.sparkleScale,
+                                                y: sin(Double(index) * .pi / 6) * 40 * animationViewModel.sparkleScale
                                             )
                                     }
                                 }
-                                .scaleEffect(animationManager.sparkleScale)
-                                .opacity(animationManager.sparkleOpacity)
+                                .scaleEffect(animationViewModel.sparkleScale)
+                                .opacity(animationViewModel.sparkleOpacity)
                             }
                         }
-                        .scaleEffect(dragManager.starButtonScale)
-                        .opacity(dragManager.starButtonOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.starButtonScale)
-                        .animation(.easeInOut(duration: 0.3), value: dragManager.starButtonOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverStar)
+                        .scaleEffect(dragViewModel.starButtonScale)
+                        .opacity(dragViewModel.starButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.starButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragViewModel.starButtonOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragViewModel.isHoveringOverStar)
                         .padding(.trailing, 40)
                         .padding(.bottom, 20)
                     }
@@ -268,7 +268,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Share button background
                             Circle()
-                                .fill((dragManager.isHoveringOverShare ? Color.blue : Color.gray).gradient)
+                                .fill((dragViewModel.isHoveringOverShare ? Color.blue : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -278,7 +278,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Glow effect
-                            if animationManager.shareGlowOpacity > 0 {
+                            if animationViewModel.shareGlowOpacity > 0 {
                                 ZStack {
                                     // Multiple glow particles
                                     ForEach(0..<6, id: \.self) { index in
@@ -286,20 +286,20 @@ struct RandomPhotoView: View {
                                             .fill(Color.blue.opacity(0.6))
                                             .frame(width: 10, height: 10)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 3) * 35 * animationManager.shareGlowScale,
-                                                y: sin(Double(index) * .pi / 3) * 35 * animationManager.shareGlowScale
+                                                x: cos(Double(index) * .pi / 3) * 35 * animationViewModel.shareGlowScale,
+                                                y: sin(Double(index) * .pi / 3) * 35 * animationViewModel.shareGlowScale
                                             )
                                     }
                                 }
-                                .scaleEffect(animationManager.shareGlowScale)
-                                .opacity(animationManager.shareGlowOpacity)
+                                .scaleEffect(animationViewModel.shareGlowScale)
+                                .opacity(animationViewModel.shareGlowOpacity)
                             }
                         }
-                        .scaleEffect(dragManager.shareButtonScale)
-                        .opacity(dragManager.shareButtonOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.shareButtonScale)
-                        .animation(.easeInOut(duration: 0.3), value: dragManager.shareButtonOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverShare)
+                        .scaleEffect(dragViewModel.shareButtonScale)
+                        .opacity(dragViewModel.shareButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.shareButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragViewModel.shareButtonOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragViewModel.isHoveringOverShare)
                         .padding(.bottom, 20)
                         Spacer()
                     }
@@ -307,9 +307,9 @@ struct RandomPhotoView: View {
                 
                 // Image overlay for sound feedback
                 SoundImageOverlay(
-                    showOverlay: soundManager.showImageOverlay,
-                    imageName: soundManager.currentImageName,
-                    pulseScale: soundManager.pulseScale
+                    showOverlay: soundService.showImageOverlay,
+                    imageName: soundService.currentImageName,
+                    pulseScale: soundService.pulseScale
                 )
                 
                 // Screen center loading indicator
@@ -326,12 +326,12 @@ struct RandomPhotoView: View {
             authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
             
             // Setup drag manager actions
-            dragManager.isOverTrashBin = HitTestingUtils.isOverTrashBin
-            dragManager.isOverShareButton = HitTestingUtils.isOverShareButton
-            dragManager.isOverStarButton = HitTestingUtils.isOverStarButton
-            dragManager.deletePhotoItem = deletePhotoItem
-            dragManager.sharePhotoItem = sharePhotoItem
-            dragManager.convertToFramedPhoto = convertToFramedPhoto
+            dragViewModel.isOverTrashBin = HitTestingUtils.isOverTrashBin
+            dragViewModel.isOverShareButton = HitTestingUtils.isOverShareButton
+            dragViewModel.isOverStarButton = HitTestingUtils.isOverStarButton
+            dragViewModel.deletePhotoItem = deletePhotoItem
+            dragViewModel.sharePhotoItem = sharePhotoItem
+            dragViewModel.convertToFramedPhoto = convertToFramedPhoto
         }
     }
     
@@ -383,11 +383,11 @@ struct RandomPhotoView: View {
 
     
     private func fetchRandomPhoto() {
-        photoManager.fetchRandomPhoto { image, actualMethod in
+        photoViewModel.fetchRandomPhoto { image, actualMethod in
             // Keep background removal and PhotoItem creation off main thread
             if let image = image {
                 // Remove background from the image first
-                self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
+                self.photoViewModel.backgroundRemover.removeBackground(of: image) { processedImage in
                         let finalImage = processedImage ?? image // Use original if background removal fails
                         
                         let screenWidth = UIScreen.main.bounds.width
@@ -400,7 +400,7 @@ struct RandomPhotoView: View {
                         switch actualMethod {
                         case .recentPhotos:
                             // Regular recent photos - no frames unless fallback from face crop mode
-                            shouldUseFrames = self.photoManager.currentMethod != .recentPhotos
+                            shouldUseFrames = self.photoViewModel.currentMethod != .recentPhotos
                         case .recentPhotosWithSVG:
                             // Intentional SVG recent photos - always use frames
                             shouldUseFrames = true
@@ -423,13 +423,13 @@ struct RandomPhotoView: View {
                         
                         // Only UI updates on main thread
                         DispatchQueue.main.async {
-                        self.photoItemsManager.photoItems.append(photoItem)
+                        self.photoItemsViewModel.photoItems.append(photoItem)
                         
                         // Loading complete - photo successfully added
                         self.isLoading = false
                         
                         // Play random Mario success sound
-                        self.soundManager.playMarioSuccessSound()
+                        self.soundService.playMarioSuccessSound()
                         }
                     }
             } else {
@@ -457,11 +457,11 @@ struct RandomPhotoView: View {
     
     private func sharePhotoItem(_ photoItem: PhotoItem) {
         // Trigger glow animation
-        animationManager.triggerShareGlowAnimation()
+        animationViewModel.triggerShareGlowAnimation()
         
         // Scale effect for share button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            dragManager.shareButtonScale = 1.1
+            dragViewModel.shareButtonScale = 1.1
         }
         
         // Generate image to share
@@ -472,7 +472,7 @@ struct RandomPhotoView: View {
         // Reset share button scale after animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.3)) {
-                dragManager.shareButtonScale = 1.0
+                dragViewModel.shareButtonScale = 1.0
             }
         }
     }
@@ -541,40 +541,40 @@ struct RandomPhotoView: View {
     
     private func convertToFramedPhoto(at index: Int) {
         // Trigger sparkle animation
-        animationManager.triggerSparkleAnimation()
+        animationViewModel.triggerSparkleAnimation()
         
         // Scale effect for star button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            dragManager.starButtonScale = 1.2
+            dragViewModel.starButtonScale = 1.2
         }
         
         // Convert using manager
-        photoItemsManager.convertToFramedPhoto(at: index)
+        photoItemsViewModel.convertToFramedPhoto(at: index)
         
         // Reset star button scale after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.2)) {
-                self.dragManager.starButtonScale = 1.0
+                self.dragViewModel.starButtonScale = 1.0
             }
         }
     }
     
     private func deletePhotoItem(at index: Int) {
         // Trigger poof animation
-        animationManager.triggerPoofAnimation()
+        animationViewModel.triggerPoofAnimation()
         
         // Scale effect for trash bin
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            dragManager.trashBinScale = 1.2
+            dragViewModel.trashBinScale = 1.2
         }
         
         // Remove item using manager
-        photoItemsManager.deletePhotoItem(at: index)
+        photoItemsViewModel.deletePhotoItem(at: index)
         
         // Reset trash bin scale
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeOut(duration: 0.2)) {
-                self.dragManager.trashBinScale = 1.0
+                self.dragViewModel.trashBinScale = 1.0
             }
         }
     }

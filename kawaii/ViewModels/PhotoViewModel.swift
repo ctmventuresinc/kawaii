@@ -10,7 +10,7 @@ import Photos
 import Vision
 
 @MainActor
-class PhotoManager: ObservableObject {
+class PhotoViewModel: ObservableObject {
     @Published var currentMethod: PhotoRetrievalMethod = .facePhotosLastMonth
     private var usedAssetIds: Set<String> = []
     private var usedFaceIds: Set<String> = []

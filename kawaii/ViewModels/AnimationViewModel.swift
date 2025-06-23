@@ -8,7 +8,7 @@
 import SwiftUI
 
 @MainActor
-class AnimationManager: ObservableObject {
+class AnimationViewModel: ObservableObject {
     // Trash animation states
     @Published var poofScale: CGFloat = 0.0
     @Published var poofOpacity: Double = 0.0

@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 
 @MainActor
-class PhotoItemsManager: ObservableObject {
+class PhotoItemsViewModel: ObservableObject {
     @Published var photoItems: [PhotoItem] = []
     
     func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
