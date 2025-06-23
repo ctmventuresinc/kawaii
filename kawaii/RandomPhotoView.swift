@@ -10,27 +10,15 @@ import Photos
 import AVFoundation
 import Vision
 
-
-
-
-
-
-
-
-
-
-
 struct RandomPhotoView: View {
     @StateObject private var photoViewModel = PhotoViewModel()
     @StateObject private var dragViewModel = DragInteractionViewModel()
     @StateObject private var soundService = SoundService()
     @StateObject private var animationViewModel = AnimationViewModel()
     @StateObject private var photoItemsViewModel = PhotoItemsViewModel()
+    @StateObject private var shareService = ShareService()
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
-    @State private var isLoading = false
-    @State private var showShareSheet = false
-    @State private var shareImage: UIImage?
     @State private var testButtonLoading = false
     
     var body: some View {
@@ -46,7 +34,7 @@ struct RandomPhotoView: View {
                 // BurstPatternBackground(rotationAngle: colorPhase * 360)
                 //     .ignoresSafeArea()
                 //     .onAppear {
-                //         startBurstAnimation()
+                //         animationViewModel.startBurstAnimation(colorPhase: $colorPhase)
                 //     }
                 
                 Color.clear
@@ -313,11 +301,11 @@ struct RandomPhotoView: View {
                 )
                 
                 // Screen center loading indicator
-                LoadingOverlay(isLoading: isLoading)
+                LoadingOverlay(isLoading: photoItemsViewModel.isLoading)
             }
         }
-        .sheet(isPresented: $showShareSheet) {
-            if let shareImage = shareImage {
+        .sheet(isPresented: $shareService.showShareSheet) {
+            if let shareImage = shareService.shareImage {
                 ActivityView(activityItems: [shareImage])
                     .presentationDetents([.fraction(0.5), .large])
             }
@@ -325,12 +313,16 @@ struct RandomPhotoView: View {
         .onAppear {
             authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
             
+            // Setup ShareService dependencies
+            shareService.animationViewModel = animationViewModel
+            shareService.dragViewModel = dragViewModel
+            
             // Setup drag manager actions
             dragViewModel.isOverTrashBin = HitTestingUtils.isOverTrashBin
             dragViewModel.isOverShareButton = HitTestingUtils.isOverShareButton
             dragViewModel.isOverStarButton = HitTestingUtils.isOverStarButton
             dragViewModel.deletePhotoItem = deletePhotoItem
-            dragViewModel.sharePhotoItem = sharePhotoItem
+            dragViewModel.sharePhotoItem = shareService.sharePhotoItem
             dragViewModel.convertToFramedPhoto = convertToFramedPhoto
         }
     }
@@ -351,20 +343,16 @@ struct RandomPhotoView: View {
     private func requestPhotoPermission() {
         switch authorizationStatus {
         case .notDetermined:
-            isLoading = true
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 DispatchQueue.main.async {
                     self.authorizationStatus = status
                     if status == .authorized || status == .limited {
-                        self.fetchRandomPhoto()
-                    } else {
-                        self.isLoading = false
+                        self.photoItemsViewModel.fetchAndAddRandomPhoto(photoViewModel: self.photoViewModel, soundService: self.soundService)
                     }
                 }
             }
         case .authorized, .limited:
-            isLoading = true
-            fetchRandomPhoto()
+            photoItemsViewModel.fetchAndAddRandomPhoto(photoViewModel: photoViewModel, soundService: soundService)
         case .denied, .restricted:
             openAppSettings()
         @unknown default:
@@ -377,165 +365,6 @@ struct RandomPhotoView: View {
             if UIApplication.shared.canOpenURL(settingsUrl) {
                 UIApplication.shared.open(settingsUrl)
             }
-        }
-    }
-    
-
-    
-    private func fetchRandomPhoto() {
-        photoViewModel.fetchRandomPhoto { image, actualMethod in
-            // Keep background removal and PhotoItem creation off main thread
-            if let image = image {
-                // Remove background from the image first
-                self.photoViewModel.backgroundRemover.removeBackground(of: image) { processedImage in
-                        let finalImage = processedImage ?? image // Use original if background removal fails
-                        
-                        let screenWidth = UIScreen.main.bounds.width
-                        let screenHeight = UIScreen.main.bounds.height
-                        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-                        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
-                        
-                        // Determine frame usage
-                        let shouldUseFrames: Bool
-                        switch actualMethod {
-                        case .recentPhotos:
-                            // Regular recent photos - no frames unless fallback from face crop mode
-                            shouldUseFrames = self.photoViewModel.currentMethod != .recentPhotos
-                        case .recentPhotosWithSVG:
-                            // Intentional SVG recent photos - always use frames
-                            shouldUseFrames = true
-                        default:
-                            // Face crop modes - always use frames
-                            shouldUseFrames = true
-                        }
-                        
-                        let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
-                        
-                        // Standardized size for all photo types - creates cohesive collaging experience
-                        let size: CGFloat = CGFloat.random(in: 153...234)
-                        
-                        let photoItem = PhotoItem(
-                            image: finalImage,
-                            position: CGPoint(x: randomX, y: randomY),
-                            frameShape: frameShape,
-                            size: size
-                        )
-                        
-                        // Only UI updates on main thread
-                        DispatchQueue.main.async {
-                        self.photoItemsViewModel.photoItems.append(photoItem)
-                        
-                        // Loading complete - photo successfully added
-                        self.isLoading = false
-                        
-                        // Play random Mario success sound
-                        self.soundService.playMarioSuccessSound()
-                        }
-                    }
-            } else {
-                // This should never happen now due to fallback system
-                print("No photos found even after fallback - check photo library permissions")
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                }
-            }
-        }
-    }
-    
-
-    
-
-    
-    private func startBurstAnimation() {
-        // Slow rotation animation
-        withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
-            colorPhase = 1.0
-        }
-    }
-    
-
-    
-    private func sharePhotoItem(_ photoItem: PhotoItem) {
-        // Trigger glow animation
-        animationViewModel.triggerShareGlowAnimation()
-        
-        // Scale effect for share button
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            dragViewModel.shareButtonScale = 1.1
-        }
-        
-        // Generate image to share
-        Task {
-            await generateShareImage(from: photoItem)
-        }
-        
-        // Reset share button scale after animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            withAnimation(.easeOut(duration: 0.3)) {
-                dragViewModel.shareButtonScale = 1.0
-            }
-        }
-    }
-    
-    @MainActor
-    private func generateShareImage(from photoItem: PhotoItem) async {
-        // Create a renderer to generate the image
-        let renderer = ImageRenderer(content: 
-            Group {
-                if let frameShape = photoItem.frameShape {
-                    // Face crops with exciting frames
-                    switch frameShape {
-                    case .irregularBurst:
-                        ZStack {
-                            // Outermost stroke using color combination
-                            Image(photoItem.shapeName)
-                                .renderingMode(.template)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: photoItem.size + 160, height: photoItem.size + 160)
-                                .foregroundColor(photoItem.strokeColor)
-                                .shadow(color: photoItem.strokeColor.opacity(0.6), radius: 12, x: 0, y: 0)
-                            
-                            // Background shape using color combination
-                            Image(photoItem.shapeName)
-                                .renderingMode(.template)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: photoItem.size + 120, height: photoItem.size + 120)
-                                .foregroundColor(photoItem.backgroundColor)
-                                .shadow(color: photoItem.backgroundColor.opacity(0.6), radius: 12, x: 0, y: 0)
-                            
-                            // Photo on top - masked by outer stroke shape with color filter
-                            Image(uiImage: photoItem.image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: photoItem.size, height: photoItem.size)
-                                .applyPhotoFilter(photoItem.photoFilter)
-                                .mask(
-                                    Image(photoItem.shapeName)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: photoItem.size + 160, height: photoItem.size + 160)
-                                )
-                                .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-                        }
-                    }
-                } else {
-                    // Regular photos with rounded corners
-                    Image(uiImage: photoItem.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: photoItem.size, height: photoItem.size)
-                        .cornerRadius(16)
-                }
-            }
-        )
-        
-        renderer.scale = 3.0 // High resolution for sharing
-        
-        if let uiImage = renderer.uiImage {
-            shareImage = uiImage
-            showShareSheet = true
         }
     }
     

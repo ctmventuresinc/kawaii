@@ -87,4 +87,11 @@ class AnimationViewModel: ObservableObject {
             addButtonScale = 1.0
         }
     }
+    
+    func startBurstAnimation(colorPhase: Binding<Double>) {
+        // Slow rotation animation
+        withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
+            colorPhase.wrappedValue = 1.0
+        }
+    }
 }

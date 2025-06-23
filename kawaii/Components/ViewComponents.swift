@@ -138,7 +138,7 @@ struct PhotoItemView: View {
     let photoItem: PhotoItem
     let geometry: GeometryProxy
     @Binding var photoItems: [PhotoItem]
-    @ObservedObject var dragManager: DragInteractionManager
+    @ObservedObject var dragViewModel: DragInteractionViewModel
     
     var body: some View {
         Group {
@@ -168,7 +168,7 @@ struct PhotoItemView: View {
                         photoItems[index].dragOffset = value.translation
                         if !photoItems[index].isDragging {
                             photoItems[index].isDragging = true
-                            dragManager.isDraggingAny = true
+                            dragViewModel.isDraggingAny = true
                         }
                         
                         // Check if currently over trash bin, star button, or share button
@@ -176,14 +176,14 @@ struct PhotoItemView: View {
                             x: photoItem.position.x + value.translation.width,
                             y: photoItem.position.y + value.translation.height
                         )
-                        dragManager.isHoveringOverTrash = dragManager.isOverTrashBin?(currentPosition, photoItem, geometry) ?? false
-                        dragManager.isHoveringOverShare = dragManager.isOverShareButton?(currentPosition, photoItem, geometry) ?? false
+                        dragViewModel.isHoveringOverTrash = dragViewModel.isOverTrashBin?(currentPosition, photoItem, geometry) ?? false
+                        dragViewModel.isHoveringOverShare = dragViewModel.isOverShareButton?(currentPosition, photoItem, geometry) ?? false
                         
                         // Only activate star if dragging a frameless photo
                         if photoItem.frameShape == nil {
-                            dragManager.isHoveringOverStar = dragManager.isOverStarButton?(currentPosition, photoItem, geometry) ?? false
+                            dragViewModel.isHoveringOverStar = dragViewModel.isOverStarButton?(currentPosition, photoItem, geometry) ?? false
                         } else {
-                            dragManager.isHoveringOverStar = false
+                            dragViewModel.isHoveringOverStar = false
                         }
                     }
                 }
@@ -195,7 +195,7 @@ struct PhotoItemView: View {
                         )
                         
                         // Check if dropped on trash bin, share button, or star button
-                        if dragManager.isOverTrashBin?(finalPosition, photoItem, geometry) == true {
+                        if dragViewModel.isOverTrashBin?(finalPosition, photoItem, geometry) == true {
                             // Keep the item in its dragged position for deletion animation
                             photoItems[index].position.x += value.translation.width
                             photoItems[index].position.y += value.translation.height
@@ -203,16 +203,16 @@ struct PhotoItemView: View {
                             photoItems[index].isDragging = false
                             
                             // Animate deletion and hide trash bin
-                            dragManager.deletePhotoItem?(index)
+                            dragViewModel.deletePhotoItem?(index)
                             
                             // Reset drag states and animate trash bin out immediately
-                            dragManager.resetDragStates()
+                            dragViewModel.resetDragStates()
                             
                             withAnimation(.easeOut(duration: 0.2)) {
-                                dragManager.trashBinOpacity = 0.0
-                                dragManager.trashBinScale = 0.8
+                                dragViewModel.trashBinOpacity = 0.0
+                                dragViewModel.trashBinScale = 0.8
                             }
-                        } else if dragManager.isOverShareButton?(finalPosition, photoItem, geometry) == true {
+                        } else if dragViewModel.isOverShareButton?(finalPosition, photoItem, geometry) == true {
                             // Share photo functionality
                             photoItems[index].position.x += value.translation.width
                             photoItems[index].position.y += value.translation.height
@@ -220,16 +220,16 @@ struct PhotoItemView: View {
                             photoItems[index].isDragging = false
                             
                             // Export and share photo
-                            dragManager.sharePhotoItem?(photoItem)
+                            dragViewModel.sharePhotoItem?(photoItem)
                             
                             // Reset drag states and animate share button out
-                            dragManager.resetDragStates()
+                            dragViewModel.resetDragStates()
                             
                             withAnimation(.easeOut(duration: 0.2)) {
-                                dragManager.shareButtonOpacity = 0.0
-                                dragManager.shareButtonScale = 0.8
+                                dragViewModel.shareButtonOpacity = 0.0
+                                dragViewModel.shareButtonScale = 0.8
                             }
-                        } else if dragManager.isOverStarButton?(finalPosition, photoItem, geometry) == true && photoItem.frameShape == nil {
+                        } else if dragViewModel.isOverStarButton?(finalPosition, photoItem, geometry) == true && photoItem.frameShape == nil {
                             // Convert frameless photo to framed photo
                             photoItems[index].position.x += value.translation.width
                             photoItems[index].position.y += value.translation.height
@@ -237,14 +237,14 @@ struct PhotoItemView: View {
                             photoItems[index].isDragging = false
                             
                             // Convert to framed photo
-                            dragManager.convertToFramedPhoto?(index)
+                            dragViewModel.convertToFramedPhoto?(index)
                             
                             // Reset drag states and animate star button out
-                            dragManager.resetDragStates()
+                            dragViewModel.resetDragStates()
                             
                             withAnimation(.easeOut(duration: 0.2)) {
-                                dragManager.starButtonOpacity = 0.0
-                                dragManager.starButtonScale = 0.8
+                                dragViewModel.starButtonOpacity = 0.0
+                                dragViewModel.starButtonScale = 0.8
                             }
                         } else {
                             // Normal drop
@@ -254,7 +254,7 @@ struct PhotoItemView: View {
                             photoItems[index].isDragging = false
                             
                             // Reset drag states for normal drops
-                            dragManager.resetDragStates()
+                            dragViewModel.resetDragStates()
                         }
                     }
                 }

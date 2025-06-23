@@ -11,6 +11,69 @@ import Photos
 @MainActor
 class PhotoItemsViewModel: ObservableObject {
     @Published var photoItems: [PhotoItem] = []
+    @Published var isLoading = false
+    
+    func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
+        isLoading = true
+        
+        photoViewModel.fetchRandomPhoto { image, actualMethod in
+            // Keep background removal and PhotoItem creation off main thread
+            if let image = image {
+                // Remove background from the image first
+                photoViewModel.backgroundRemover.removeBackground(of: image) { processedImage in
+                    let finalImage = processedImage ?? image // Use original if background removal fails
+                    
+                    let screenWidth = UIScreen.main.bounds.width
+                    let screenHeight = UIScreen.main.bounds.height
+                    let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+                    let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+                    
+                    // Determine frame usage
+                    let shouldUseFrames: Bool
+                    switch actualMethod {
+                    case .recentPhotos:
+                        // Regular recent photos - no frames unless fallback from face crop mode
+                        shouldUseFrames = photoViewModel.currentMethod != .recentPhotos
+                    case .recentPhotosWithSVG:
+                        // Intentional SVG recent photos - always use frames
+                        shouldUseFrames = true
+                    default:
+                        // Face crop modes - always use frames
+                        shouldUseFrames = true
+                    }
+                    
+                    let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
+                    
+                    // Standardized size for all photo types - creates cohesive collaging experience
+                    let size: CGFloat = CGFloat.random(in: 153...234)
+                    
+                    let photoItem = PhotoItem(
+                        image: finalImage,
+                        position: CGPoint(x: randomX, y: randomY),
+                        frameShape: frameShape,
+                        size: size
+                    )
+                    
+                    // Only UI updates on main thread
+                    DispatchQueue.main.async {
+                        self.photoItems.append(photoItem)
+                        
+                        // Loading complete - photo successfully added
+                        self.isLoading = false
+                        
+                        // Play random Mario success sound
+                        soundService.playMarioSuccessSound()
+                    }
+                }
+            } else {
+                // This should never happen now due to fallback system
+                print("No photos found even after fallback - check photo library permissions")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
+            }
+        }
+    }
     
     func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
         // Remove background from the image first
