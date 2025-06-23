@@ -460,6 +460,7 @@ struct SoundImagePair {
 
 struct RandomPhotoView: View {
     @StateObject private var photoManager = PhotoManager()
+    @StateObject private var dragManager = DragInteractionManager()
     @State private var photoItems: [PhotoItem] = []
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
@@ -469,20 +470,10 @@ struct RandomPhotoView: View {
     @State private var currentImageName: String = ""
     @State private var showImageOverlay = false
     @State private var pulseScale: CGFloat = 1.0
-    @State private var isDraggingAny = false
-    @State private var trashBinScale: CGFloat = 1.0
-    @State private var trashBinOpacity: Double = 0.0
-    @State private var isHoveringOverTrash = false
     @State private var poofScale: CGFloat = 0.0
     @State private var poofOpacity: Double = 0.0
-    @State private var starButtonScale: CGFloat = 1.0
-    @State private var starButtonOpacity: Double = 0.0
-    @State private var isHoveringOverStar = false
     @State private var sparkleScale: CGFloat = 0.0
     @State private var sparkleOpacity: Double = 0.0
-    @State private var shareButtonScale: CGFloat = 1.0
-    @State private var shareButtonOpacity: Double = 0.0
-    @State private var isHoveringOverShare = false
     @State private var shareGlowScale: CGFloat = 0.0
     @State private var shareGlowOpacity: Double = 0.0
     @State private var showShareSheet = false
@@ -524,22 +515,7 @@ struct RandomPhotoView: View {
                         photoItem: photoItem,
                         geometry: geometry,
                         photoItems: $photoItems,
-                        isDraggingAny: $isDraggingAny,
-                        isHoveringOverTrash: $isHoveringOverTrash,
-                        isHoveringOverStar: $isHoveringOverStar,
-                        isHoveringOverShare: $isHoveringOverShare,
-                        trashBinOpacity: $trashBinOpacity,
-                        trashBinScale: $trashBinScale,
-                        starButtonOpacity: $starButtonOpacity,
-                        starButtonScale: $starButtonScale,
-                        shareButtonOpacity: $shareButtonOpacity,
-                        shareButtonScale: $shareButtonScale,
-                        isOverTrashBin: isOverTrashBin,
-                        isOverShareButton: isOverShareButton,
-                        isOverStarButton: isOverStarButton,
-                        deletePhotoItem: deletePhotoItem,
-                        sharePhotoItem: sharePhotoItem,
-                        convertToFramedPhoto: convertToFramedPhoto
+                        dragManager: dragManager
                     )
                 }
                 
@@ -652,7 +628,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Trash bin background
                             Circle()
-                                .fill((isHoveringOverTrash ? Color.red : Color.gray).gradient)
+                                .fill((dragManager.isHoveringOverTrash ? Color.red : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -679,34 +655,23 @@ struct RandomPhotoView: View {
                                 .opacity(poofOpacity)
                             }
                         }
-                        .scaleEffect(trashBinScale)
-                        .opacity(trashBinOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: trashBinScale)
-                        .animation(.easeInOut(duration: 0.3), value: trashBinOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: isHoveringOverTrash)
+                        .scaleEffect(dragManager.trashBinScale)
+                        .opacity(dragManager.trashBinOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.trashBinScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragManager.trashBinOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverTrash)
                         .padding(.leading, 40)
                         .padding(.bottom, 20)
                         
                         Spacer()
                     }
                 }
-                .onChange(of: isDraggingAny) { isDragging in
+                .onChange(of: dragManager.isDraggingAny) { isDragging in
+                    dragManager.updateDragStates(isDragging: isDragging)
                     if isDragging {
-                        trashBinOpacity = 1.0
-                        trashBinScale = 1.0
-                        starButtonOpacity = 1.0
-                        starButtonScale = 1.0
-                        shareButtonOpacity = 1.0
-                        shareButtonScale = 1.0
                         addButtonOpacity = 0.0
                         addButtonScale = 0.8
                     } else {
-                        trashBinOpacity = 0.0
-                        trashBinScale = 0.8
-                        starButtonOpacity = 0.0
-                        starButtonScale = 0.8
-                        shareButtonOpacity = 0.0
-                        shareButtonScale = 0.8
                         addButtonOpacity = 1.0
                         addButtonScale = 1.0
                     }
@@ -720,7 +685,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Star button background
                             Circle()
-                                .fill((isHoveringOverStar ? Color.yellow : Color.gray).gradient)
+                                .fill((dragManager.isHoveringOverStar ? Color.yellow : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -747,11 +712,11 @@ struct RandomPhotoView: View {
                                 .opacity(sparkleOpacity)
                             }
                         }
-                        .scaleEffect(starButtonScale)
-                        .opacity(starButtonOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: starButtonScale)
-                        .animation(.easeInOut(duration: 0.3), value: starButtonOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: isHoveringOverStar)
+                        .scaleEffect(dragManager.starButtonScale)
+                        .opacity(dragManager.starButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.starButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragManager.starButtonOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverStar)
                         .padding(.trailing, 40)
                         .padding(.bottom, 20)
                     }
@@ -765,7 +730,7 @@ struct RandomPhotoView: View {
                         ZStack {
                             // Share button background
                             Circle()
-                                .fill((isHoveringOverShare ? Color.blue : Color.gray).gradient)
+                                .fill((dragManager.isHoveringOverShare ? Color.blue : Color.gray).gradient)
                                 .frame(width: 60, height: 60)
                                 .shadow(color: .black.opacity(0.3), radius: 6, x: 0, y: 3)
                             
@@ -792,11 +757,11 @@ struct RandomPhotoView: View {
                                 .opacity(shareGlowOpacity)
                             }
                         }
-                        .scaleEffect(shareButtonScale)
-                        .opacity(shareButtonOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: shareButtonScale)
-                        .animation(.easeInOut(duration: 0.3), value: shareButtonOpacity)
-                        .animation(.easeInOut(duration: 0.2), value: isHoveringOverShare)
+                        .scaleEffect(dragManager.shareButtonScale)
+                        .opacity(dragManager.shareButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragManager.shareButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: dragManager.shareButtonOpacity)
+                        .animation(.easeInOut(duration: 0.2), value: dragManager.isHoveringOverShare)
                         .padding(.bottom, 20)
                         Spacer()
                     }
@@ -826,6 +791,14 @@ struct RandomPhotoView: View {
         }
         .onAppear {
             authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+            
+            // Setup drag manager actions
+            dragManager.isOverTrashBin = isOverTrashBin
+            dragManager.isOverShareButton = isOverShareButton
+            dragManager.isOverStarButton = isOverStarButton
+            dragManager.deletePhotoItem = deletePhotoItem
+            dragManager.sharePhotoItem = sharePhotoItem
+            dragManager.convertToFramedPhoto = convertToFramedPhoto
         }
     }
     
@@ -1171,7 +1144,7 @@ struct RandomPhotoView: View {
         
         // Scale effect for share button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            shareButtonScale = 1.1
+            dragManager.shareButtonScale = 1.1
         }
         
         // Generate image to share
@@ -1184,7 +1157,7 @@ struct RandomPhotoView: View {
             withAnimation(.easeOut(duration: 0.3)) {
                 shareGlowScale = 0.0
                 shareGlowOpacity = 0.0
-                shareButtonScale = 1.0
+                dragManager.shareButtonScale = 1.0
             }
         }
     }
@@ -1262,7 +1235,7 @@ struct RandomPhotoView: View {
         
         // Scale effect for star button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            starButtonScale = 1.2
+            dragManager.starButtonScale = 1.2
         }
         
         // Create new PhotoItem with frame
@@ -1308,7 +1281,7 @@ struct RandomPhotoView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.2)) {
                 self.sparkleOpacity = 0.0
-                self.starButtonScale = 1.0
+                self.dragManager.starButtonScale = 1.0
             }
             
             // Reset sparkle scale for next use
@@ -1327,7 +1300,7 @@ struct RandomPhotoView: View {
         
         // Scale effect for trash bin
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            trashBinScale = 1.2
+            dragManager.trashBinScale = 1.2
         }
         
         // Remove item after short delay
@@ -1341,7 +1314,7 @@ struct RandomPhotoView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeOut(duration: 0.2)) {
                 self.poofOpacity = 0.0
-                self.trashBinScale = 1.0
+                self.dragManager.trashBinScale = 1.0
             }
             
             // Reset poof scale for next use
