@@ -25,7 +25,7 @@ struct RandomPhotoView: View {
     @StateObject private var dragManager = DragInteractionManager()
     @StateObject private var soundManager = SoundManager()
     @StateObject private var animationManager = AnimationManager()
-    @State private var photoItems: [PhotoItem] = []
+    @StateObject private var photoItemsManager = PhotoItemsManager()
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
     @State private var isLoading = false
@@ -52,11 +52,11 @@ struct RandomPhotoView: View {
                 Color.clear
                     .contentShape(Rectangle())
                 
-                ForEach(photoItems) { photoItem in
+                ForEach(photoItemsManager.photoItems) { photoItem in
                     PhotoItemView(
                         photoItem: photoItem,
                         geometry: geometry,
-                        photoItems: $photoItems,
+                        photoItems: $photoItemsManager.photoItems,
                         dragManager: dragManager
                     )
                 }
@@ -98,10 +98,12 @@ struct RandomPhotoView: View {
                         // Test button
                         Button(action: {
                             if !testButtonLoading {
-                                print("Test button tapped!")
-                                testButtonLoading = true
-                                addTestElement()
+                            print("Test button tapped!")
+                            testButtonLoading = true
+                            photoItemsManager.addTestPhotoItem(backgroundRemover: photoManager.backgroundRemover) { success in
+                                    self.testButtonLoading = false
                             }
+                        }
                         }) {
                             Text("Button")
                         }
@@ -378,96 +380,7 @@ struct RandomPhotoView: View {
         }
     }
     
-    private func addTestElement() {
-        print("🔍 DEBUG: addTestElement() called - START")
-        
-        // Move ALL Photos framework operations to background queue
-        DispatchQueue.global(qos: .userInitiated).async {
-            print("🔍 DEBUG: Now on background queue")
-            
-            // Get the most recent photo in the simplest way possible
-            print("🔍 DEBUG: About to create fetch options")
-            let fetchOptions = PHFetchOptions()
-            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-            fetchOptions.fetchLimit = 1 // Just get the most recent
-            
-            print("🔍 DEBUG: About to call PHAsset.fetchAssets")
-            let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
-            print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
-        
-        guard fetchResult.count > 0 else {
-            print("🔍 DEBUG: No photos found")
-            DispatchQueue.main.async {
-                self.testButtonLoading = false
-            }
-            return
-        }
-        
-        let mostRecentAsset = fetchResult.object(at: 0)
-        print("🔍 DEBUG: Got most recent asset, about to request image")
-        
-        // Request the image at high quality (matching regular Add button)
-        let options = PHImageRequestOptions()
-        options.deliveryMode = .highQualityFormat
-        options.isNetworkAccessAllowed = true
-        
-        // Load at display resolution (450px max) * 2 for retina * screen scale
-        let maxDisplaySize: CGFloat = 450 // Same as regular Add button
-        let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
-        
-        PHImageManager.default().requestImage(
-            for: mostRecentAsset,
-            targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
-            contentMode: .aspectFit,
-            options: options
-        ) { image, _ in
-            print("🔍 DEBUG: Image request completed")
-            guard let image = image else {
-                print("🔍 DEBUG: No image returned")
-                DispatchQueue.main.async {
-                    self.testButtonLoading = false
-                }
-                return
-            }
-            
-            print("🔍 DEBUG: Got image, applying background removal")
-            // Apply background removal to make it transparent/cut out
-            self.photoManager.backgroundRemover.removeBackground(of: image) { processedImage in
-                print("🔍 DEBUG: Background removal completed")
-                let finalImage = processedImage ?? image // Use original if background removal fails
-                
-                DispatchQueue.main.async {
-                    print("🔍 DEBUG: Back on main queue with processed image")
-                    let screenWidth = UIScreen.main.bounds.width
-                    let screenHeight = UIScreen.main.bounds.height
-                    let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-                    let randomY = CGFloat.random(in: 100...(screenHeight - 200))
-                    
-                    // Add SVG frames like regular Add button
-                    let frameShape = FaceFrameShape.allCases.randomElement()
-                    print("🔍 DEBUG: Added SVG frame: \(frameShape != nil ? "irregularBurst" : "none")")
-                    
-                    // Use same size range as regular Add button
-                    let size: CGFloat = CGFloat.random(in: 153...234)
-                    
-                    let testPhotoItem = PhotoItem(
-                        image: finalImage,
-                        position: CGPoint(x: randomX, y: randomY),
-                        frameShape: frameShape,
-                        size: size
-                    )
-                    
-                    print("🔍 DEBUG: About to append PhotoItem with cut-out background")
-                    self.photoItems.append(testPhotoItem)
-                    
-                    // Reset loading state
-                    self.testButtonLoading = false
-                    print("🔍 DEBUG: PhotoItem appended - END")
-                }
-            }
-        }
-        }
-    }
+
     
     private func fetchRandomPhoto() {
         photoManager.fetchRandomPhoto { image, actualMethod in
@@ -510,13 +423,13 @@ struct RandomPhotoView: View {
                         
                         // Only UI updates on main thread
                         DispatchQueue.main.async {
-                            self.photoItems.append(photoItem)
-                            
-                            // Loading complete - photo successfully added
-                            self.isLoading = false
-                            
-                            // Play random Mario success sound
-                            self.soundManager.playMarioSuccessSound()
+                        self.photoItemsManager.photoItems.append(photoItem)
+                        
+                        // Loading complete - photo successfully added
+                        self.isLoading = false
+                        
+                        // Play random Mario success sound
+                        self.soundManager.playMarioSuccessSound()
                         }
                     }
             } else {
@@ -678,8 +591,6 @@ struct RandomPhotoView: View {
     }
     
     private func convertToFramedPhoto(at index: Int) {
-        guard index < photoItems.count else { return }
-        
         // Trigger sparkle animation
         animationManager.triggerSparkleAnimation()
         
@@ -688,44 +599,8 @@ struct RandomPhotoView: View {
             dragManager.starButtonScale = 1.2
         }
         
-        // Create new PhotoItem with frame
-        let currentItem = photoItems[index]
-        let frameShape = FaceFrameShape.allCases.randomElement()
-        let newSize = CGFloat.random(in: 153...234) // Face crop size range
-        
-        // Color combinations for stroke and background
-        let colorCombinations: [(background: String, button: String, inviteButtonColor: String)] = [
-            ("#4D9DE1", "#FF5C8D", "#FF5C8D"),
-            ("#FF0095", "#FFEA00", "#FFEA00"),
-            ("#F5F5F5", "#F03889", "#F03889"),
-            ("#5500CC", "#FF0095", "#FF0095"),
-            ("#E86A58", "#178E96", "#178E96"),
-            ("#A8DADC", "#178E96", "#178E96"),
-            ("#A8DADC", "#FBECCF", "#FBECCF"),
-            ("#33A1FD", "#FA7921", "#FA7921"),
-            ("#7DE0E6", "#FA7921", "#FA7921"),
-            ("#7DE0E6", "#FF2A93", "#FF2A93"),
-            ("#FF0095", "#77CC00", "#77CC00"),
-            ("#F9F6F0", "#C19875", "#C19875"),
-            ("#F70000", "#E447D1", "#E447D1")
-        ]
-        
-        let selectedCombo = colorCombinations.randomElement() ?? colorCombinations[0]
-        let backgroundColor = Color(hex: selectedCombo.background)
-        let strokeColor = Color(hex: selectedCombo.button)
-        
-        let shapeNames = ["harmonyshape", "shape2", "shape3", "shape4"]
-        let shapeName = shapeNames.randomElement() ?? "harmonyshape"
-        
-        let photoFilter = PhotoFilter.allCases.randomElement() ?? .none
-        
-        // Update the existing PhotoItem
-        photoItems[index] = PhotoItem(
-            image: currentItem.image,
-            position: currentItem.position,
-            frameShape: frameShape,
-            size: newSize
-        )
+        // Convert using manager
+        photoItemsManager.convertToFramedPhoto(at: index)
         
         // Reset star button scale after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -744,12 +619,8 @@ struct RandomPhotoView: View {
             dragManager.trashBinScale = 1.2
         }
         
-        // Remove item after short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if index < self.photoItems.count {
-                self.photoItems.remove(at: index)
-            }
-        }
+        // Remove item using manager
+        photoItemsManager.deletePhotoItem(at: index)
         
         // Reset trash bin scale
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
