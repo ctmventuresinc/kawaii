@@ -12,6 +12,8 @@ enum SoundType {
     case intro
     case click
     case nandeska
+    case loading
+    case timetravel
     case custom(String)
     
     var fileName: String {
@@ -22,6 +24,10 @@ enum SoundType {
             return "click"
         case .nandeska:
             return "nandeska"
+        case .loading:
+            return "loading"
+        case .timetravel:
+            return "timetravel"
         case .custom(let name):
             return name
         }

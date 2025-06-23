@@ -16,6 +16,7 @@ class PhotoItemsViewModel: ObservableObject {
     
     func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
         isLoading = true
+        soundService.playSound(.loading)
         
         photoViewModel.fetchRandomPhoto { image, actualMethod in
             // Keep background removal and PhotoItem creation off main thread
@@ -123,6 +124,7 @@ class PhotoItemsViewModel: ObservableObject {
     func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         isLoading = true
+        soundService.playSound(.loading)
         
         // Move ALL Photos framework operations to background queue
         DispatchQueue.global(qos: .userInitiated).async {

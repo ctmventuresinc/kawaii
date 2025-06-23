@@ -142,6 +142,7 @@ struct RandomPhotoView: View {
                         HStack {
                             Spacer()
                             Button(action: {
+                                soundService.playSound(.timetravel)
                                 showTravelMessage()
                             }) {
                                 Image(systemName: "clock.arrow.circlepath")
