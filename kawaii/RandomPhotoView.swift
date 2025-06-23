@@ -520,165 +520,26 @@ struct RandomPhotoView: View {
                     .contentShape(Rectangle())
                 
                 ForEach(photoItems) { photoItem in
-                    Group {
-                        if let frameShape = photoItem.frameShape {
-                            // Face crops with exciting frames
-                            switch frameShape {
-                            case .irregularBurst:
-                                ZStack {
-                                    // Outermost stroke using color combination
-                                    Image(photoItem.shapeName)
-                                        .renderingMode(.template)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: photoItem.size + 160, height: photoItem.size + 160)
-                                        .foregroundColor(photoItem.strokeColor)
-                                        .shadow(color: photoItem.strokeColor.opacity(0.6), radius: 12, x: 0, y: 0)
-                                    
-                                    // Background shape using color combination
-                                    Image(photoItem.shapeName)
-                                        .renderingMode(.template)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: photoItem.size + 120, height: photoItem.size + 120)
-                                        .foregroundColor(photoItem.backgroundColor)
-                                        .shadow(color: photoItem.backgroundColor.opacity(0.6), radius: 12, x: 0, y: 0)
-                                    
-                                    // Photo on top - masked by outer stroke shape with color filter
-                                    Image(uiImage: photoItem.image)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: photoItem.size, height: photoItem.size)
-                                        .applyPhotoFilter(photoItem.photoFilter)
-                                        .mask(
-                                            Image(photoItem.shapeName)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: photoItem.size + 160, height: photoItem.size + 160)
-                                        )
-                                        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
-                                }
-                            }
-                        } else {
-                            // Regular photos with rounded corners
-                            Image(uiImage: photoItem.image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: photoItem.size, height: photoItem.size)
-                                .cornerRadius(16)
-                        }
-                    }
-                    .position(
-                        CGPoint(
-                            x: photoItem.position.x + photoItem.dragOffset.width,
-                            y: photoItem.position.y + photoItem.dragOffset.height
-                        )
-                    )
-                    .scaleEffect(photoItem.isDragging ? 1.05 : 1.0)
-                    .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.6), value: photoItem.isDragging)
-                    .gesture(
-                        DragGesture(coordinateSpace: .global)
-                            .onChanged { value in
-                                if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
-                                    photoItems[index].dragOffset = value.translation
-                                    if !photoItems[index].isDragging {
-                                        photoItems[index].isDragging = true
-                                        isDraggingAny = true
-                                    }
-                                    
-                                    // Check if currently over trash bin, star button, or share button
-                                    let currentPosition = CGPoint(
-                                        x: photoItem.position.x + value.translation.width,
-                                        y: photoItem.position.y + value.translation.height
-                                    )
-                                    isHoveringOverTrash = isOverTrashBin(position: currentPosition, photoItem: photoItem, geometry: geometry)
-                                    isHoveringOverShare = isOverShareButton(position: currentPosition, photoItem: photoItem, geometry: geometry)
-                                    
-                                    // Only activate star if dragging a frameless photo
-                                    if photoItem.frameShape == nil {
-                                        isHoveringOverStar = isOverStarButton(position: currentPosition, photoItem: photoItem, geometry: geometry)
-                                    } else {
-                                        isHoveringOverStar = false
-                                    }
-                                }
-                            }
-                            .onEnded { value in
-                                if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
-                                    let finalPosition = CGPoint(
-                                        x: photoItem.position.x + value.translation.width,
-                                        y: photoItem.position.y + value.translation.height
-                                    )
-                                    
-                                    // Check if dropped on trash bin, share button, or star button
-                                    if isOverTrashBin(position: finalPosition, photoItem: photoItem, geometry: geometry) {
-                                        // Keep the item in its dragged position for deletion animation
-                                        photoItems[index].position.x += value.translation.width
-                                        photoItems[index].position.y += value.translation.height
-                                        photoItems[index].dragOffset = .zero
-                                        photoItems[index].isDragging = false
-                                        
-                                        // Animate deletion and hide trash bin
-                                        deletePhotoItem(at: index)
-                                        
-                                        // Reset drag states and animate trash bin out immediately
-                                        isDraggingAny = false
-                                        isHoveringOverTrash = false
-                                        
-                                        withAnimation(.easeOut(duration: 0.2)) {
-                                            trashBinOpacity = 0.0
-                                            trashBinScale = 0.8
-                                        }
-                                    } else if isOverShareButton(position: finalPosition, photoItem: photoItem, geometry: geometry) {
-                                        // Share photo functionality
-                                        photoItems[index].position.x += value.translation.width
-                                        photoItems[index].position.y += value.translation.height
-                                        photoItems[index].dragOffset = .zero
-                                        photoItems[index].isDragging = false
-                                        
-                                        // Export and share photo
-                                        sharePhotoItem(photoItem)
-                                        
-                                        // Reset drag states and animate share button out
-                                        isDraggingAny = false
-                                        isHoveringOverShare = false
-                                        
-                                        withAnimation(.easeOut(duration: 0.2)) {
-                                            shareButtonOpacity = 0.0
-                                            shareButtonScale = 0.8
-                                        }
-                                    } else if isOverStarButton(position: finalPosition, photoItem: photoItem, geometry: geometry) && photoItem.frameShape == nil {
-                                        // Convert frameless photo to framed photo
-                                        photoItems[index].position.x += value.translation.width
-                                        photoItems[index].position.y += value.translation.height
-                                        photoItems[index].dragOffset = .zero
-                                        photoItems[index].isDragging = false
-                                        
-                                        // Convert to framed photo
-                                        convertToFramedPhoto(at: index)
-                                        
-                                        // Reset drag states and animate star button out
-                                        isDraggingAny = false
-                                        isHoveringOverStar = false
-                                        
-                                        withAnimation(.easeOut(duration: 0.2)) {
-                                            starButtonOpacity = 0.0
-                                            starButtonScale = 0.8
-                                        }
-                                    } else {
-                                        // Normal drop
-                                        photoItems[index].position.x += value.translation.width
-                                        photoItems[index].position.y += value.translation.height
-                                        photoItems[index].dragOffset = .zero
-                                        photoItems[index].isDragging = false
-                                        
-                                        // Reset drag states for normal drops
-                                        isDraggingAny = false
-                                        isHoveringOverTrash = false
-                                        isHoveringOverStar = false
-                                        isHoveringOverShare = false
-                                    }
-                                }
-                            }
+                    PhotoItemView(
+                        photoItem: photoItem,
+                        geometry: geometry,
+                        photoItems: $photoItems,
+                        isDraggingAny: $isDraggingAny,
+                        isHoveringOverTrash: $isHoveringOverTrash,
+                        isHoveringOverStar: $isHoveringOverStar,
+                        isHoveringOverShare: $isHoveringOverShare,
+                        trashBinOpacity: $trashBinOpacity,
+                        trashBinScale: $trashBinScale,
+                        starButtonOpacity: $starButtonOpacity,
+                        starButtonScale: $starButtonScale,
+                        shareButtonOpacity: $shareButtonOpacity,
+                        shareButtonScale: $shareButtonScale,
+                        isOverTrashBin: isOverTrashBin,
+                        isOverShareButton: isOverShareButton,
+                        isOverStarButton: isOverStarButton,
+                        deletePhotoItem: deletePhotoItem,
+                        sharePhotoItem: sharePhotoItem,
+                        convertToFramedPhoto: convertToFramedPhoto
                     )
                 }
                 
