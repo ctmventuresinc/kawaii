@@ -89,24 +89,15 @@ struct LoadingOverlay: View {
     
     var body: some View {
         if isLoading {
-            VStack(spacing: 16) {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(1.5)
-                
-                Text(text)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-            }
-            .padding(24)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.black.opacity(0.7))
-                    .blur(radius: 1)
-            )
-            .scaleEffect(isLoading ? 1.0 : 0.8)
-            .opacity(isLoading ? 1.0 : 0.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isLoading)
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                .scaleEffect(1.5)
+                .padding(20)
+                .background(Circle().fill(Color.white))
+                .offset(y: -30) // Move up 30px from center
+                .scaleEffect(isLoading ? 1.0 : 0.8)
+                .opacity(isLoading ? 1.0 : 0.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isLoading)
         }
     }
 }

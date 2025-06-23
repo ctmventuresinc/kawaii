@@ -122,6 +122,7 @@ class PhotoItemsViewModel: ObservableObject {
     
     func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
+        isLoading = true
         
         // Move ALL Photos framework operations to background queue
         DispatchQueue.global(qos: .userInitiated).async {
@@ -146,6 +147,7 @@ class PhotoItemsViewModel: ObservableObject {
             guard fetchResult.count > 0 else {
                 print("🔍 DEBUG: No photos found from last month")
                 DispatchQueue.main.async {
+                    self.isLoading = false
                     completion(false)
                 }
                 return
@@ -203,6 +205,7 @@ class PhotoItemsViewModel: ObservableObject {
         ) { image, _ in
             guard let image = image else {
                 DispatchQueue.main.async {
+                    self.isLoading = false
                     completion(false)
                 }
                 return
@@ -212,6 +215,7 @@ class PhotoItemsViewModel: ObservableObject {
                 self.addPhotoItem(from: image, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
                     // Play sound and show overlay (same as add button)
                     soundService.playMarioSuccessSound()
+                    self.isLoading = false
                     completion(true)
                 }
             }
@@ -223,6 +227,7 @@ class PhotoItemsViewModel: ObservableObject {
             self.addPhotoItem(from: faceImage, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
                 // Play sound and show overlay (same as add button)
                 soundService.playMarioSuccessSound()
+                self.isLoading = false
                 completion(true)
             }
         }

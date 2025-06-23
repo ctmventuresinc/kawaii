@@ -22,6 +22,8 @@ struct RandomPhotoView: View {
     @State private var testButtonLoading = false
     @State private var blinkingOpacity: Double = 0.0
     @State private var hasBeenTapped = false
+    @State private var topText = "this is not an app"
+    @State private var topTextOpacity: Double = 1.0
     
     var body: some View {
         GeometryReader { geometry in
@@ -45,21 +47,19 @@ struct RandomPhotoView: View {
                         handleScreenTap()
                     }
                 
-                // DANGER TESTING indicator at top - HIDDEN
-                /*
+                // Independent top text that cycles through phrases
                 VStack {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.yellow)
-                            .font(.system(size: 12))
-                        Text("DANGER TESTING")
-                            .font(.system(size: 18, weight: .bold, design: .default))
-                            .foregroundColor(.black)
-                    }
-                    .padding(.top, 50)
+                    Text(topText)
+                        .font(.system(size: 19, weight: .regular))
+                        .foregroundColor(Color.gray.opacity(0.7))
+                        .opacity(topTextOpacity)
+                        .animation(.easeInOut(duration: 0.65), value: topTextOpacity)
+                        .padding(.top, 50)
+                        .onAppear {
+                            startTopTextCycle()
+                        }
                     Spacer()
                 }
-                */
                 
                 ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
@@ -122,20 +122,14 @@ struct RandomPhotoView: View {
                     
                     // Button layout with centered main button and right-aligned envelope
                     ZStack {
-                        // Centered test button
+                        // Centered share button
                         Button(action: {
-                            if !testButtonLoading {
-                            print("Test button tapped!")
-                            testButtonLoading = true
-                            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService) { success in
-                                    self.testButtonLoading = false
-                            }
-                        }
+                            print("Share clicked!")
                         }) {
-                            Text("Button")
+                            Text("Share")
                         }
-                        .buttonStyle(LoadingGlossyButtonStyle(isLoading: testButtonLoading))
-                        .disabled(testButtonLoading)
+                        .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
+                        .disabled(false)
                         .scaleEffect(animationViewModel.addButtonScale)
                         .opacity(animationViewModel.addButtonOpacity)
                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
@@ -447,12 +441,11 @@ struct RandomPhotoView: View {
             hasBeenTapped = true
         }
         
-        // Execute same action as "Button"
-        if !testButtonLoading {
-            print("Screen tapped!")
-            testButtonLoading = true
+        // Execute photo adding action directly (not button)
+        if !photoItemsViewModel.isLoading {
+            print("Screen tapped! Adding photo...")
             photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService) { success in
-                self.testButtonLoading = false
+                print("Photo added via screen tap: \(success)")
             }
         }
     }
@@ -473,6 +466,35 @@ struct RandomPhotoView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeOut(duration: 0.2)) {
                 self.dragViewModel.trashBinScale = 1.0
+            }
+        }
+    }
+    
+    private func startTopTextCycle() {
+        let possibleTexts = [
+            "this is not an app",
+            "this is your life",
+            "this was last month", 
+            "this is a video game",
+            "this was your life",
+            "this is people you miss",
+            "this is a faint memory",
+            "this feels like today",
+            "this is an app"
+        ]
+        
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            // Fade out
+            withAnimation(.easeInOut(duration: 0.65)) {
+                topTextOpacity = 0.0
+            }
+            
+            // Change text and fade back in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
+                topText = possibleTexts.randomElement() ?? "this is not an app"
+                withAnimation(.easeInOut(duration: 0.65)) {
+                    topTextOpacity = 1.0
+                }
             }
         }
     }
