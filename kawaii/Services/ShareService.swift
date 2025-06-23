@@ -11,6 +11,7 @@ import SwiftUI
 class ShareService: ObservableObject {
     @Published var showShareSheet = false
     @Published var shareImage: UIImage?
+    @Published var shareText: String?
     
     var animationViewModel: AnimationViewModel?
     var dragViewModel: DragInteractionViewModel?
