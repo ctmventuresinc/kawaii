@@ -20,6 +20,7 @@ struct RandomPhotoView: View {
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
     @State private var testButtonLoading = false
+    @State private var blinkingOpacity: Double = 0.0
     
     var body: some View {
         GeometryReader { geometry in
@@ -40,6 +41,20 @@ struct RandomPhotoView: View {
                 Color.clear
                     .contentShape(Rectangle())
                 
+                // DANGER TESTING indicator at top
+                VStack {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 12))
+                        Text("DANGER TESTING")
+                            .font(.system(size: 18, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                    }
+                    .padding(.top, 50)
+                    Spacer()
+                }
+                
                 ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
                         photoItem: photoItem,
@@ -49,6 +64,8 @@ struct RandomPhotoView: View {
                     )
                 }
                 
+                // Add button - TEMPORARILY HIDDEN
+                /*
                 VStack {
                     Spacer()
                     Button(action: requestPhotoPermission) {
@@ -80,6 +97,17 @@ struct RandomPhotoView: View {
                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
                     .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                     .padding(.bottom, 120)
+                */
+                
+                // Blinking instruction text in center of screen
+                VStack {
+                    Spacer()
+                    Text("Touch the Touch Screen to continue.")
+                        .font(.system(size: 19, weight: .medium))
+                        .foregroundColor(.black)
+                        .opacity(blinkingOpacity)
+                        .animation(.easeInOut(duration: 0.55).repeatForever(autoreverses: true), value: blinkingOpacity)
+                    Spacer()
                     
                     // Button layout with centered main button and right-aligned envelope
                     ZStack {
@@ -335,6 +363,9 @@ struct RandomPhotoView: View {
             dragViewModel.deletePhotoItem = deletePhotoItem
             dragViewModel.sharePhotoItem = shareService.sharePhotoItem
             dragViewModel.convertToFramedPhoto = convertToFramedPhoto
+            
+            // Start gentle blinking animation
+            blinkingOpacity = 1.0
         }
     }
     
