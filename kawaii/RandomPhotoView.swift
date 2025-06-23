@@ -24,6 +24,8 @@ struct RandomPhotoView: View {
     @State private var hasBeenTapped = false
     @State private var topText = "this is not an app"
     @State private var topTextOpacity: Double = 1.0
+    @State private var showTravelOverlay = false
+    @State private var travelDate = ""
     
     var body: some View {
         GeometryReader { geometry in
@@ -139,7 +141,7 @@ struct RandomPhotoView: View {
                         HStack {
                             Spacer()
                             Button(action: {
-                                print("Date range selector tapped!")
+                                showTravelMessage()
                             }) {
                                 Image(systemName: "clock.arrow.circlepath")
                                     .font(.system(size: 32, weight: .medium))
@@ -346,6 +348,25 @@ struct RandomPhotoView: View {
                 
                 // Screen center loading indicator
                 LoadingOverlay(isLoading: photoItemsViewModel.isLoading)
+                
+                // Travel overlay
+                if showTravelOverlay {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.9))
+                        .ignoresSafeArea()
+                        .overlay(
+                            VStack {
+                                Text("traveling to")
+                                    .font(.system(size: 24, weight: .regular))
+                                    .foregroundColor(.white)
+                                Text(travelDate)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        )
+                        .opacity(showTravelOverlay ? 1.0 : 0.0)
+                        .animation(.easeInOut(duration: 0.3), value: showTravelOverlay)
+                }
             }
         }
         .sheet(isPresented: $shareService.showShareSheet) {
@@ -495,6 +516,24 @@ struct RandomPhotoView: View {
                 withAnimation(.easeInOut(duration: 0.65)) {
                     topTextOpacity = 1.0
                 }
+            }
+        }
+    }
+    
+    private func showTravelMessage() {
+        // Calculate the date we're traveling to (one month ago)
+        let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM d"
+        travelDate = formatter.string(from: oneMonthAgo)
+        
+        // Show overlay
+        showTravelOverlay = true
+        
+        // Hide after 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showTravelOverlay = false
             }
         }
     }
