@@ -12,6 +12,9 @@ import AVFoundation
 struct OnboardingView: View {
 	@State private var player: AVPlayer?
 	@State private var showButton = false
+	@State private var blinkingText = "this is your life"
+	@State private var blinkingOpacity: Double = 0.0
+	@State private var textOpacity: Double = 1.0
 	
 	var body: some View {
 		ZStack {
@@ -46,6 +49,18 @@ struct OnboardingView: View {
 					.foregroundColor(.white)
 			}
 			
+			// Cycling text at top
+			VStack {
+				Text(blinkingText)
+					.font(.system(size: 19, weight: .regular))
+					.foregroundColor(Color.gray.opacity(0.7))
+					.opacity(textOpacity)
+					.animation(.easeInOut(duration: 0.65), value: textOpacity)
+					.padding(.top, 50)
+				
+				Spacer()
+			}
+			
 			// Bottom Button (appears after 5 seconds)
 			VStack {
 				Spacer()
@@ -67,6 +82,7 @@ struct OnboardingView: View {
 		}
 		.onAppear {
 			setupPlayer()
+			startTextCycle()
 		}
 	}
 	
@@ -94,6 +110,36 @@ struct OnboardingView: View {
 		) { _ in
 			player?.seek(to: .zero)
 			player?.play()
+		}
+	}
+	
+	private func startTextCycle() {
+		let possibleTexts = [
+			"this is not an app",
+			"this is your life",
+			"this was last month", 
+			"this is a video game",
+			"this was your life",
+			"this is people you miss",
+			"this is a faint memory",
+			"this feels like today",
+			"this is an app",
+			"this is your life with no fear"
+		]
+		
+		Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+			// Fade out
+			withAnimation(.easeInOut(duration: 0.65)) {
+				textOpacity = 0.0
+			}
+			
+			// Change text and fade back in
+			DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
+				blinkingText = possibleTexts.randomElement() ?? "this is your life"
+				withAnimation(.easeInOut(duration: 0.65)) {
+					textOpacity = 1.0
+				}
+			}
 		}
 	}
 }
