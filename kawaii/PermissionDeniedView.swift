@@ -17,9 +17,10 @@ struct PermissionDeniedView: View {
             VStack(spacing: 40) {
                 Spacer()
                 
-                // Error message or branding could go here
-                Text("📸")
-                    .font(.system(size: 80))
+                // Middle text message
+                Text("allow full access for the danger boys")
+                    .font(.system(size: 19, weight: .regular))
+                    .foregroundColor(.white)
                 
                 Spacer()
                 
@@ -27,12 +28,12 @@ struct PermissionDeniedView: View {
                 Button(action: {
                     openAppSettings()
                 }) {
-                    Text("allow full access for the danger boy band")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
+                    Text("allow full access")
+                        .font(.system(size: 27, weight: .semibold))
+                        .foregroundColor(.black)
                 }
                 .buttonStyle(GlossyStartButtonStyle())
-                .frame(height: 60)
+                .frame(height: 90)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 8)
                 .padding(.bottom, 50)
