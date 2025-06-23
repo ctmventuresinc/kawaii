@@ -26,6 +26,7 @@ struct RandomPhotoView: View {
     @State private var topText = "this is not an app"
     @State private var topTextOpacity: Double = 1.0
     @State private var showTravelOverlay = false
+    @State private var isFaceMode = true // true = face detection, false = any photo
     
     var body: some View {
         GeometryReader { geometry in
@@ -142,9 +143,10 @@ struct RandomPhotoView: View {
                         // Face button aligned to far left and Date range selector button aligned to far right
                         HStack {
                             Button(action: {
-                                print("Face button clicked!")
+                                isFaceMode.toggle()
+                                print("Photo mode switched to: \(isFaceMode ? "Face detection" : "Any photo")")
                             }) {
-                                Image(systemName: "face.smiling")
+                                Image(systemName: isFaceMode ? "face.smiling" : "photo.on.rectangle")
                                     .font(.system(size: 32, weight: .medium))
                             }
                             .buttonStyle(GlossyEnvelopeButtonStyle())
@@ -482,7 +484,7 @@ struct RandomPhotoView: View {
         // Execute photo adding action directly (not button)
         if !photoItemsViewModel.isLoading {
             print("Screen tapped! Adding photo...")
-            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel) { success in
+            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
                 print("Photo added via screen tap: \(success)")
             }
         }

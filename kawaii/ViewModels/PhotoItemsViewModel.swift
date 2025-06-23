@@ -123,7 +123,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, completion: @escaping (Bool) -> Void) {
+    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, isFaceMode: Bool, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
@@ -158,8 +158,17 @@ class PhotoItemsViewModel: ObservableObject {
                 return
             }
             
-            // Try to find a photo with faces from selected date
-            self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            if isFaceMode {
+                // Try to find a photo with faces from selected date
+                self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            } else {
+                // Any photo mode - just pick a random photo (use existing working method)
+                print("🔍 DEBUG: Any photo mode - selecting random photo from \(fetchResult.count) available")
+                let randomIndex = Int.random(in: 0..<fetchResult.count)
+                let randomAsset = fetchResult.object(at: randomIndex)
+                print("🔍 DEBUG: Selected photo at index \(randomIndex)")
+                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+            }
         }
     }
     
@@ -194,7 +203,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    private func loadImageAndCreatePhotoItem(asset: PHAsset, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+    private func loadImageAndCreatePhotoItem(asset: PHAsset, backgroundRemover: BackgroundRemover, soundService: SoundService, method: PhotoRetrievalMethod = .facePhotosLastMonth, completion: @escaping (Bool) -> Void) {
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
@@ -217,7 +226,7 @@ class PhotoItemsViewModel: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                self.addPhotoItem(from: image, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
+                self.addPhotoItem(from: image, actualMethod: method, currentMethod: method, backgroundRemover: backgroundRemover) {
                     // Play sound and show overlay (same as add button)
                     soundService.playMarioSuccessSound()
                     self.isLoading = false
@@ -354,4 +363,5 @@ class PhotoItemsViewModel: ObservableObject {
             size: newSize
         )
     }
+
 }
