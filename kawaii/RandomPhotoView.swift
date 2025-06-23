@@ -88,7 +88,7 @@ struct RandomPhotoView: View {
                             if !testButtonLoading {
                             print("Test button tapped!")
                             testButtonLoading = true
-                            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover) { success in
+                            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService) { success in
                                     self.testButtonLoading = false
                             }
                         }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Photos
+import Vision
 
 @MainActor
 class PhotoItemsViewModel: ObservableObject {
@@ -119,102 +120,203 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addTestPhotoItem(backgroundRemover: BackgroundRemover, completion: @escaping (Bool) -> Void) {
+    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         
         // Move ALL Photos framework operations to background queue
         DispatchQueue.global(qos: .userInitiated).async {
             print("🔍 DEBUG: Now on background queue")
             
-            // Get random photos from today
+            // Get random face photos from last month (same as add button default)
             print("🔍 DEBUG: About to create fetch options")
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             
-            // Filter for today's photos
-            let startOfToday = Calendar.current.startOfDay(for: Date())
-            let endOfToday = Calendar.current.date(byAdding: .day, value: 1, to: startOfToday) ?? Date()
-            fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", 
-                                               startOfToday as NSDate, endOfToday as NSDate)
-            fetchOptions.fetchLimit = 50 // Get up to 50 from today to pick randomly
+            // Filter for last month's photos (same as default add button behavior)
+            let lastMonthStart = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+            let lastMonthEnd = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+            fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate <= %@", 
+                                               lastMonthStart as NSDate, lastMonthEnd as NSDate)
+            fetchOptions.fetchLimit = 300 // Same as PhotoViewModel face detection
             
             print("🔍 DEBUG: About to call PHAsset.fetchAssets")
             let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
             print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
             guard fetchResult.count > 0 else {
-                print("🔍 DEBUG: No photos found from today")
+                print("🔍 DEBUG: No photos found from last month")
                 DispatchQueue.main.async {
                     completion(false)
                 }
                 return
             }
             
-            // Pick a random photo from today's collection
-            let randomIndex = Int.random(in: 0..<fetchResult.count)
-            let randomAsset = fetchResult.object(at: randomIndex)
-            print("🔍 DEBUG: Got random asset from today (\(randomIndex) of \(fetchResult.count)), about to request image")
-            
-            // Request the image at high quality (matching regular Add button)
-            let options = PHImageRequestOptions()
-            options.deliveryMode = .highQualityFormat
-            options.isNetworkAccessAllowed = true
-            
-            // Load at display resolution (450px max) * 2 for retina * screen scale
-            let maxDisplaySize: CGFloat = 450 // Same as regular Add button
-            let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
-            
-            PHImageManager.default().requestImage(
-                for: randomAsset,
-                targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
-                contentMode: .aspectFit,
-                options: options
-            ) { image, _ in
-                print("🔍 DEBUG: Image request completed")
-                guard let image = image else {
-                    print("🔍 DEBUG: No image returned")
-                    DispatchQueue.main.async {
-                        completion(false)
-                    }
-                    return
+            // Try to find a photo with faces from last month (same logic as PhotoViewModel)
+            self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+        }
+    }
+    
+    private func findPhotoWithFacesFromAssets(_ assets: PHFetchResult<PHAsset>, attempts: Int, maxAttempts: Int, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+        guard attempts < maxAttempts, attempts < assets.count else {
+            print("No faces found after \(attempts) attempts - falling back to regular photo")
+            // Fallback to regular photo if no faces found
+            let randomIndex = Int.random(in: 0..<assets.count)
+            let randomAsset = assets.object(at: randomIndex)
+            loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            return
+        }
+        
+        let randomIndex = Int.random(in: 0..<assets.count)
+        let asset = assets.object(at: randomIndex)
+        
+        // Skip screenshots
+        if asset.mediaSubtypes.contains(.photoScreenshot) {
+            findPhotoWithFacesFromAssets(assets, attempts: attempts + 1, maxAttempts: maxAttempts, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            return
+        }
+        
+        // Load image and detect faces
+        loadImageAndDetectFaces(asset: asset) { [weak self] faceImage in
+            if let faceImage = faceImage {
+                // Found a face! Create photo item with frame
+                self?.createPhotoItemWithFrame(from: faceImage, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            } else {
+                // No faces in this image, try next one
+                self?.findPhotoWithFacesFromAssets(assets, attempts: attempts + 1, maxAttempts: maxAttempts, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            }
+        }
+    }
+    
+    private func loadImageAndCreatePhotoItem(asset: PHAsset, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        
+        let maxDisplaySize: CGFloat = 450
+        let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
+        
+        PHImageManager.default().requestImage(
+            for: asset,
+            targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            guard let image = image else {
+                DispatchQueue.main.async {
+                    completion(false)
                 }
-                
-                print("🔍 DEBUG: Got image, applying background removal")
-                // Apply background removal to make it transparent/cut out
-                backgroundRemover.removeBackground(of: image) { processedImage in
-                    print("🔍 DEBUG: Background removal completed")
-                    let finalImage = processedImage ?? image // Use original if background removal fails
-                    
-                    DispatchQueue.main.async {
-                        print("🔍 DEBUG: Back on main queue with processed image")
-                        let screenWidth = UIScreen.main.bounds.width
-                        let screenHeight = UIScreen.main.bounds.height
-                        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
-                        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
-                        
-                        // Add SVG frames like regular Add button
-                        let frameShape = FaceFrameShape.allCases.randomElement()
-                        print("🔍 DEBUG: Added SVG frame: \(frameShape != nil ? "irregularBurst" : "none")")
-                        
-                        // Use same size range as regular Add button
-                        let size: CGFloat = CGFloat.random(in: 153...234)
-                        
-                        let testPhotoItem = PhotoItem(
-                            image: finalImage,
-                            position: CGPoint(x: randomX, y: randomY),
-                            frameShape: frameShape,
-                            size: size
-                        )
-                        
-                        print("🔍 DEBUG: About to append PhotoItem with cut-out background")
-                        self.photoItems.append(testPhotoItem)
-                        
-                        print("🔍 DEBUG: PhotoItem appended - END")
-                        completion(true)
-                    }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.addPhotoItem(from: image, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
+                    // Play sound and show overlay (same as add button)
+                    soundService.playMarioSuccessSound()
+                    completion(true)
                 }
             }
         }
+    }
+    
+    private func createPhotoItemWithFrame(from faceImage: UIImage, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.async {
+            self.addPhotoItem(from: faceImage, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
+                // Play sound and show overlay (same as add button)
+                soundService.playMarioSuccessSound()
+                completion(true)
+            }
+        }
+    }
+    
+    private func loadImageAndDetectFaces(asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        
+        let maxFaceDisplaySize: CGFloat = 234
+        let targetPixelSize = maxFaceDisplaySize * 2.0 * UIScreen.main.scale
+        
+        PHImageManager.default().requestImage(
+            for: asset,
+            targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            guard let fullImage = image else {
+                completion(nil)
+                return
+            }
+            
+            // Use the same face detection logic as PhotoViewModel
+            self.detectAndCropFace(from: fullImage, completion: completion)
+        }
+    }
+    
+    // Copy face detection logic from PhotoViewModel
+    private func detectAndCropFace(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
+        guard let cgImage = image.cgImage else {
+            completion(nil)
+            return
+        }
+        
+        let request = VNDetectFaceRectanglesRequest { request, error in
+            guard let observations = request.results as? [VNFaceObservation] else {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+                return
+            }
+            
+            let minFaceSize: CGFloat = 0.10
+            let qualityFaces = observations.filter { face in
+                return face.boundingBox.width > minFaceSize && face.boundingBox.height > minFaceSize
+            }
+            
+            guard let firstQualityFace = qualityFaces.first else {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+                return
+            }
+            
+            let croppedImage = self.cropFaceFromImage(image, faceObservation: firstQualityFace)
+            DispatchQueue.main.async {
+                completion(croppedImage)
+            }
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
+    }
+    
+    private func cropFaceFromImage(_ image: UIImage, faceObservation: VNFaceObservation) -> UIImage? {
+        guard let cgImage = image.cgImage else { return nil }
+        
+        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+        
+        let boundingBox = faceObservation.boundingBox
+        let faceRect = CGRect(
+            x: boundingBox.origin.x * imageSize.width,
+            y: (1 - boundingBox.origin.y - boundingBox.height) * imageSize.height,
+            width: boundingBox.width * imageSize.width,
+            height: boundingBox.height * imageSize.height
+        )
+        
+        let padding: CGFloat = 0.4
+        let paddedRect = CGRect(
+            x: max(0, faceRect.origin.x - faceRect.width * padding),
+            y: max(0, faceRect.origin.y - faceRect.height * padding),
+            width: min(imageSize.width, faceRect.width * (1 + 2 * padding)),
+            height: min(imageSize.height, faceRect.height * (1 + 2 * padding))
+        )
+        
+        guard let croppedCGImage = cgImage.cropping(to: paddedRect) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
     }
     
     func deletePhotoItem(at index: Int) {
