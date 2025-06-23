@@ -129,6 +129,7 @@ struct RandomPhotoView: View {
                     ZStack {
                         // Centered share button
                         Button(action: {
+                            soundService.playSound(.click)
                             print("Share clicked!")
                         }) {
                             Text("Share")
@@ -143,6 +144,7 @@ struct RandomPhotoView: View {
                         // Face button aligned to far left and Date range selector button aligned to far right
                         HStack {
                             Button(action: {
+                                soundService.playSound(.click)
                                 isFaceMode.toggle()
                                 print("Photo mode switched to: \(isFaceMode ? "Face detection" : "Any photo")")
                             }) {
@@ -156,6 +158,7 @@ struct RandomPhotoView: View {
                             Spacer()
                             
                             Button(action: {
+                                soundService.playSound(.click)
                                 soundService.playSound(.timetravel)
                                 showTravelMessage()
                             }) {
