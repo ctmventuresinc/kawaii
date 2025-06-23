@@ -326,9 +326,9 @@ struct RandomPhotoView: View {
             authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
             
             // Setup drag manager actions
-            dragManager.isOverTrashBin = isOverTrashBin
-            dragManager.isOverShareButton = isOverShareButton
-            dragManager.isOverStarButton = isOverStarButton
+            dragManager.isOverTrashBin = HitTestingUtils.isOverTrashBin
+            dragManager.isOverShareButton = HitTestingUtils.isOverShareButton
+            dragManager.isOverStarButton = HitTestingUtils.isOverStarButton
             dragManager.deletePhotoItem = deletePhotoItem
             dragManager.sharePhotoItem = sharePhotoItem
             dragManager.convertToFramedPhoto = convertToFramedPhoto
@@ -453,58 +453,7 @@ struct RandomPhotoView: View {
         }
     }
     
-    private func isOverTrashBin(position: CGPoint, photoItem: PhotoItem, geometry: GeometryProxy) -> Bool {
-        let trashBinCenter = CGPoint(x: 70, y: geometry.size.height - 50) // 40 padding + 30 radius
-        let trashBinRadius: CGFloat = 30 // Half of trash bin size (60/2)
-        
-        // Calculate PhotoItem's effective radius - more conservative approach
-        let photoItemRadius: CGFloat
-        if photoItem.frameShape != nil {
-            // Face crops with frames - use background shape size instead of outer stroke for less sensitivity
-            photoItemRadius = (photoItem.size + 60) / 2 // Much smaller buffer
-        } else {
-            // Regular photos
-            photoItemRadius = photoItem.size / 2
-        }
-        
-        let distance = sqrt(pow(position.x - trashBinCenter.x, 2) + pow(position.y - trashBinCenter.y, 2))
-        let totalRadius = trashBinRadius + photoItemRadius - 5 // Reduce tolerance to make it less sensitive
-        
-        return distance <= totalRadius
-    }
-    
-    private func isOverStarButton(position: CGPoint, photoItem: PhotoItem, geometry: GeometryProxy) -> Bool {
-        let starButtonCenter = CGPoint(x: geometry.size.width - 70, y: geometry.size.height - 50) // 40 padding + 30 radius from right
-        let starButtonRadius: CGFloat = 30 // Half of star button size (60/2)
-        
-        // Calculate PhotoItem's effective radius 
-        let photoItemRadius = photoItem.size / 2 // Only for regular photos without frames
-        
-        let distance = sqrt(pow(position.x - starButtonCenter.x, 2) + pow(position.y - starButtonCenter.y, 2))
-        let totalRadius = starButtonRadius + photoItemRadius - 5 // Same tolerance as trash bin
-        
-        return distance <= totalRadius
-    }
-    
-    private func isOverShareButton(position: CGPoint, photoItem: PhotoItem, geometry: GeometryProxy) -> Bool {
-        let shareButtonCenter = CGPoint(x: geometry.size.width / 2, y: geometry.size.height - 50) // Center horizontally, same vertical position
-        let shareButtonRadius: CGFloat = 30 // Half of share button size (60/2)
-        
-        // Calculate PhotoItem's effective radius
-        let photoItemRadius: CGFloat
-        if photoItem.frameShape != nil {
-            // Face crops with frames
-            photoItemRadius = (photoItem.size + 60) / 2
-        } else {
-            // Regular photos
-            photoItemRadius = photoItem.size / 2
-        }
-        
-        let distance = sqrt(pow(position.x - shareButtonCenter.x, 2) + pow(position.y - shareButtonCenter.y, 2))
-        let totalRadius = shareButtonRadius + photoItemRadius - 5 // Same tolerance as other buttons
-        
-        return distance <= totalRadius
-    }
+
     
     private func sharePhotoItem(_ photoItem: PhotoItem) {
         // Trigger glow animation
