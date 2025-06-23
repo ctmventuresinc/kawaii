@@ -59,6 +59,7 @@ struct RandomPhotoView: View {
                         .padding(.top, 50)
                         .onAppear {
                             startTopTextCycle()
+                            soundService.playNandeskaSound()
                         }
                     Spacer()
                 }

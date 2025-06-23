@@ -99,4 +99,24 @@ class SoundService: ObservableObject {
             pulseScale = 1.15
         }
     }
+    
+    func playNandeskaSound() {
+        guard let path = Bundle.main.path(forResource: "nandeska", ofType: "mp3") else {
+            print("Could not find nandeska.mp3")
+            return
+        }
+        
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+        } catch {
+            print("Could not play nandeska sound: \(error)")
+        }
+    }
 }
