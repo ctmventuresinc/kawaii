@@ -46,7 +46,9 @@ class SoundService: ObservableObject {
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
         SoundImagePair(soundName: "saiyonara", imageName: "saiyonara"),
         SoundImagePair(soundName: "bombaclatt", imageName: "bombaclatt"),
-        SoundImagePair(soundName: "nandeska", imageName: "nandeska")
+        SoundImagePair(soundName: "nandeska", imageName: "nandeska"),
+		SoundImagePair(soundName: "kawaii", imageName: "gay"),
+		SoundImagePair(soundName: "kawaii", imageName: "gay"),
     ]
     
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]

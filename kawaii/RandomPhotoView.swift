@@ -152,7 +152,10 @@ struct RandomPhotoView: View {
                                     .font(.system(size: 32, weight: .medium))
                             }
                             .buttonStyle(GlossyEnvelopeButtonStyle())
-                            .scaleEffect(0.6)
+                            .scaleEffect(0.6 * dragViewModel.faceButtonScale)
+                            .opacity(dragViewModel.faceButtonOpacity)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.faceButtonScale)
+                            .animation(.easeInOut(duration: 0.3), value: dragViewModel.faceButtonOpacity)
                             .padding(.leading, 20)
                             
                             Spacer()
@@ -166,7 +169,10 @@ struct RandomPhotoView: View {
                                     .font(.system(size: 32, weight: .medium))
                             }
                             .buttonStyle(GlossyEnvelopeButtonStyle())
-                            .scaleEffect(0.6)
+                            .scaleEffect(0.6 * dragViewModel.rewindButtonScale)
+                            .opacity(dragViewModel.rewindButtonOpacity)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.rewindButtonScale)
+                            .animation(.easeInOut(duration: 0.3), value: dragViewModel.rewindButtonOpacity)
                             .padding(.trailing, 20)
                         }
                     }
