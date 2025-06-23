@@ -54,8 +54,9 @@ struct RandomPhotoView: View {
                     Text(topText)
                         .font(.system(size: 19, weight: .regular))
                         .foregroundColor(Color.gray.opacity(0.7))
-                        .opacity(topTextOpacity)
+                        .opacity(hasBeenTapped ? topTextOpacity : 0.0)
                         .animation(.easeInOut(duration: 0.65), value: topTextOpacity)
+                        .animation(.easeInOut(duration: 0.65), value: hasBeenTapped)
                         .padding(.top, 50)
                         .onAppear {
                             startTopTextCycle()
@@ -138,9 +139,20 @@ struct RandomPhotoView: View {
                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
                         .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                         
-                        // Date range selector button aligned to far right
+                        // Face button aligned to far left and Date range selector button aligned to far right
                         HStack {
+                            Button(action: {
+                                print("Face button clicked!")
+                            }) {
+                                Image(systemName: "face.smiling")
+                                    .font(.system(size: 32, weight: .medium))
+                            }
+                            .buttonStyle(GlossyEnvelopeButtonStyle())
+                            .scaleEffect(0.6)
+                            .padding(.leading, 20)
+                            
                             Spacer()
+                            
                             Button(action: {
                                 soundService.playSound(.timetravel)
                                 showTravelMessage()
