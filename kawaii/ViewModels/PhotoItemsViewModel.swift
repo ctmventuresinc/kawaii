@@ -120,7 +120,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         isLoading = true
         
@@ -128,17 +128,15 @@ class PhotoItemsViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             print("🔍 DEBUG: Now on background queue")
             
-            // Get random face photos from exactly one month ago today
-            print("🔍 DEBUG: About to create fetch options")
+            // Get random face photos from selected date
+            print("🔍 DEBUG: About to create fetch options for date: \(dateSelection.getDebugDate())")
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             
-            // Filter for photos from exactly one month ago on the same date
-            let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-            let startOfDay = Calendar.current.startOfDay(for: oneMonthAgo)
-            let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) ?? Date()
+            // Filter for photos from the selected date
+            let dateRange = dateSelection.getCurrentDateRange()
             fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", 
-                                               startOfDay as NSDate, endOfDay as NSDate)
+                                               dateRange.start as NSDate, dateRange.end as NSDate)
             fetchOptions.fetchLimit = 100 // Smaller limit since it's just one day
             
             print("🔍 DEBUG: About to call PHAsset.fetchAssets")
@@ -146,7 +144,7 @@ class PhotoItemsViewModel: ObservableObject {
             print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
             guard fetchResult.count > 0 else {
-                print("🔍 DEBUG: No photos found from exactly one month ago")
+                print("🔍 DEBUG: No photos found from selected date: \(dateSelection.getDebugDate())")
                 DispatchQueue.main.async {
                     self.isLoading = false
                     completion(false)
@@ -154,7 +152,7 @@ class PhotoItemsViewModel: ObservableObject {
                 return
             }
             
-            // Try to find a photo with faces from exactly one month ago
+            // Try to find a photo with faces from selected date
             self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
         }
     }

@@ -17,6 +17,7 @@ struct RandomPhotoView: View {
     @StateObject private var animationViewModel = AnimationViewModel()
     @StateObject private var photoItemsViewModel = PhotoItemsViewModel()
     @StateObject private var shareService = ShareService()
+    @StateObject private var dateSelectionViewModel = DateSelectionViewModel()
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
     @State private var testButtonLoading = false
@@ -25,7 +26,6 @@ struct RandomPhotoView: View {
     @State private var topText = "this is not an app"
     @State private var topTextOpacity: Double = 1.0
     @State private var showTravelOverlay = false
-    @State private var travelDate = ""
     
     var body: some View {
         GeometryReader { geometry in
@@ -359,7 +359,7 @@ struct RandomPhotoView: View {
                                 Text("traveling to")
                                     .font(.system(size: 24, weight: .regular))
                                     .foregroundColor(.white)
-                                Text(travelDate)
+                                Text(dateSelectionViewModel.formattedTravelDate)
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.white)
                             }
@@ -465,7 +465,7 @@ struct RandomPhotoView: View {
         // Execute photo adding action directly (not button)
         if !photoItemsViewModel.isLoading {
             print("Screen tapped! Adding photo...")
-            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService) { success in
+            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel) { success in
                 print("Photo added via screen tap: \(success)")
             }
         }
@@ -521,11 +521,8 @@ struct RandomPhotoView: View {
     }
     
     private func showTravelMessage() {
-        // Calculate the date we're traveling to (one month ago)
-        let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d"
-        travelDate = formatter.string(from: oneMonthAgo)
+        // Navigate to one day before current selected date
+        dateSelectionViewModel.navigateToOneDayAgo()
         
         // Show overlay
         showTravelOverlay = true
