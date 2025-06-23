@@ -942,45 +942,19 @@ struct RandomPhotoView: View {
                 }
                 
                 // Image overlay for sound feedback
-                if showImageOverlay && !currentImageName.isEmpty {
-                    Image(currentImageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 200, height: 200)
-                        .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
-                        .shadow(color: .pink.opacity(0.8), radius: 20, x: 0, y: 0)
-                        .scaleEffect((showImageOverlay ? 1.2 : 0.1) * pulseScale)
-                        .opacity(showImageOverlay ? 1.0 : 0.0)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.3, blendDuration: 0.2), value: showImageOverlay)
-                        .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: pulseScale)
-                        .onAppear {
-                            if showImageOverlay {
-                                startPulsing()
-                            }
-                        }
+                SoundImageOverlay(
+                    showOverlay: showImageOverlay,
+                    imageName: currentImageName,
+                    pulseScale: pulseScale
+                )
+                .onAppear {
+                    if showImageOverlay {
+                        startPulsing()
+                    }
                 }
                 
                 // Screen center loading indicator
-                if isLoading {
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.5)
-                        
-                        Text("Adding photo...")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                    }
-                    .padding(24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.black.opacity(0.7))
-                            .blur(radius: 1)
-                    )
-                    .scaleEffect(isLoading ? 1.0 : 0.8)
-                    .opacity(isLoading ? 1.0 : 0.0)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isLoading)
-                }
+                LoadingOverlay(isLoading: isLoading)
             }
         }
         .sheet(isPresented: $showShareSheet) {
@@ -1517,15 +1491,7 @@ struct RandomPhotoView: View {
     }
 }
 
-struct ActivityView: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    let applicationActivities: [UIActivity]? = nil
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
-    }
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
+
 
 
 
