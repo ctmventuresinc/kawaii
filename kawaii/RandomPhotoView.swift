@@ -119,7 +119,8 @@ struct RandomPhotoView: View {
                     .padding(.bottom, 50)
                 }
                 
-                // Photo method selector in top right
+                // Photo method selector in top right - TEMPORARILY COMMENTED OUT
+                /*
                 VStack {
                     HStack {
                         Spacer()
@@ -161,6 +162,7 @@ struct RandomPhotoView: View {
                     .padding(.top, 60)
                     Spacer()
                 }
+                */
                 
                 // Trash bin in bottom left corner
                 VStack {
