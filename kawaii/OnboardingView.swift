@@ -8,6 +8,7 @@
 import SwiftUI
 import AVKit
 import AVFoundation
+import Photos
 
 struct OnboardingView: View {
 	@State private var player: AVPlayer?
@@ -15,6 +16,7 @@ struct OnboardingView: View {
 	@State private var blinkingText = "this is your life"
 	@State private var blinkingOpacity: Double = 0.0
 	@State private var textOpacity: Double = 1.0
+	@State private var showPermissionDenied = false
 	
 	var body: some View {
 		ZStack {
@@ -67,18 +69,23 @@ struct OnboardingView: View {
 				
 				if showButton {
 					Button(action: {
-						print("Allow full access for los clicked!")
+						requestPhotoPermission()
 					}) {
-						Text("Allow full access 🥺")
-							.font(.system(size: 27, weight: .regular))
+						Text("Allow full access for los 🥀🥺")
+							.font(.system(size: 27, weight: .semibold))
 							.foregroundColor(.black)
 					}
 					.buttonStyle(GlossyStartButtonStyle())
+					.frame(height: 90)
 					.frame(maxWidth: .infinity)
-					.padding(.bottom, 50) // Bottom spacing
+					.padding(.horizontal, 8)
+					.padding(.bottom, 50)
 					.transition(.move(edge: .bottom).combined(with: .opacity))
 				}
 			}
+		}
+		.fullScreenCover(isPresented: $showPermissionDenied) {
+			PermissionDeniedView()
 		}
 		.onAppear {
 			setupPlayer()
@@ -114,18 +121,7 @@ struct OnboardingView: View {
 	}
 	
 	private func startTextCycle() {
-		let possibleTexts = [
-			"this is not an app",
-			"this is your life",
-			"this was last month", 
-			"this is a video game",
-			"this was your life",
-			"this is people you miss",
-			"this is a faint memory",
-			"this feels like today",
-			"this is an app",
-			"this is your life with no fear"
-		]
+		let possibleTexts = AppConstants.cyclingTexts
 		
 		Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
 			// Fade out
@@ -138,6 +134,27 @@ struct OnboardingView: View {
 				blinkingText = possibleTexts.randomElement() ?? "this is your life"
 				withAnimation(.easeInOut(duration: 0.65)) {
 					textOpacity = 1.0
+				}
+			}
+		}
+	}
+	
+	private func requestPhotoPermission() {
+		PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+			DispatchQueue.main.async {
+				switch status {
+				case .authorized:
+					// Full access granted - navigate to main app
+					// This will be handled by ContentView observing the change
+					break
+				case .denied, .restricted, .limited:
+					// Permission denied or limited - show red error screen
+					showPermissionDenied = true
+				case .notDetermined:
+					// This shouldn't happen after request, but handle it
+					break
+				@unknown default:
+					break
 				}
 			}
 		}

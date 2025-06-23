@@ -520,18 +520,7 @@ struct RandomPhotoView: View {
     }
     
     private func startTopTextCycle() {
-        let possibleTexts = [
-            "this is not an app",
-            "this is your life",
-            "this was last month", 
-            "this is a video game",
-            "this was your life",
-            "this is people you miss",
-            "this is a faint memory",
-            "this feels like today",
-            "this is an app",
-			"this is your life with no fear"
-        ]
+        let possibleTexts = AppConstants.cyclingTexts
         
         Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
             // Fade out
