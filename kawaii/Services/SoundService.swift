@@ -8,6 +8,26 @@
 import SwiftUI
 import AVFoundation
 
+enum SoundType {
+    case intro
+    case click
+    case nandeska
+    case custom(String)
+    
+    var fileName: String {
+        switch self {
+        case .intro:
+            return "intro"
+        case .click:
+            return "click"
+        case .nandeska:
+            return "nandeska"
+        case .custom(let name):
+            return name
+        }
+    }
+}
+
 @MainActor
 class SoundService: ObservableObject {
     @Published var audioPlayer: AVAudioPlayer?
@@ -100,9 +120,10 @@ class SoundService: ObservableObject {
         }
     }
     
-    func playNandeskaSound() {
-        guard let path = Bundle.main.path(forResource: "intro", ofType: "mp3") else {
-            print("Could not find intro.mp3")
+    func playSound(_ soundType: SoundType) {
+        let fileName = soundType.fileName
+        guard let path = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
+            print("Could not find \(fileName).mp3")
             return
         }
         
@@ -116,7 +137,7 @@ class SoundService: ObservableObject {
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
         } catch {
-            print("Could not play intro sound: \(error)")
+            print("Could not play \(fileName) sound: \(error)")
         }
     }
 }

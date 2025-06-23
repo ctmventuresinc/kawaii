@@ -59,7 +59,7 @@ struct RandomPhotoView: View {
                         .padding(.top, 50)
                         .onAppear {
                             startTopTextCycle()
-                            soundService.playNandeskaSound()
+                            soundService.playSound(.intro)
                         }
                     Spacer()
                 }
@@ -458,6 +458,9 @@ struct RandomPhotoView: View {
     }
     
     private func handleScreenTap() {
+        // Play click sound
+        soundService.playSound(.click)
+        
         // Hide the instruction text on first tap
         if !hasBeenTapped {
             hasBeenTapped = true
