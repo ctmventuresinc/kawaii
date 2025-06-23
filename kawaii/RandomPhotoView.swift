@@ -27,6 +27,7 @@ struct RandomPhotoView: View {
     @State private var topTextOpacity: Double = 1.0
     @State private var showTravelOverlay = false
     @State private var isFaceMode = true // true = face detection, false = any photo
+    @State private var areButtonsHidden = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -130,16 +131,17 @@ struct RandomPhotoView: View {
                         // Centered share button
                         Button(action: {
                             soundService.playSound(.click)
-                            print("Share clicked!")
+                            shareScreenshot()
                         }) {
                             Text("Share")
                         }
                         .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
                         .disabled(false)
                         .scaleEffect(animationViewModel.addButtonScale)
-                        .opacity(animationViewModel.addButtonOpacity)
+                        .opacity(areButtonsHidden ? 0 : animationViewModel.addButtonOpacity)
                         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
                         .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
+                        .animation(.easeInOut(duration: 0.3), value: areButtonsHidden)
                         
                         // Face button aligned to far left and Date range selector button aligned to far right
                         HStack {
@@ -153,9 +155,10 @@ struct RandomPhotoView: View {
                             }
                             .buttonStyle(GlossyEnvelopeButtonStyle())
                             .scaleEffect(0.6 * dragViewModel.faceButtonScale)
-                            .opacity(dragViewModel.faceButtonOpacity)
+                            .opacity(areButtonsHidden ? 0 : dragViewModel.faceButtonOpacity)
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.faceButtonScale)
                             .animation(.easeInOut(duration: 0.3), value: dragViewModel.faceButtonOpacity)
+                            .animation(.easeInOut(duration: 0.3), value: areButtonsHidden)
                             .padding(.leading, 20)
                             
                             Spacer()
@@ -170,9 +173,10 @@ struct RandomPhotoView: View {
                             }
                             .buttonStyle(GlossyEnvelopeButtonStyle())
                             .scaleEffect(0.6 * dragViewModel.rewindButtonScale)
-                            .opacity(dragViewModel.rewindButtonOpacity)
+                            .opacity(areButtonsHidden ? 0 : dragViewModel.rewindButtonOpacity)
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.rewindButtonScale)
                             .animation(.easeInOut(duration: 0.3), value: dragViewModel.rewindButtonOpacity)
+                            .animation(.easeInOut(duration: 0.3), value: areButtonsHidden)
                             .padding(.trailing, 20)
                         }
                     }
@@ -550,6 +554,41 @@ struct RandomPhotoView: View {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showTravelOverlay = false
             }
+        }
+    }
+    
+    private func shareScreenshot() {
+        // Hide all buttons
+        withAnimation(.easeInOut(duration: 0.3)) {
+            areButtonsHidden = true
+        }
+        
+        // Wait for animation to complete, then take screenshot
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let screenshot = captureScreenshot()
+            if let screenshot = screenshot {
+                shareService.shareImage = screenshot
+                shareService.showShareSheet = true
+            }
+            
+            // Unhide buttons after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    areButtonsHidden = false
+                }
+            }
+        }
+    }
+    
+    private func captureScreenshot() -> UIImage? {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return nil
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: window.bounds.size)
+        return renderer.image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
     }
 }
