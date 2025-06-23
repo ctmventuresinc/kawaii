@@ -130,6 +130,7 @@ struct PhotoItem: Identifiable {
     var position: CGPoint
     var dragOffset: CGSize = .zero
     var isDragging: Bool = false
+    var scale: CGFloat = 1.0
     let frameShape: FaceFrameShape?
     let size: CGFloat
     let strokeColor: Color

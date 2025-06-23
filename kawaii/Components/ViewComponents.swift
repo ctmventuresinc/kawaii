@@ -150,10 +150,12 @@ struct PhotoItemView: View {
                 y: photoItem.position.y + photoItem.dragOffset.height
             )
         )
-        .scaleEffect(photoItem.isDragging ? 1.05 : 1.0)
+        .scaleEffect((photoItem.isDragging ? 1.05 : 1.0) * photoItem.scale)
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.6), value: photoItem.isDragging)
+        .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.8), value: photoItem.scale)
         .gesture(
-            DragGesture(coordinateSpace: .global)
+            SimultaneousGesture(
+                DragGesture(coordinateSpace: .global)
                 .onChanged { value in
                     if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
                         photoItems[index].dragOffset = value.translation
@@ -248,7 +250,22 @@ struct PhotoItemView: View {
                             dragViewModel.resetDragStates()
                         }
                     }
-                }
+                },
+                
+                MagnificationGesture()
+                    .onChanged { value in
+                        if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
+                            let newScale = max(0.5, min(3.0, value)) // Limit scale between 0.5x and 3.0x
+                            photoItems[index].scale = newScale
+                        }
+                    }
+                    .onEnded { value in
+                        if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
+                            let finalScale = max(0.5, min(3.0, value))
+                            photoItems[index].scale = finalScale
+                        }
+                    }
+            )
         )
     }
 }
