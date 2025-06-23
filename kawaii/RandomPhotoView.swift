@@ -81,9 +81,9 @@ struct RandomPhotoView: View {
                     .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                     .padding(.bottom, 120)
                     
-                    // Button row with test button and envelope button
-                    HStack(spacing: 20) {
-                        // Test button
+                    // Button layout with centered main button and right-aligned envelope
+                    ZStack {
+                        // Centered test button
                         Button(action: {
                             if !testButtonLoading {
                             print("Test button tapped!")
@@ -97,15 +97,24 @@ struct RandomPhotoView: View {
                         }
                         .buttonStyle(LoadingGlossyButtonStyle(isLoading: testButtonLoading))
                         .disabled(testButtonLoading)
+                        .scaleEffect(animationViewModel.addButtonScale)
+                        .opacity(animationViewModel.addButtonOpacity)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
+                        .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                         
-                        // Envelope button
-                        Button(action: {
-                            print("Envelope button tapped!")
-                        }) {
-                            Image(systemName: "envelope.fill")
-                                .font(.system(size: 32, weight: .medium))
+                        // Date range selector button aligned to far right
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                print("Date range selector tapped!")
+                            }) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 32, weight: .medium))
+                            }
+                            .buttonStyle(GlossyEnvelopeButtonStyle())
+                            .scaleEffect(0.6)
+                            .padding(.trailing, 20)
                         }
-                        .buttonStyle(GlossyEnvelopeButtonStyle())
                     }
                     .padding(.bottom, 50)
                 }

@@ -126,26 +126,34 @@ class PhotoItemsViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             print("🔍 DEBUG: Now on background queue")
             
-            // Get the most recent photo in the simplest way possible
+            // Get random photos from today
             print("🔍 DEBUG: About to create fetch options")
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-            fetchOptions.fetchLimit = 1 // Just get the most recent
+            
+            // Filter for today's photos
+            let startOfToday = Calendar.current.startOfDay(for: Date())
+            let endOfToday = Calendar.current.date(byAdding: .day, value: 1, to: startOfToday) ?? Date()
+            fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", 
+                                               startOfToday as NSDate, endOfToday as NSDate)
+            fetchOptions.fetchLimit = 50 // Get up to 50 from today to pick randomly
             
             print("🔍 DEBUG: About to call PHAsset.fetchAssets")
             let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
             print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
             guard fetchResult.count > 0 else {
-                print("🔍 DEBUG: No photos found")
+                print("🔍 DEBUG: No photos found from today")
                 DispatchQueue.main.async {
                     completion(false)
                 }
                 return
             }
             
-            let mostRecentAsset = fetchResult.object(at: 0)
-            print("🔍 DEBUG: Got most recent asset, about to request image")
+            // Pick a random photo from today's collection
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            let randomAsset = fetchResult.object(at: randomIndex)
+            print("🔍 DEBUG: Got random asset from today (\(randomIndex) of \(fetchResult.count)), about to request image")
             
             // Request the image at high quality (matching regular Add button)
             let options = PHImageRequestOptions()
@@ -157,7 +165,7 @@ class PhotoItemsViewModel: ObservableObject {
             let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
             
             PHImageManager.default().requestImage(
-                for: mostRecentAsset,
+                for: randomAsset,
                 targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
                 contentMode: .aspectFit,
                 options: options
