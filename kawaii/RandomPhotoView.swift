@@ -24,20 +24,13 @@ struct RandomPhotoView: View {
     @StateObject private var photoManager = PhotoManager()
     @StateObject private var dragManager = DragInteractionManager()
     @StateObject private var soundManager = SoundManager()
+    @StateObject private var animationManager = AnimationManager()
     @State private var photoItems: [PhotoItem] = []
     @State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
     @State private var colorPhase: Double = 0
     @State private var isLoading = false
-    @State private var poofScale: CGFloat = 0.0
-    @State private var poofOpacity: Double = 0.0
-    @State private var sparkleScale: CGFloat = 0.0
-    @State private var sparkleOpacity: Double = 0.0
-    @State private var shareGlowScale: CGFloat = 0.0
-    @State private var shareGlowOpacity: Double = 0.0
     @State private var showShareSheet = false
     @State private var shareImage: UIImage?
-    @State private var addButtonScale: CGFloat = 1.0
-    @State private var addButtonOpacity: Double = 1.0
     @State private var testButtonLoading = false
     
     var body: some View {
@@ -94,10 +87,10 @@ struct RandomPhotoView: View {
                         .shadow(color: Color.white.opacity(0.8), radius: 1, x: 0, y: 1)
                     }
                     .disabled(authorizationStatus == .restricted)
-                    .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * addButtonScale)
-                    .opacity((authorizationStatus == .restricted ? 0.8 : 1.0) * addButtonOpacity)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: addButtonScale)
-                    .animation(.easeInOut(duration: 0.3), value: addButtonOpacity)
+                    .scaleEffect((authorizationStatus == .restricted ? 0.9 : 1.0) * animationManager.addButtonScale)
+                    .opacity((authorizationStatus == .restricted ? 0.8 : 1.0) * animationManager.addButtonOpacity)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationManager.addButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: animationManager.addButtonOpacity)
                     .padding(.bottom, 120)
                     
                     // Button row with test button and envelope button
@@ -187,7 +180,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Poof effect
-                            if poofOpacity > 0 {
+                            if animationManager.poofOpacity > 0 {
                                 ZStack {
                                     // Multiple poof particles
                                     ForEach(0..<8, id: \.self) { index in
@@ -195,13 +188,13 @@ struct RandomPhotoView: View {
                                             .fill(Color.white.opacity(0.8))
                                             .frame(width: 6, height: 6)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 4) * 30 * poofScale,
-                                                y: sin(Double(index) * .pi / 4) * 30 * poofScale
+                                                x: cos(Double(index) * .pi / 4) * 30 * animationManager.poofScale,
+                                                y: sin(Double(index) * .pi / 4) * 30 * animationManager.poofScale
                                             )
                                     }
                                 }
-                                .scaleEffect(poofScale)
-                                .opacity(poofOpacity)
+                                .scaleEffect(animationManager.poofScale)
+                                .opacity(animationManager.poofOpacity)
                             }
                         }
                         .scaleEffect(dragManager.trashBinScale)
@@ -217,13 +210,7 @@ struct RandomPhotoView: View {
                 }
                 .onChange(of: dragManager.isDraggingAny) { isDragging in
                     dragManager.updateDragStates(isDragging: isDragging)
-                    if isDragging {
-                        addButtonOpacity = 0.0
-                        addButtonScale = 0.8
-                    } else {
-                        addButtonOpacity = 1.0
-                        addButtonScale = 1.0
-                    }
+                    animationManager.updateAddButtonVisibility(isDragging: isDragging)
                 }
                 
                 // Star button in bottom right corner
@@ -244,7 +231,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Sparkle effect
-                            if sparkleOpacity > 0 {
+                            if animationManager.sparkleOpacity > 0 {
                                 ZStack {
                                     // Multiple sparkle particles
                                     ForEach(0..<12, id: \.self) { index in
@@ -252,13 +239,13 @@ struct RandomPhotoView: View {
                                             .font(.system(size: 8, weight: .bold))
                                             .foregroundColor(.yellow)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 6) * 40 * sparkleScale,
-                                                y: sin(Double(index) * .pi / 6) * 40 * sparkleScale
+                                                x: cos(Double(index) * .pi / 6) * 40 * animationManager.sparkleScale,
+                                                y: sin(Double(index) * .pi / 6) * 40 * animationManager.sparkleScale
                                             )
                                     }
                                 }
-                                .scaleEffect(sparkleScale)
-                                .opacity(sparkleOpacity)
+                                .scaleEffect(animationManager.sparkleScale)
+                                .opacity(animationManager.sparkleOpacity)
                             }
                         }
                         .scaleEffect(dragManager.starButtonScale)
@@ -289,7 +276,7 @@ struct RandomPhotoView: View {
                                 .foregroundColor(.white)
                             
                             // Glow effect
-                            if shareGlowOpacity > 0 {
+                            if animationManager.shareGlowOpacity > 0 {
                                 ZStack {
                                     // Multiple glow particles
                                     ForEach(0..<6, id: \.self) { index in
@@ -297,13 +284,13 @@ struct RandomPhotoView: View {
                                             .fill(Color.blue.opacity(0.6))
                                             .frame(width: 10, height: 10)
                                             .offset(
-                                                x: cos(Double(index) * .pi / 3) * 35 * shareGlowScale,
-                                                y: sin(Double(index) * .pi / 3) * 35 * shareGlowScale
+                                                x: cos(Double(index) * .pi / 3) * 35 * animationManager.shareGlowScale,
+                                                y: sin(Double(index) * .pi / 3) * 35 * animationManager.shareGlowScale
                                             )
                                     }
                                 }
-                                .scaleEffect(shareGlowScale)
-                                .opacity(shareGlowOpacity)
+                                .scaleEffect(animationManager.shareGlowScale)
+                                .opacity(animationManager.shareGlowOpacity)
                             }
                         }
                         .scaleEffect(dragManager.shareButtonScale)
@@ -608,10 +595,7 @@ struct RandomPhotoView: View {
     
     private func sharePhotoItem(_ photoItem: PhotoItem) {
         // Trigger glow animation
-        withAnimation(.easeOut(duration: 0.4)) {
-            shareGlowScale = 1.0
-            shareGlowOpacity = 1.0
-        }
+        animationManager.triggerShareGlowAnimation()
         
         // Scale effect for share button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
@@ -623,11 +607,9 @@ struct RandomPhotoView: View {
             await generateShareImage(from: photoItem)
         }
         
-        // Hide glow effect after animation
+        // Reset share button scale after animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.3)) {
-                shareGlowScale = 0.0
-                shareGlowOpacity = 0.0
                 dragManager.shareButtonScale = 1.0
             }
         }
@@ -699,10 +681,7 @@ struct RandomPhotoView: View {
         guard index < photoItems.count else { return }
         
         // Trigger sparkle animation
-        withAnimation(.easeOut(duration: 0.4)) {
-            sparkleScale = 1.0
-            sparkleOpacity = 1.0
-        }
+        animationManager.triggerSparkleAnimation()
         
         // Scale effect for star button
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
@@ -748,26 +727,17 @@ struct RandomPhotoView: View {
             size: newSize
         )
         
-        // Reset animations after delay
+        // Reset star button scale after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeOut(duration: 0.2)) {
-                self.sparkleOpacity = 0.0
                 self.dragManager.starButtonScale = 1.0
-            }
-            
-            // Reset sparkle scale for next use
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                self.sparkleScale = 0.0
             }
         }
     }
     
     private func deletePhotoItem(at index: Int) {
         // Trigger poof animation
-        withAnimation(.easeOut(duration: 0.3)) {
-            poofScale = 1.0
-            poofOpacity = 1.0
-        }
+        animationManager.triggerPoofAnimation()
         
         // Scale effect for trash bin
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
@@ -781,16 +751,10 @@ struct RandomPhotoView: View {
             }
         }
         
-        // Reset animations
+        // Reset trash bin scale
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeOut(duration: 0.2)) {
-                self.poofOpacity = 0.0
                 self.dragManager.trashBinScale = 1.0
-            }
-            
-            // Reset poof scale for next use
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                self.poofScale = 0.0
             }
         }
     }
