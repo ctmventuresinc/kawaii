@@ -501,7 +501,8 @@ struct RandomPhotoView: View {
             "this is people you miss",
             "this is a faint memory",
             "this feels like today",
-            "this is an app"
+            "this is an app",
+			"this is your life with no fear"
         ]
         
         Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
