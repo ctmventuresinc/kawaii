@@ -23,10 +23,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1930E1452E0A4F0E0037DD06 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kawaiiapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1930E1342E0A4A010037DD06 /* kawaiiapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = kawaiiapp.entitlements; sourceTree = "<group>"; };
 		195A410D2E0922960017536C /* kawaiiapp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "kawaiiapp-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -44,6 +58,11 @@
 		191FDEB92E030FCD00D2AF6D /* kawaiiUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = kawaiiUITests;
+			sourceTree = "<group>";
+		};
+		1930E13A2E0A4F0E0037DD06 /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OneSignalNotificationServiceExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -76,10 +95,12 @@
 		191FDE932E030FCC00D2AF6D = {
 			isa = PBXGroup;
 			children = (
+				1930E1342E0A4A010037DD06 /* kawaiiapp.entitlements */,
 				195A410D2E0922960017536C /* kawaiiapp-Info.plist */,
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 				191FDEAF2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB92E030FCD00D2AF6D /* kawaiiUITests */,
+				1930E13A2E0A4F0E0037DD06 /* OneSignalNotificationServiceExtension */,
 				191FDE9D2E030FCC00D2AF6D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,6 +125,7 @@
 				191FDE982E030FCC00D2AF6D /* Sources */,
 				191FDE992E030FCC00D2AF6D /* Frameworks */,
 				191FDE9A2E030FCC00D2AF6D /* Resources */,
+				1930E1452E0A4F0E0037DD06 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -395,6 +417,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = kawaiiapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"kawaii/Preview Content\"";
@@ -430,6 +453,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = kawaiiapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"kawaii/Preview Content\"";
