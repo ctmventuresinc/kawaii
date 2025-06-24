@@ -135,12 +135,13 @@ class PhotoItemsViewModel: ObservableObject {
             print("🔍 DEBUG: Now on background queue")
             
             // Get random face photos from selected date
-            print("🔍 DEBUG: About to create fetch options for date: \(dateSelection.getDebugDate())")
+            let debugDate = await MainActor.run { dateSelection.getDebugDate() }
+            print("🔍 DEBUG: About to create fetch options for date: \(debugDate)")
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             
             // Filter for photos from the selected date
-            let dateRange = dateSelection.getCurrentDateRange()
+            let dateRange = await MainActor.run { dateSelection.getCurrentDateRange() }
             fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", 
                                                dateRange.start as NSDate, dateRange.end as NSDate)
             fetchOptions.fetchLimit = 100 // Smaller limit since it's just one day
@@ -150,7 +151,8 @@ class PhotoItemsViewModel: ObservableObject {
             print("🔍 DEBUG: PHAsset.fetchAssets completed, found \(fetchResult.count) assets")
         
             guard fetchResult.count > 0 else {
-                print("🔍 DEBUG: No photos found from selected date: \(dateSelection.getDebugDate())")
+                let debugDate = await MainActor.run { dateSelection.getDebugDate() }
+                print("🔍 DEBUG: No photos found from selected date: \(debugDate)")
                 DispatchQueue.main.async {
                     self.isLoading = false
                     completion(false)
@@ -167,7 +169,7 @@ class PhotoItemsViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Selected photo at index \(randomIndex)")
-                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                await self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             }
         }
     }

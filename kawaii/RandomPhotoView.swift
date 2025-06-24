@@ -294,7 +294,7 @@ struct RandomPhotoView: View {
                         Spacer()
                     }
                 }
-                .onChange(of: dragViewModel.isDraggingAny) { isDragging in
+                .onChange(of: dragViewModel.isDraggingAny) { _, isDragging in
                     dragViewModel.updateDragStates(isDragging: isDragging)
                     animationViewModel.updateAddButtonVisibility(isDragging: isDragging)
                 }
