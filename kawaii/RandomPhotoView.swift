@@ -138,56 +138,56 @@ struct RandomPhotoView: View {
                     
                     // Button layout with centered main button and right-aligned envelope
                     ZStack {
-                        // Centered share button
-                        Button(action: {
-                            shareManager.shareScreenshot()
-                        }) {
-                            Text("Share")
-                        }
-                        .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
-                        .disabled(false)
-                        .scaleEffect(animationViewModel.addButtonScale)
-                        .opacity(shareManager.areButtonsHidden ? 0 : animationViewModel.addButtonOpacity)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
-                        .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
-                        .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
-                        
-                        // Face button aligned to far left and Date range selector button aligned to far right
-                        HStack {
-                            Button(action: {
-                                soundService.playSound(.click)
-                                isFaceMode.toggle()
-                                print("Photo mode switched to: \(isFaceMode ? "Face detection" : "Any photo")")
-                            }) {
-                                Image(systemName: isFaceMode ? "face.smiling" : "photo.on.rectangle")
-                                    .font(.system(size: 32, weight: .medium))
-                            }
-                            .buttonStyle(GlossyEnvelopeButtonStyle())
-                            .scaleEffect(0.6 * dragViewModel.faceButtonScale)
-                            .opacity(shareManager.areButtonsHidden ? 0 : dragViewModel.faceButtonOpacity)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.faceButtonScale)
-                            .animation(.easeInOut(duration: 0.3), value: dragViewModel.faceButtonOpacity)
-                            .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
-                            .padding(.leading, 20)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                soundService.playSound(.click)
-                                soundService.playSound(.timetravel)
-                                showTravelMessage()
-                            }) {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.system(size: 32, weight: .medium))
-                            }
-                            .buttonStyle(GlossyEnvelopeButtonStyle())
-                            .scaleEffect(0.6 * dragViewModel.rewindButtonScale)
-                            .opacity(shareManager.areButtonsHidden ? 0 : dragViewModel.rewindButtonOpacity)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.rewindButtonScale)
-                            .animation(.easeInOut(duration: 0.3), value: dragViewModel.rewindButtonOpacity)
-                            .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
-                            .padding(.trailing, 20)
-                        }
+                    // Centered rewind button
+                    Button(action: {
+                    soundService.playSound(.click)
+                        soundService.playSound(.timetravel)
+                    showTravelMessage()
+                    }) {
+                        Text("Rewind")
+                    }
+                    .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
+                    .disabled(false)
+                    .scaleEffect(animationViewModel.addButtonScale)
+                    .opacity(shareManager.areButtonsHidden ? 0 : animationViewModel.addButtonOpacity)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: animationViewModel.addButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
+                    .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
+                    
+                    // Face button aligned to far left and Share button aligned to far right
+                    HStack {
+                    Button(action: {
+                    soundService.playSound(.click)
+                        isFaceMode.toggle()
+                    print("Photo mode switched to: \(isFaceMode ? "Face detection" : "Any photo")")
+                    }) {
+                        Image(systemName: isFaceMode ? "face.smiling" : "photo.on.rectangle")
+                            .font(.system(size: 32, weight: .medium))
+                    }
+                    .buttonStyle(GlossyEnvelopeButtonStyle())
+                    .scaleEffect(0.6 * dragViewModel.faceButtonScale)
+                    .opacity(shareManager.areButtonsHidden ? 0 : dragViewModel.faceButtonOpacity)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.faceButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: dragViewModel.faceButtonOpacity)
+                    .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
+                    .padding(.leading, 20)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                    shareManager.shareScreenshot()
+                    }) {
+                    Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 32, weight: .medium))
+                    }
+                    .buttonStyle(GlossyEnvelopeButtonStyle())
+                    .scaleEffect(0.6 * dragViewModel.rewindButtonScale)
+                    .opacity(shareManager.areButtonsHidden ? 0 : dragViewModel.rewindButtonOpacity)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: dragViewModel.rewindButtonScale)
+                    .animation(.easeInOut(duration: 0.3), value: dragViewModel.rewindButtonOpacity)
+                    .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
+                    .padding(.trailing, 20)
+                    }
                     }
                     .padding(.bottom, 50)
                 }
