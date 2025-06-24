@@ -31,6 +31,8 @@ struct RandomPhotoView: View {
     @State private var isFaceMode = true // true = face detection, false = any photo
     @State private var showEnjoymentAlert = false
     @State private var hasPendingTimeTravel = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
     init() {
         let shareService = ShareService()
@@ -140,11 +142,20 @@ struct RandomPhotoView: View {
                     // Button layout with centered main button and right-aligned envelope
                     ZStack {
                     // Centered rewind button
-                    Button(action: {
-                        soundService.playSound(.click)
-                        handleRewindAction()
-                    }) {
-                        Text("Rewind")
+                    ZStack {
+                        // Lock icon behind the button - offset to be visible
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 40, weight: .medium))
+                            .foregroundColor(.gray)
+                            .offset(x: -60, y: 0)
+                        
+                        // Rewind button on top
+                        Button(action: {
+                            soundService.playSound(.click)
+                            handleRewindAction()
+                        }) {
+                            Text("Rewind")
+                        }
                     }
                     .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
                     .disabled(false)
@@ -439,9 +450,12 @@ struct RandomPhotoView: View {
             
             // Start gentle blinking animation
             blinkingOpacity = 1.0
+            
+            // Check for notification alert on app launch
+            showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
         }
 
-        .alert("Enable Push Notifications", isPresented: $showEnjoymentAlert) {
+        .alert(alertTitle, isPresented: $showEnjoymentAlert) {
             Button("Dismiss") {
                 // User declined, clear any pending time travel
                 hasPendingTimeTravel = false
@@ -450,7 +464,7 @@ struct RandomPhotoView: View {
                 requestNotificationPermission()
             }
         } message: {
-            Text("Unlock rewind by approving notifications")
+            Text(alertMessage)
         }
     }
     
@@ -597,6 +611,16 @@ struct RandomPhotoView: View {
         } else {
             // Notifications not approved, show alert first
             hasPendingTimeTravel = true
+            showNotificationAlert(title: "Enable Push Notifications", message: "Unlock Rewind by approving notifications")
+        }
+    }
+    
+    private func showNotificationAlert(title: String, message: String) {
+        // Check if notifications are already authorized
+        let permissionState = OneSignal.Notifications.permission
+        if permissionState != true {
+            alertTitle = title
+            alertMessage = message
             showEnjoymentAlert = true
         }
     }
