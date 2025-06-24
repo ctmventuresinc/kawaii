@@ -30,7 +30,6 @@ struct RandomPhotoView: View {
     @State private var showTravelOverlay = false
     @State private var isFaceMode = true // true = face detection, false = any photo
     @State private var showEnjoymentAlert = false
-    @State private var hasAskedForNotifications = UserDefaults.standard.bool(forKey: "hasAskedForNotifications")
     
     init() {
         let shareService = ShareService()
@@ -441,20 +440,18 @@ struct RandomPhotoView: View {
             // Start gentle blinking animation
             blinkingOpacity = 1.0
         }
+        .onChange(of: photoItemsViewModel.photoItems.count) { _, newCount in
+            // Check for enjoyment alert whenever a new photo is added
+            if newCount > 0 {
+                checkAndShowEnjoymentAlert()
+            }
+        }
         .alert("Are you enjoying the app?", isPresented: $showEnjoymentAlert) {
             Button("Yes!") {
                 requestNotificationPermission()
             }
             Button("Not really") {
-                hasAskedForNotifications = true
-                UserDefaults.standard.set(true, forKey: "hasAskedForNotifications")
-                
-                // Execute photo adding action
-                if !photoItemsViewModel.isLoading {
-                    photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
-                        print("Photo added without notification permission: \(success)")
-                    }
-                }
+                // User declined, no further action needed
             }
         } message: {
             Text("We'd love to send you fun reminders to check out your photos!")
@@ -529,12 +526,6 @@ struct RandomPhotoView: View {
         // Hide the instruction text on first tap
         if !hasBeenTapped {
             hasBeenTapped = true
-            
-            // Check if we should show enjoyment alert for notifications
-            if !hasAskedForNotifications {
-                showEnjoymentAlert = true
-                return
-            }
         }
         
         // Execute photo adding action directly (not button)
@@ -542,6 +533,9 @@ struct RandomPhotoView: View {
             print("Screen tapped! Adding photo...")
             photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
                 print("Photo added via screen tap: \(success)")
+                if success {
+                    checkAndShowEnjoymentAlert()
+                }
             }
         }
     }
@@ -600,21 +594,17 @@ struct RandomPhotoView: View {
         }
     }
     
+    private func checkAndShowEnjoymentAlert() {
+        // Check if notifications are already authorized
+        let permissionState = OneSignal.Notifications.permission
+        if permissionState != true {
+            showEnjoymentAlert = true
+        }
+    }
+    
     private func requestNotificationPermission() {
         OneSignal.Notifications.requestPermission({ accepted in
             print("User accepted notifications: \(accepted)")
-            DispatchQueue.main.async {
-                hasAskedForNotifications = true
-                UserDefaults.standard.set(true, forKey: "hasAskedForNotifications")
-                
-                // Now execute the photo adding action
-                if !photoItemsViewModel.isLoading {
-                    print("Adding photo after notification permission...")
-                    photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
-                        print("Photo added after permission: \(success)")
-                    }
-                }
-            }
         }, fallbackToSettings: false)
     }
 
