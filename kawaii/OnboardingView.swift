@@ -145,8 +145,8 @@ struct OnboardingView: View {
 			DispatchQueue.main.async {
 				switch status {
 				case .authorized:
-					// Full access granted - now request push notifications
-					requestNotificationPermission()
+					// Full access granted - notification request will happen on first screen tap
+					break
 				case .denied, .restricted, .limited:
 					// Permission denied or limited - show red error screen
 					showPermissionDenied = true
