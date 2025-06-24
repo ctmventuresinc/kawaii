@@ -146,11 +146,7 @@ struct OnboardingView: View {
 				switch status {
 				case .authorized:
 					// Full access granted - now request push notifications
-					OneSignal.Notifications.requestPermission({ accepted in
-						print("User accepted notifications: \(accepted)")
-					}, fallbackToSettings: false)
-					// Navigate to main app - handled by ContentView observing the change
-					break
+					requestNotificationPermission()
 				case .denied, .restricted, .limited:
 					// Permission denied or limited - show red error screen
 					showPermissionDenied = true
@@ -162,6 +158,13 @@ struct OnboardingView: View {
 				}
 			}
 		}
+	}
+	
+	private func requestNotificationPermission() {
+		OneSignal.Notifications.requestPermission({ accepted in
+			print("User accepted notifications: \(accepted)")
+			// Navigation will be handled by ContentView observing the change
+		}, fallbackToSettings: false)
 	}
 }
 
