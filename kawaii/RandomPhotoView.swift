@@ -30,6 +30,7 @@ struct RandomPhotoView: View {
     @State private var showTravelOverlay = false
     @State private var isFaceMode = true // true = face detection, false = any photo
     @State private var showEnjoymentAlert = false
+    @State private var hasPendingTimeTravel = false
     
     init() {
         let shareService = ShareService()
@@ -140,9 +141,8 @@ struct RandomPhotoView: View {
                     ZStack {
                     // Centered rewind button
                     Button(action: {
-                    soundService.playSound(.click)
-                        soundService.playSound(.timetravel)
-                    showTravelMessage()
+                        soundService.playSound(.click)
+                        handleRewindAction()
                     }) {
                         Text("Rewind")
                     }
@@ -440,18 +440,14 @@ struct RandomPhotoView: View {
             // Start gentle blinking animation
             blinkingOpacity = 1.0
         }
-        .onChange(of: photoItemsViewModel.photoItems.count) { _, newCount in
-            // Check for enjoyment alert whenever a new photo is added
-            if newCount > 0 {
-                checkAndShowEnjoymentAlert()
-            }
-        }
+
         .alert("Are you enjoying the app?", isPresented: $showEnjoymentAlert) {
             Button("Yes!") {
                 requestNotificationPermission()
             }
             Button("Not really") {
-                // User declined, no further action needed
+                // User declined, clear any pending time travel
+                hasPendingTimeTravel = false
             }
         } message: {
             Text("We'd love to send you fun reminders to check out your photos!")
@@ -533,9 +529,6 @@ struct RandomPhotoView: View {
             print("Screen tapped! Adding photo...")
             photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
                 print("Photo added via screen tap: \(success)")
-                if success {
-                    checkAndShowEnjoymentAlert()
-                }
             }
         }
     }
@@ -594,6 +587,20 @@ struct RandomPhotoView: View {
         }
     }
     
+    private func handleRewindAction() {
+        // Check if notifications are already authorized
+        let permissionState = OneSignal.Notifications.permission
+        if permissionState == true {
+            // Notifications approved, do time travel immediately
+            soundService.playSound(.timetravel)
+            showTravelMessage()
+        } else {
+            // Notifications not approved, show alert first
+            hasPendingTimeTravel = true
+            showEnjoymentAlert = true
+        }
+    }
+    
     private func checkAndShowEnjoymentAlert() {
         // Check if notifications are already authorized
         let permissionState = OneSignal.Notifications.permission
@@ -605,6 +612,14 @@ struct RandomPhotoView: View {
     private func requestNotificationPermission() {
         OneSignal.Notifications.requestPermission({ accepted in
             print("User accepted notifications: \(accepted)")
+            DispatchQueue.main.async {
+                if accepted && hasPendingTimeTravel {
+                    // User approved notifications and we have pending time travel
+                    soundService.playSound(.timetravel)
+                    showTravelMessage()
+                    hasPendingTimeTravel = false
+                }
+            }
         }, fallbackToSettings: false)
     }
 
