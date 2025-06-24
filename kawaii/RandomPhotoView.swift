@@ -25,6 +25,7 @@ struct RandomPhotoView: View {
     @State private var testButtonLoading = false
     @State private var blinkingOpacity: Double = 0.0
     @State private var hasBeenTapped = false
+    @State private var isFirstTap = true
     @State private var topText = "this is not an app"
     @State private var topTextOpacity: Double = 1.0
     @State private var showTravelOverlay = false
@@ -538,11 +539,35 @@ struct RandomPhotoView: View {
             hasBeenTapped = true
         }
         
-        // Execute photo adding action directly (not button)
-        if !photoItemsViewModel.isLoading {
-            print("Screen tapped! Adding photo...")
-            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
-                print("Photo added via screen tap: \(success)")
+        // Check if this is the first tap
+        if isFirstTap {
+            isFirstTap = false
+            // Show travel overlay first
+            showTravelOverlay = true
+            
+            // Hide overlay after 2 seconds, then add photo
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showTravelOverlay = false
+                }
+                
+                // Add photo after overlay dismisses
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    if !photoItemsViewModel.isLoading {
+                        print("First tap! Adding photo after travel overlay...")
+                        photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
+                            print("Photo added via first screen tap: \(success)")
+                        }
+                    }
+                }
+            }
+        } else {
+            // Execute photo adding action directly (not button) for subsequent taps
+            if !photoItemsViewModel.isLoading {
+                print("Screen tapped! Adding photo...")
+                photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
+                    print("Photo added via screen tap: \(success)")
+                }
             }
         }
     }
