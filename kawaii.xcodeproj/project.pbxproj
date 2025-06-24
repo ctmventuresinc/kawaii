@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		1930E27C2E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1930E2852E0A56600037DD06 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2842E0A56600037DD06 /* OneSignalExtension */; };
+		1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2862E0A56600037DD06 /* OneSignalFramework */; };
+		1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2882E0A56600037DD06 /* OneSignalInAppMessages */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,6 +101,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */,
+				1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1930E2852E0A56600037DD06 /* OneSignalExtension in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -171,6 +177,8 @@
 			);
 			name = kawaiiapp;
 			packageProductDependencies = (
+				1930E2862E0A56600037DD06 /* OneSignalFramework */,
+				1930E2882E0A56600037DD06 /* OneSignalInAppMessages */,
 			);
 			productName = kawaii;
 			productReference = 191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */;
@@ -239,6 +247,7 @@
 			);
 			name = OneSignalNotificationServiceExtension;
 			packageProductDependencies = (
+				1930E2842E0A56600037DD06 /* OneSignalExtension */,
 			);
 			productName = OneSignalNotificationServiceExtension;
 			productReference = 1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */;
@@ -279,6 +288,9 @@
 			);
 			mainGroup = 191FDE932E030FCC00D2AF6D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 191FDE9D2E030FCC00D2AF6D /* Products */;
 			projectDirPath = "";
@@ -739,6 +751,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.14;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1930E2842E0A56600037DD06 /* OneSignalExtension */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalExtension;
+		};
+		1930E2862E0A56600037DD06 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalFramework;
+		};
+		1930E2882E0A56600037DD06 /* OneSignalInAppMessages */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalInAppMessages;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 191FDE942E030FCC00D2AF6D /* Project object */;
 }
