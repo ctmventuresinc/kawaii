@@ -441,16 +441,16 @@ struct RandomPhotoView: View {
             blinkingOpacity = 1.0
         }
 
-        .alert("Are you enjoying the app?", isPresented: $showEnjoymentAlert) {
-            Button("Yes!") {
-                requestNotificationPermission()
-            }
-            Button("Not really") {
+        .alert("Enable Push Notifications", isPresented: $showEnjoymentAlert) {
+            Button("Dismiss") {
                 // User declined, clear any pending time travel
                 hasPendingTimeTravel = false
             }
+            Button("Yes", role: .cancel) {
+                requestNotificationPermission()
+            }
         } message: {
-            Text("We'd love to send you fun reminders to check out your photos!")
+            Text("Unlock rewind by approving notifications")
         }
     }
     
