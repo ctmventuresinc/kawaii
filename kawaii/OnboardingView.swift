@@ -9,6 +9,7 @@ import SwiftUI
 import AVKit
 import AVFoundation
 import Photos
+import OneSignalFramework
 
 struct OnboardingView: View {
 	@State private var player: AVPlayer?
@@ -144,8 +145,11 @@ struct OnboardingView: View {
 			DispatchQueue.main.async {
 				switch status {
 				case .authorized:
-					// Full access granted - navigate to main app
-					// This will be handled by ContentView observing the change
+					// Full access granted - now request push notifications
+					OneSignal.Notifications.requestPermission({ accepted in
+						print("User accepted notifications: \(accepted)")
+					}, fallbackToSettings: false)
+					// Navigate to main app - handled by ContentView observing the change
 					break
 				case .denied, .restricted, .limited:
 					// Permission denied or limited - show red error screen

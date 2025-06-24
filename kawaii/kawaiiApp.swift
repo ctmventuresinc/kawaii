@@ -26,11 +26,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
        OneSignal.Debug.setLogLevel(.LL_VERBOSE)     
        // Initialize with your OneSignal App ID
        OneSignal.initialize("dcbcd501-d44c-46ad-84ca-e7aca9c02a0c", withLaunchOptions: launchOptions)
-       // Use this method to prompt for push notifications.
-       // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-       OneSignal.Notifications.requestPermission({ accepted in
-         print("User accepted notifications: \(accepted)")
-       }, fallbackToSettings: false)
+       // Push notification permission will be requested after photo access is granted
       
        return true
     }
