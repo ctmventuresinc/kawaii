@@ -67,7 +67,7 @@ class PhotoViewModel: ObservableObject {
     
     private func fetchRandomRecentPhoto(completion: @escaping (UIImage?) -> Void) {
         // Move ALL Photos framework operations to background queue
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task {
             print("🔍 DEBUG: fetchRandomRecentPhoto() started on background queue")
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]

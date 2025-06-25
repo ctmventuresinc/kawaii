@@ -131,7 +131,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
         
         // Move ALL Photos framework operations to background queue
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task {
             print("🔍 DEBUG: Now on background queue")
             
             // Get random face photos from selected date
