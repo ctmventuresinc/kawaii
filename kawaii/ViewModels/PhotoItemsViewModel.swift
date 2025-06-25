@@ -123,7 +123,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, isFaceMode: Bool, completion: @escaping (Bool) -> Void) {
+    func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
@@ -160,16 +160,30 @@ class PhotoItemsViewModel: ObservableObject {
                 return
             }
             
-            if isFaceMode {
+            switch photoMode {
+            case .faceOnly:
                 // Try to find a photo with faces from selected date
                 self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
-            } else {
+            case .anyPhoto:
                 // Any photo mode - just pick a random photo (use existing working method)
                 print("🔍 DEBUG: Any photo mode - selecting random photo from \(fetchResult.count) available")
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Selected photo at index \(randomIndex)")
                 self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+            case .mixed:
+                // Mixed mode - 50/50 chance between face detection and any photo
+                let useFaceDetection = Bool.random()
+                print("🔍 DEBUG: Mixed mode - randomly chose \(useFaceDetection ? "face detection" : "any photo")")
+                
+                if useFaceDetection {
+                    self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                } else {
+                    let randomIndex = Int.random(in: 0..<fetchResult.count)
+                    let randomAsset = fetchResult.object(at: randomIndex)
+                    print("🔍 DEBUG: Selected random photo at index \(randomIndex)")
+                    self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                }
             }
         }
     }

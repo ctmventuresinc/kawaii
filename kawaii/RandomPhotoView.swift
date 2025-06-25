@@ -11,6 +11,28 @@ import AVFoundation
 import Vision
 import OneSignalFramework
 
+enum PhotoMode: CaseIterable {
+    case mixed     // 50/50 face detection + any photo
+    case faceOnly  // only face detection
+    case anyPhoto  // only random photos
+    
+    var icon: String {
+        switch self {
+        case .mixed: return "photo.stack"
+        case .faceOnly: return "face.smiling"
+        case .anyPhoto: return "photo.on.rectangle"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .mixed: return "Mixed mode"
+        case .faceOnly: return "Face detection"
+        case .anyPhoto: return "Any photo"
+        }
+    }
+}
+
 struct RandomPhotoView: View {
     @StateObject private var photoViewModel = PhotoViewModel()
     @StateObject private var dragViewModel = DragInteractionViewModel()
@@ -29,7 +51,7 @@ struct RandomPhotoView: View {
     @State private var topText = "this is not an app"
     @State private var topTextOpacity: Double = 1.0
     @State private var showTravelOverlay = false
-    @State private var isFaceMode = true // true = face detection, false = any photo
+    @State private var photoMode: PhotoMode = .mixed // Default to mixed mode
     @State private var showEnjoymentAlert = false
     @State private var hasPendingTimeTravel = false
     @State private var alertTitle = ""
@@ -170,10 +192,13 @@ struct RandomPhotoView: View {
                     HStack {
                     Button(action: {
                     soundService.playSound(.click)
-                        isFaceMode.toggle()
-                    print("Photo mode switched to: \(isFaceMode ? "Face detection" : "Any photo")")
+                        // Cycle through all photo modes
+                        let currentIndex = PhotoMode.allCases.firstIndex(of: photoMode) ?? 0
+                        let nextIndex = (currentIndex + 1) % PhotoMode.allCases.count
+                        photoMode = PhotoMode.allCases[nextIndex]
+                    print("Photo mode switched to: \(photoMode.description)")
                     }) {
-                        Image(systemName: isFaceMode ? "face.smiling" : "photo.on.rectangle")
+                        Image(systemName: photoMode.icon)
                             .font(.system(size: 32, weight: .medium))
                     }
                     .buttonStyle(GlossyEnvelopeButtonStyle())
@@ -555,7 +580,7 @@ struct RandomPhotoView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     if !photoItemsViewModel.isLoading {
                         print("First tap! Adding photo after travel overlay...")
-                        photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
+                        photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoMode) { success in
                             print("Photo added via first screen tap: \(success)")
                         }
                     }
@@ -565,7 +590,7 @@ struct RandomPhotoView: View {
             // Execute photo adding action directly (not button) for subsequent taps
             if !photoItemsViewModel.isLoading {
                 print("Screen tapped! Adding photo...")
-                photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, isFaceMode: isFaceMode) { success in
+                photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoMode) { success in
                     print("Photo added via screen tap: \(success)")
                 }
             }
