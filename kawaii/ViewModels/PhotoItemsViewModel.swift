@@ -169,7 +169,7 @@ class PhotoItemsViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Selected photo at index \(randomIndex)")
-                await self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             }
         }
     }

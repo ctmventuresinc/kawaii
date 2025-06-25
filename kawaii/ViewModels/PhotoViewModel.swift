@@ -90,11 +90,15 @@ class PhotoViewModel: ObservableObject {
             let randomIndex = Int.random(in: 0..<fetchResult.count)
             let randomAsset = fetchResult.object(at: randomIndex)
             
-            if !randomAsset.mediaSubtypes.contains(.photoScreenshot) && 
-               !(await MainActor.run { self.usedAssetIds.contains(randomAsset.localIdentifier) }) {
+            let isScreenshot = randomAsset.mediaSubtypes.contains(.photoScreenshot)
+            let isAlreadyUsed = await MainActor.run { self.usedAssetIds.contains(randomAsset.localIdentifier) }
+            
+            if !isScreenshot && !isAlreadyUsed {
                 print("🔍 DEBUG: Found valid asset, calling loadPhoto")
-                await self.loadPhoto(asset: randomAsset, completion: completion)
-                await MainActor.run { self.usedAssetIds.insert(randomAsset.localIdentifier) }
+                self.loadPhoto(asset: randomAsset, completion: completion)
+                await MainActor.run { 
+                    _ = self.usedAssetIds.insert(randomAsset.localIdentifier) 
+                }
                 return
             }
             attempts += 1
