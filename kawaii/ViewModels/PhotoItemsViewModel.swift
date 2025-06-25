@@ -79,6 +79,41 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
+    func addPhotoItemWithForcedBackgroundRemoval(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
+        // Force background removal for SVG cutout effect
+        backgroundRemover.removeBackground(of: image) { processedImage in
+            // Use processed image or fail gracefully
+            guard let finalImage = processedImage else {
+                print("🔍 DEBUG: Background removal failed for SVG cutout")
+                DispatchQueue.main.async {
+                    completion()
+                }
+                return
+            }
+            
+            let screenWidth = UIScreen.main.bounds.width
+            let screenHeight = UIScreen.main.bounds.height
+            let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+            let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+            
+            // Always use frames for SVG cutout effect
+            let frameShape = FaceFrameShape.allCases.randomElement()
+            let size: CGFloat = CGFloat.random(in: 153...234)
+            
+            let photoItem = PhotoItem(
+                image: finalImage,
+                position: CGPoint(x: randomX, y: randomY),
+                frameShape: frameShape,
+                size: size
+            )
+            
+            DispatchQueue.main.async {
+                self.photoItems.append(photoItem)
+                completion()
+            }
+        }
+    }
+    
     func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
         // Remove background from the image first
         backgroundRemover.removeBackground(of: image) { processedImage in
@@ -171,17 +206,25 @@ class PhotoItemsViewModel: ObservableObject {
                 print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
                 self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             case .mixed:
-                // 50/50 chance between face detection and random photo
-                let useFaceDetection = Bool.random()
-                print("🔍 DEBUG: Mixed mode - randomly chose \(useFaceDetection ? "FACE DETECTION" : "RANDOM PHOTO")")
+                // Weighted random: 30% face detection, 60% regular photo, 10% random photo with SVG cutout
+                let randomValue = Int.random(in: 1...100)
                 
-                if useFaceDetection {
+                if randomValue <= 30 {
+                    // 30% - Face detection photos (cropped faces with background removed)
+                    print("🔍 DEBUG: Mixed mode - chose FACE DETECTION (30%)")
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
-                } else {
+                } else if randomValue <= 90 {
+                    // 60% - Regular random photos (full photos, no processing)
+                    print("🔍 DEBUG: Mixed mode - chose REGULAR PHOTO (60%)")
                     let randomIndex = Int.random(in: 0..<fetchResult.count)
                     let randomAsset = fetchResult.object(at: randomIndex)
-                    print("🔍 DEBUG: Mixed mode - selected random photo at index \(randomIndex)")
                     self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                } else {
+                    // 10% - Random photos with SVG cutout (background removed but not face-cropped)
+                    print("🔍 DEBUG: Mixed mode - chose RANDOM PHOTO WITH SVG CUTOUT (10%)")
+                    let randomIndex = Int.random(in: 0..<fetchResult.count)
+                    let randomAsset = fetchResult.object(at: randomIndex)
+                    self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 }
             }
         }
@@ -243,6 +286,39 @@ class PhotoItemsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.addPhotoItem(from: image, actualMethod: method, currentMethod: method, backgroundRemover: backgroundRemover) {
                     // Play sound and show overlay (same as add button)
+                    soundService.playMarioSuccessSound()
+                    self.isLoading = false
+                    completion(true)
+                }
+            }
+        }
+    }
+    
+    private func loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: PHAsset, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        
+        let maxDisplaySize: CGFloat = 450
+        let targetPixelSize = maxDisplaySize * 2.0 * UIScreen.main.scale
+        
+        PHImageManager.default().requestImage(
+            for: asset,
+            targetSize: CGSize(width: targetPixelSize, height: targetPixelSize),
+            contentMode: .aspectFit,
+            options: options
+        ) { image, _ in
+            guard let image = image else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    completion(false)
+                }
+                return
+            }
+            
+            // Force background removal for SVG cutout effect
+            DispatchQueue.main.async {
+                self.addPhotoItemWithForcedBackgroundRemoval(from: image, backgroundRemover: backgroundRemover) {
                     soundService.playMarioSuccessSound()
                     self.isLoading = false
                     completion(true)
