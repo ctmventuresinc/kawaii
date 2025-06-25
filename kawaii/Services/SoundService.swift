@@ -41,6 +41,7 @@ class SoundService: ObservableObject {
     @Published var currentImageName: String = ""
     @Published var showImageOverlay = false
     @Published var pulseScale: CGFloat = 1.0
+    @Published var isMuted: Bool = true // Temporarily muted
     
     private let soundImagePairs: [SoundImagePair] = [
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
@@ -53,6 +54,8 @@ class SoundService: ObservableObject {
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]
     
     func playMarioSuccessSound() {
+        guard !isMuted else { return } // Skip if muted
+        
         let randomPair = soundImagePairs.randomElement() ?? soundImagePairs[0]
         
         guard let path = Bundle.main.path(forResource: randomPair.soundName, ofType: "mp3") else {
@@ -83,6 +86,8 @@ class SoundService: ObservableObject {
     }
     
     private func playRandomBackgroundSound() {
+        guard !isMuted else { return } // Skip if muted
+        
         let randomBackgroundSound = backgroundSounds.randomElement() ?? backgroundSounds[0]
         
         guard let path = Bundle.main.path(forResource: randomBackgroundSound, ofType: "mp3") else {
@@ -128,6 +133,8 @@ class SoundService: ObservableObject {
     }
     
     func playSound(_ soundType: SoundType, delay: TimeInterval = 0) {
+        guard !isMuted else { return } // Skip if muted
+        
         let fileName = soundType.fileName
         guard let path = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
             print("Could not find \(fileName).mp3")
@@ -159,6 +166,8 @@ class SoundService: ObservableObject {
     }
     
     func playLoadingSoundIfStillLoading(isLoadingCheck: @escaping () -> Bool, delay: TimeInterval = 0.7) {
+        guard !isMuted else { return } // Skip if muted
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             if isLoadingCheck() {
                 self.playSound(.loading)

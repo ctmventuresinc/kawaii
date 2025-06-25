@@ -49,11 +49,14 @@ struct RandomPhotoView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Wallpaper background
-                Image("wallpaper")
-                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
+                // Blue background
+                Color.blue
                     .ignoresSafeArea()
+                
+                // Wallpaper background - commented out
+                // Image("wallpaper")
+                //     .resizable()
+                //     .ignoresSafeArea()
                 
                 // Burst pattern background - commented out temporarily
                 // BurstPatternBackground(rotationAngle: colorPhase * 360)
