@@ -160,24 +160,28 @@ class PhotoItemsViewModel: ObservableObject {
                 return
             }
             
-            // Use PhotoSelectionService to handle mode-specific logic
-            PhotoSelectionService.shared.selectPhoto(for: photoMode, from: fetchResult) { selectedAsset in
-                guard let asset = selectedAsset else {
-                    print("🔍 DEBUG: No photo selected by service")
-                    DispatchQueue.main.async {
-                        self.isLoading = false
-                        completion(false)
-                    }
-                    return
-                }
+            switch photoMode {
+            case .faceOnly:
+                // Face detection only
+                self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            case .anyPhoto:
+                // Random photo only
+                let randomIndex = Int.random(in: 0..<fetchResult.count)
+                let randomAsset = fetchResult.object(at: randomIndex)
+                print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
+                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+            case .mixed:
+                // 50/50 chance between face detection and random photo
+                let useFaceDetection = Bool.random()
+                print("🔍 DEBUG: Mixed mode - randomly chose \(useFaceDetection ? "FACE DETECTION" : "RANDOM PHOTO")")
                 
-                // For face-only mode, still use the existing face detection logic
-                // For other modes, load the selected asset directly
-                if photoMode == .faceOnly {
+                if useFaceDetection {
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 } else {
-                    print("🔍 DEBUG: Selected photo for \(photoMode.description)")
-                    self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                    let randomIndex = Int.random(in: 0..<fetchResult.count)
+                    let randomAsset = fetchResult.object(at: randomIndex)
+                    print("🔍 DEBUG: Mixed mode - selected random photo at index \(randomIndex)")
+                    self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
                 }
             }
         }
