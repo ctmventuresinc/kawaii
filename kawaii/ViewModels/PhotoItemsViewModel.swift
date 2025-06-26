@@ -181,7 +181,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
         
         // If cache miss and face mode was requested, try aggressive face search
-        if photoMode == .faceOnly || (photoMode == .mixed && Int.random(in: 1...100) <= 30) {
+        if photoMode == .faceOnly || (photoMode == .mixed && Int.random(in: 1...100) <= 40) {
             print("🔍 DEBUG: Cache miss for face request - trying aggressive search")
             isLoading = true
             soundService.playLoadingSoundIfStillLoading { [weak self] in

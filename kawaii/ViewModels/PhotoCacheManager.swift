@@ -73,19 +73,19 @@ class PhotoCacheManager: ObservableObject {
             return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
         case .mixed:
             let randomValue = Int.random(in: 1...100)
-            if randomValue <= 30 {
-                // 30% - Face detection photos (cropped faces with background removed)
+            if randomValue <= 40 {
+                // 40% - Face detection photos (cropped faces with background removed)
                 if let facePhoto = readyPhotoPool.first(where: { $0.processingType == .faceDetection }) {
                     return facePhoto
                 }
                 // If no face photos available, trigger aggressive search and return nil to force fallback
-                print("🔍 CACHE: No face photos in pool for 30% request - needs aggressive refill")
+                print("🔍 CACHE: No face photos in pool for 40% request - needs aggressive refill")
                 return nil
-            } else if randomValue <= 90 {
-                // 60% - Regular random photos (full photos, no processing)
+            } else if randomValue <= 65 {
+                // 25% - Regular random photos (full photos, no frames)
                 return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
             } else {
-                // 10% - Background removed with frames but no face crop
+                // 35% - Background removed with frames but no face crop
                 return readyPhotoPool.first { $0.processingType == .backgroundOnly } ?? readyPhotoPool.first
             }
         }
@@ -277,9 +277,9 @@ class PhotoCacheManager: ObservableObject {
         // Decide processing type based on mixed mode percentages
         let randomValue = Int.random(in: 1...100)
         var processingType: ProcessingType
-        if randomValue <= 30 {
+        if randomValue <= 40 {
             processingType = .faceDetection
-        } else if randomValue <= 90 {
+        } else if randomValue <= 65 {
             processingType = .none
         } else {
             processingType = .backgroundOnly
