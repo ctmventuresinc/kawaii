@@ -475,6 +475,10 @@ struct RandomPhotoView: View {
         } message: {
             Text(alertMessage)
         }
+        .onChange(of: dateSelectionViewModel.selectedDate) { oldDate, newDate in
+            print("🔍 DEBUG: Date selection changed from \(oldDate) to \(newDate)")
+            photoItemsViewModel.handleDateChange(newDate)
+        }
     }
     
     private var buttonTitle: String {

@@ -20,6 +20,11 @@ class PhotoItemsViewModel: ObservableObject {
         photoCacheManager.prefillPhotosForDate(date)
     }
     
+    func handleDateChange(_ newDate: Date) {
+        print("🔍 DEBUG: Date changed to \(newDate)")
+        photoCacheManager.prefillPhotosForDate(newDate)
+    }
+    
     func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in

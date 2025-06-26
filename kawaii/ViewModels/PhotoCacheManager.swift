@@ -93,9 +93,23 @@ class PhotoCacheManager: ObservableObject {
     
     func prefillPhotosForDate(_ date: Date) {
         print("🔍 CACHE: Starting aggressive prefill for date: \(date)")
+        
+        // Check if date changed - clear cache if needed
+        if let cachedDate = cachedDate, !Calendar.current.isDate(cachedDate, inSameDayAs: date) {
+            print("🔍 CACHE: Date changed from \(cachedDate) to \(date) - clearing cache")
+            clearCache()
+        }
+        
         Task {
             await refillPhotoPool(for: date)
         }
+    }
+    
+    func clearCache() {
+        readyPhotoPool.removeAll()
+        cachedFetchResult = nil
+        cachedDate = nil
+        print("🔍 CACHE: Cache cleared")
     }
     
     func ensureFacePhotosAvailable(for date: Date) async {
