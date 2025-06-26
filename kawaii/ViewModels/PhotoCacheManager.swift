@@ -192,8 +192,8 @@ class PhotoCacheManager: ObservableObject {
         case .backgroundOnly:
             backgroundRemovedImage = await removeBackground(from: image)
         case .none:
-            // No processing needed
-            break
+            // Even "regular" photos get background removal in original code
+            backgroundRemovedImage = await removeBackground(from: image)
         }
         
         return PreprocessedPhoto(

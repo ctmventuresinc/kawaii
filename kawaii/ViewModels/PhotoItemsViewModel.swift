@@ -171,7 +171,7 @@ class PhotoItemsViewModel: ObservableObject {
         let currentDate = dateSelection.selectedDate
         if let cachedPhoto = photoCacheManager.getCachedPhotoInstantly(for: currentDate, photoMode: photoMode) {
             print("🔍 DEBUG: Using CACHED photo - instant response!")
-            createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, completion: completion)
+            createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, soundService: soundService, completion: completion)
             return
         }
         
@@ -455,7 +455,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    private func createPhotoItemFromCachedPhoto(_ cachedPhoto: PhotoCacheManager.PreprocessedPhoto, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
+    private func createPhotoItemFromCachedPhoto(_ cachedPhoto: PhotoCacheManager.PreprocessedPhoto, photoMode: PhotoMode, soundService: SoundService, completion: @escaping (Bool) -> Void) {
         let screenWidth = UIScreen.main.bounds.width
         let screenHeight = UIScreen.main.bounds.height
         let randomX = CGFloat.random(in: 100...(screenWidth - 100))
@@ -478,8 +478,8 @@ class PhotoItemsViewModel: ObservableObject {
             frameShape = nil
             size = CGFloat.random(in: 220...350)
         case .none:
-            // Use original image, no frame
-            finalImage = cachedPhoto.image
+            // Use background removed image (all photos get background removal), no frame
+            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.image
             frameShape = nil
             size = CGFloat.random(in: 220...350)
         }
@@ -492,6 +492,9 @@ class PhotoItemsViewModel: ObservableObject {
         )
         
         photoItems.append(photoItem)
+        
+        // Play sound effect like original code
+        soundService.playMarioSuccessSound()
         completion(true)
     }
     
