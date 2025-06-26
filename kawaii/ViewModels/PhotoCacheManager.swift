@@ -85,7 +85,7 @@ class PhotoCacheManager: ObservableObject {
                 // 60% - Regular random photos (full photos, no processing)
                 return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
             } else {
-                // 10% - Background removed but no face crop
+                // 10% - Background removed with frames but no face crop
                 return readyPhotoPool.first { $0.processingType == .backgroundOnly } ?? readyPhotoPool.first
             }
         }
