@@ -175,11 +175,9 @@ class PhotoItemsViewModel: ObservableObject {
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             
-            // Filter for photos from the selected date and exclude screenshots
-            let dateRange = await MainActor.run { dateSelection.getCurrentDateRange() }
-            fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@ AND NOT (mediaSubtypes & %d) != 0", 
-                                               dateRange.start as NSDate, dateRange.end as NSDate, PHAssetMediaSubtype.photoScreenshot.rawValue)
-            fetchOptions.fetchLimit = 100 // Smaller limit since it's just one day
+            // Exclude screenshots but allow photos from any date
+            fetchOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", PHAssetMediaSubtype.photoScreenshot.rawValue)
+            fetchOptions.fetchLimit = 1000 // Larger limit for full library access
             
             print("🔍 DEBUG: About to call PHAsset.fetchAssets")
             let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
