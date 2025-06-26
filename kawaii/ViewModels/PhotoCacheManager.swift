@@ -32,7 +32,8 @@ class PhotoCacheManager: ObservableObject {
         case backgroundOnly // 10% - Background removed, no face crop
     }
     
-    private let poolSize = 8 // Keep 8 photos ready
+    private let poolSize = 20 // Keep 20 photos ready - need more for aggressive face detection
+    private let minFacePhotos = 6 // Always maintain at least 6 face photos in pool
     private let backgroundQueue = DispatchQueue(label: "photo.preprocessing", qos: .userInitiated)
     
     func getCachedPhotoInstantly(for date: Date, photoMode: PhotoMode) -> PreprocessedPhoto? {
@@ -77,8 +78,9 @@ class PhotoCacheManager: ObservableObject {
                 if let facePhoto = readyPhotoPool.first(where: { $0.processingType == .faceDetection }) {
                     return facePhoto
                 }
-                // Fallback to any photo if no face photos available
-                return readyPhotoPool.first
+                // If no face photos available, trigger aggressive search and return nil to force fallback
+                print("🔍 CACHE: No face photos in pool for 30% request - needs aggressive refill")
+                return nil
             } else if randomValue <= 90 {
                 // 60% - Regular random photos (full photos, no processing)
                 return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
@@ -90,8 +92,21 @@ class PhotoCacheManager: ObservableObject {
     }
     
     func prefillPhotosForDate(_ date: Date) {
+        print("🔍 CACHE: Starting aggressive prefill for date: \(date)")
         Task {
             await refillPhotoPool(for: date)
+        }
+    }
+    
+    func ensureFacePhotosAvailable(for date: Date) async {
+        // Force aggressive face detection if pool is empty or has no faces
+        let currentFacePhotos = readyPhotoPool.filter { $0.processingType == .faceDetection }.count
+        if currentFacePhotos == 0 {
+            print("🔍 CACHE: No face photos available - forcing aggressive search")
+            let fetchResult = await getCachedFetchResult(for: date)
+            if fetchResult.count > 0 {
+                await aggressivelyFindFacePhotos(from: fetchResult, needed: minFacePhotos)
+            }
         }
     }
     
@@ -106,15 +121,63 @@ class PhotoCacheManager: ObservableObject {
             return
         }
         
-        // Fill pool to capacity
-        let needed = poolSize - readyPhotoPool.count
-        guard needed > 0 else {
-            isPreprocessing = false
-            return
+        // Check how many face photos we have
+        let currentFacePhotos = await MainActor.run { 
+            readyPhotoPool.filter { $0.processingType == .faceDetection }.count 
+        }
+        let currentPoolSize = await MainActor.run { readyPhotoPool.count }
+        
+        print("🔍 CACHE: Current pool - Total: \(currentPoolSize), Face photos: \(currentFacePhotos)")
+        
+        // If we don't have enough face photos, aggressively find them first
+        if currentFacePhotos < minFacePhotos {
+            print("🔍 CACHE: AGGRESSIVE FACE DETECTION - Need \(minFacePhotos - currentFacePhotos) more face photos")
+            await aggressivelyFindFacePhotos(from: fetchResult, needed: minFacePhotos - currentFacePhotos)
         }
         
+        // Then fill rest of pool with mixed content
+        let totalNeeded = poolSize - (await MainActor.run { readyPhotoPool.count })
+        if totalNeeded > 0 {
+            await fillRemainingPool(from: fetchResult, needed: totalNeeded)
+        }
+        
+        isPreprocessing = false
+    }
+    
+    private func aggressivelyFindFacePhotos(from fetchResult: PHFetchResult<PHAsset>, needed: Int) async {
+        print("🔍 CACHE: Starting aggressive face search for \(needed) photos...")
+        var found = 0
+        var attempts = 0
+        let maxTotalAttempts = min(50, fetchResult.count) // Try up to 50 photos like original
+        
+        while found < needed && attempts < maxTotalAttempts {
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            let asset = fetchResult.object(at: randomIndex)
+            attempts += 1
+            
+            // Skip screenshots
+            if asset.mediaSubtypes.contains(.photoScreenshot) {
+                continue
+            }
+            
+            print("🔍 CACHE: Face search attempt \(attempts)/\(maxTotalAttempts)")
+            
+            // Try to create face photo
+            if let facePhoto = await preprocessPhotoForFaces(asset: asset) {
+                await MainActor.run {
+                    self.readyPhotoPool.append(facePhoto)
+                }
+                found += 1
+                print("🔍 CACHE: ✅ Found face photo! (\(found)/\(needed))")
+            }
+        }
+        
+        print("🔍 CACHE: Aggressive face search complete - Found \(found) face photos in \(attempts) attempts")
+    }
+    
+    private func fillRemainingPool(from fetchResult: PHFetchResult<PHAsset>, needed: Int) async {
         await withTaskGroup(of: PreprocessedPhoto?.self) { group in
-            for _ in 0..<min(needed, 5) { // Process max 5 at once
+            for _ in 0..<min(needed, 8) { // Process max 8 at once
                 group.addTask {
                     await self.preprocessRandomPhoto(from: fetchResult)
                 }
@@ -128,8 +191,6 @@ class PhotoCacheManager: ObservableObject {
                 }
             }
         }
-        
-        isPreprocessing = false
     }
     
     private func getCachedFetchResult(for date: Date) async -> PHFetchResult<PHAsset> {
@@ -165,6 +226,31 @@ class PhotoCacheManager: ObservableObject {
                 continuation.resume(returning: result)
             }
         }
+    }
+    
+    private func preprocessPhotoForFaces(asset: PHAsset) async -> PreprocessedPhoto? {
+        // Load image at face detection size
+        guard let image = await loadImage(from: asset, isForFaceDetection: true) else { return nil }
+        
+        // Try to detect and crop faces
+        let hasFaces = await detectFaces(in: image)
+        guard hasFaces else { return nil } // Only return if we found faces
+        
+        guard let faceImage = await cropFace(from: image) else { return nil }
+        
+        // Apply background removal to face image
+        let backgroundRemovedImage = await removeBackground(from: faceImage)
+        
+        print("🔍 CACHE: ✅ Successfully created face photo with background removal")
+        
+        return PreprocessedPhoto(
+            asset: asset,
+            image: image,
+            hasFaces: true,
+            faceImage: faceImage,
+            backgroundRemovedImage: backgroundRemovedImage,
+            processingType: .faceDetection
+        )
     }
     
     private func preprocessRandomPhoto(from fetchResult: PHFetchResult<PHAsset>) async -> PreprocessedPhoto? {

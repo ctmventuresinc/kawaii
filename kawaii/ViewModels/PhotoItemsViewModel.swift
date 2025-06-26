@@ -175,6 +175,35 @@ class PhotoItemsViewModel: ObservableObject {
             return
         }
         
+        // If cache miss and face mode was requested, try aggressive face search
+        if photoMode == .faceOnly || (photoMode == .mixed && Int.random(in: 1...100) <= 30) {
+            print("🔍 DEBUG: Cache miss for face request - trying aggressive search")
+            isLoading = true
+            soundService.playLoadingSoundIfStillLoading { [weak self] in
+                return self?.isLoading ?? false
+            }
+            
+            Task {
+                await photoCacheManager.ensureFacePhotosAvailable(for: currentDate)
+                
+                // Try cache again after aggressive search
+                if let cachedPhoto = await MainActor.run(body: { 
+                    photoCacheManager.getCachedPhotoInstantly(for: currentDate, photoMode: photoMode) 
+                }) {
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, soundService: soundService, completion: completion)
+                    }
+                    return
+                }
+                
+                // Still no faces found, fall through to original slow path
+                await MainActor.run {
+                    print("🔍 DEBUG: Aggressive search failed - falling back to original slow path")
+                }
+            }
+        }
+        
         // Fallback to original slow path
         print("🔍 DEBUG: Cache miss - falling back to slow fetch")
         isLoading = true
