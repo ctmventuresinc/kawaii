@@ -120,5 +120,17 @@ When implementing new features, **ALWAYS CONSIDER REFACTORING FIRST** using thes
 - **Performance implications** of main thread usage
 - **Maintainability** over quick fixes
 
+## ⚠️ Common Mistakes to Avoid
+
+### 1. **Over-Engineering Framework Capabilities**
+**Mistake Made:** When filtering out screenshots from PhotoKit, I initially created multiple helper methods with retry loops to check `asset.mediaSubtypes.contains(.photoScreenshot)` for each photo individually.
+
+**Simple Solution:** PhotoKit already supports filtering at the database level using predicates:
+```swift
+fetchOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", PHAssetMediaSubtype.photoScreenshot.rawValue)
+```
+
+**Lesson:** Always check if the framework has built-in capabilities before implementing custom logic. PhotoKit, CoreData, etc. often have powerful filtering/querying features.
+
 ---
-*Last updated: June 22, 2025*
+*Last updated: June 25, 2025*
