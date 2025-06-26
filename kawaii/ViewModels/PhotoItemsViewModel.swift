@@ -461,11 +461,28 @@ class PhotoItemsViewModel: ObservableObject {
         let randomX = CGFloat.random(in: 100...(screenWidth - 100))
         let randomY = CGFloat.random(in: 100...(screenHeight - 200))
         
-        let shouldUseFrames = photoMode == .faceOnly || (photoMode == .mixed && cachedPhoto.hasFaces)
-        let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
-        let finalImage = cachedPhoto.processedImage ?? cachedPhoto.image
+        // Determine final image and framing based on processing type
+        let finalImage: UIImage
+        let frameShape: FaceFrameShape?
+        let size: CGFloat
         
-        let size = shouldUseFrames ? CGFloat.random(in: 153...234) : CGFloat.random(in: 220...350)
+        switch cachedPhoto.processingType {
+        case .faceDetection:
+            // Use face image with background removed, always framed
+            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.faceImage ?? cachedPhoto.image
+            frameShape = FaceFrameShape.allCases.randomElement()
+            size = CGFloat.random(in: 153...234) // Face crop size range
+        case .backgroundOnly:
+            // Use background removed image, no frame
+            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.image
+            frameShape = nil
+            size = CGFloat.random(in: 220...350)
+        case .none:
+            // Use original image, no frame
+            finalImage = cachedPhoto.image
+            frameShape = nil
+            size = CGFloat.random(in: 220...350)
+        }
         
         let photoItem = PhotoItem(
             image: finalImage,
