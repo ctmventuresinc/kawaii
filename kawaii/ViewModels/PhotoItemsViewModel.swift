@@ -14,6 +14,17 @@ class PhotoItemsViewModel: ObservableObject {
     @Published var photoItems: [PhotoItem] = []
     @Published var isLoading = false
     
+    private let photoCacheManager = PhotoCacheManager()
+    
+    func prefillCacheForDate(_ date: Date) {
+        photoCacheManager.prefillPhotosForDate(date)
+    }
+    
+    func handleDateChange(_ newDate: Date) {
+        print("🔍 DEBUG: Date changed to \(newDate)")
+        photoCacheManager.prefillPhotosForDate(newDate)
+    }
+    
     func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
@@ -160,6 +171,46 @@ class PhotoItemsViewModel: ObservableObject {
     
     func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
+        
+        // Try cache first for instant response
+        let currentDate = dateSelection.selectedDate
+        if let cachedPhoto = photoCacheManager.getCachedPhotoInstantly(for: currentDate, photoMode: photoMode) {
+            print("🔍 DEBUG: Using CACHED photo - instant response!")
+            createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, soundService: soundService, completion: completion)
+            return
+        }
+        
+        // If cache miss and face mode was requested, try aggressive face search
+        if photoMode == .faceOnly || (photoMode == .mixed && Int.random(in: 1...100) <= 40) {
+            print("🔍 DEBUG: Cache miss for face request - trying aggressive search")
+            isLoading = true
+            soundService.playLoadingSoundIfStillLoading { [weak self] in
+                return self?.isLoading ?? false
+            }
+            
+            Task {
+                await photoCacheManager.ensureFacePhotosAvailable(for: currentDate)
+                
+                // Try cache again after aggressive search
+                if let cachedPhoto = await MainActor.run(body: { 
+                    photoCacheManager.getCachedPhotoInstantly(for: currentDate, photoMode: photoMode) 
+                }) {
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, soundService: soundService, completion: completion)
+                    }
+                    return
+                }
+                
+                // Still no faces found, fall through to original slow path
+                await MainActor.run {
+                    print("🔍 DEBUG: Aggressive search failed - falling back to original slow path")
+                }
+            }
+        }
+        
+        // Fallback to original slow path
+        print("🔍 DEBUG: Cache miss - falling back to slow fetch")
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
             return self?.isLoading ?? false
@@ -436,6 +487,52 @@ class PhotoItemsViewModel: ObservableObject {
                 self.photoItems.remove(at: index)
             }
         }
+    }
+    
+    private func createPhotoItemFromCachedPhoto(_ cachedPhoto: PhotoCacheManager.PreprocessedPhoto, photoMode: PhotoMode, soundService: SoundService, completion: @escaping (Bool) -> Void) {
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+        
+        // Determine final image and framing based on processing type
+        let finalImage: UIImage
+        let frameShape: FaceFrameShape?
+        let size: CGFloat
+        
+        switch cachedPhoto.processingType {
+        case .faceDetection:
+            // Use face image with background removed, always framed
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
+            frameShape = FaceFrameShape.allCases.randomElement()
+            size = CGFloat.random(in: 153...234) // Face crop size range
+        case .backgroundOnly:
+            // Use background removed image, WITH frame (for visual variety)
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
+            frameShape = FaceFrameShape.allCases.randomElement()
+            size = CGFloat.random(in: 220...350)
+        case .none:
+            // Use background removed image (all photos get background removal), no frame
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
+            frameShape = nil
+            size = CGFloat.random(in: 220...350)
+        }
+        
+        let photoItem = PhotoItem(
+            image: finalImage,
+            position: CGPoint(x: randomX, y: randomY),
+            frameShape: frameShape,
+            size: size
+        )
+        
+        photoItems.append(photoItem)
+        
+        // Play sound effect like original code
+        soundService.playMarioSuccessSound()
+        completion(true)
     }
     
     func convertToFramedPhoto(at index: Int) {
