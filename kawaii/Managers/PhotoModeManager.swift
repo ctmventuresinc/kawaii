@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 class PhotoModeManager: ObservableObject {
-    @Published var currentMode: PhotoMode = .anyPhoto
+    @Published var currentMode: PhotoMode = .mixed
     
     func cycleToNextMode() {
         let currentIndex = PhotoMode.allCases.firstIndex(of: currentMode) ?? 0
