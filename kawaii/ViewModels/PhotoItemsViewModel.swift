@@ -14,6 +14,12 @@ class PhotoItemsViewModel: ObservableObject {
     @Published var photoItems: [PhotoItem] = []
     @Published var isLoading = false
     
+    private let photoCacheManager = PhotoCacheManager()
+    
+    func prefillCacheForDate(_ date: Date) {
+        photoCacheManager.prefillPhotosForDate(date)
+    }
+    
     func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
@@ -160,6 +166,17 @@ class PhotoItemsViewModel: ObservableObject {
     
     func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
+        
+        // Try cache first for instant response
+        let currentDate = dateSelection.selectedDate
+        if let cachedPhoto = photoCacheManager.getCachedPhotoInstantly(for: currentDate, photoMode: photoMode) {
+            print("🔍 DEBUG: Using CACHED photo - instant response!")
+            createPhotoItemFromCachedPhoto(cachedPhoto, photoMode: photoMode, completion: completion)
+            return
+        }
+        
+        // Fallback to original slow path
+        print("🔍 DEBUG: Cache miss - falling back to slow fetch")
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
             return self?.isLoading ?? false
@@ -436,6 +453,29 @@ class PhotoItemsViewModel: ObservableObject {
                 self.photoItems.remove(at: index)
             }
         }
+    }
+    
+    private func createPhotoItemFromCachedPhoto(_ cachedPhoto: PhotoCacheManager.PreprocessedPhoto, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+        let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+        
+        let shouldUseFrames = photoMode == .faceOnly || (photoMode == .mixed && cachedPhoto.hasFaces)
+        let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
+        let finalImage = cachedPhoto.processedImage ?? cachedPhoto.image
+        
+        let size = shouldUseFrames ? CGFloat.random(in: 153...234) : CGFloat.random(in: 220...350)
+        
+        let photoItem = PhotoItem(
+            image: finalImage,
+            position: CGPoint(x: randomX, y: randomY),
+            frameShape: frameShape,
+            size: size
+        )
+        
+        photoItems.append(photoItem)
+        completion(true)
     }
     
     func convertToFramedPhoto(at index: Int) {

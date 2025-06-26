@@ -457,6 +457,9 @@ struct RandomPhotoView: View {
             // Start gentle blinking animation
             blinkingOpacity = 1.0
             
+            // Prefill photo cache for current date
+            photoItemsViewModel.prefillCacheForDate(dateSelectionViewModel.selectedDate)
+            
             // Check for notification alert on app launch
             showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
         }
