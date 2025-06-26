@@ -50,13 +50,13 @@ struct RandomPhotoView: View {
         GeometryReader { geometry in
             ZStack {
                 // Blue background
-                Color.blue
-                    .ignoresSafeArea()
+//                Color.blue
+//                    .ignoresSafeArea()
                 
 				// Wallpaper background - commented out
-				// Image("wallpaper")
-				//	.resizable()
-				//	.ignoresSafeArea()
+				Image("wallpaper")
+					.resizable()
+					.ignoresSafeArea()
                 
                 // Burst pattern background - commented out temporarily
                 // BurstPatternBackground(rotationAngle: colorPhase * 360)
@@ -153,11 +153,14 @@ struct RandomPhotoView: View {
                 VStack {
                     Spacer()
                     
-                    // Permanent instruction text
-                    Text("tap anywhere to add a photo")
-                        .font(.system(size: 19, weight: .medium))
-                        .foregroundColor(.white)
-                        .opacity(1.0)
+                    // Conditional instruction text
+                    if !hasBeenTapped {
+                        Text("Touch the Touch Screen to continue.")
+                            .font(.system(size: 19, weight: .medium))
+                            .foregroundColor(.black)
+                            .opacity(blinkingOpacity)
+                            .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: blinkingOpacity)
+                    }
                     
                     Spacer()
                     
@@ -473,16 +476,6 @@ struct RandomPhotoView: View {
             
             // Start gentle blinking animation
             blinkingOpacity = 1.0
-            
-            // Auto-start adding a photo on launch
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                if !photoItemsViewModel.isLoading {
-                    print("Auto-starting photo on launch...")
-                    photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoModeManager.currentMode) { success in
-                        print("Auto photo added on launch: \(success)")
-                    }
-                }
-            }
             
             // Check for notification alert on app launch
             showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
