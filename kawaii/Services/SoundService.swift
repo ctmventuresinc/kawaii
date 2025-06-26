@@ -41,7 +41,7 @@ class SoundService: ObservableObject {
     @Published var currentImageName: String = ""
     @Published var showImageOverlay = false
     @Published var pulseScale: CGFloat = 1.0
-    @Published var isMuted: Bool = false // Temporarily muted
+    @Published var isMuted: Bool = true // Temporarily muted
     
     private let soundImagePairs: [SoundImagePair] = [
         SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
