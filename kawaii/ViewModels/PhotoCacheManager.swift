@@ -36,14 +36,20 @@ class PhotoCacheManager: ObservableObject {
     private let backgroundQueue = DispatchQueue(label: "photo.preprocessing", qos: .userInitiated)
     
     func getCachedPhotoInstantly(for date: Date, photoMode: PhotoMode) -> PreprocessedPhoto? {
+        print("🔍 CACHE: Looking for photo - Mode: \(photoMode), Pool size: \(readyPhotoPool.count)")
+        print("🔍 CACHE: Pool types: \(readyPhotoPool.map { $0.processingType })")
+        
         // Return immediately if we have a suitable photo
         guard let photo = getSuitablePhotoFromPool(for: photoMode) else {
+            print("🔍 CACHE: No suitable photo found in pool")
             // Start background refill if pool is low
             if readyPhotoPool.count < 3 {
                 Task { await refillPhotoPool(for: date) }
             }
             return nil
         }
+        
+        print("🔍 CACHE: Found suitable photo - Type: \(photo.processingType), HasFaces: \(photo.hasFaces)")
         
         // Remove from pool and start refill
         if let index = readyPhotoPool.firstIndex(where: { $0.asset.localIdentifier == photo.asset.localIdentifier }) {
@@ -59,20 +65,26 @@ class PhotoCacheManager: ObservableObject {
     private func getSuitablePhotoFromPool(for mode: PhotoMode) -> PreprocessedPhoto? {
         switch mode {
         case .faceOnly:
-            return readyPhotoPool.first { $0.processingType == .faceDetection }
+            // Only face detection photos, fallback to any photo if none found
+            return readyPhotoPool.first { $0.processingType == .faceDetection } ?? readyPhotoPool.first
         case .anyPhoto:
-            return readyPhotoPool.first { $0.processingType == .none }
+            // Regular photos preferred, fallback to any photo
+            return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
         case .mixed:
             let randomValue = Int.random(in: 1...100)
             if randomValue <= 30 {
                 // 30% - Face detection photos (cropped faces with background removed)
-                return readyPhotoPool.first { $0.processingType == .faceDetection }
+                if let facePhoto = readyPhotoPool.first(where: { $0.processingType == .faceDetection }) {
+                    return facePhoto
+                }
+                // Fallback to any photo if no face photos available
+                return readyPhotoPool.first
             } else if randomValue <= 90 {
                 // 60% - Regular random photos (full photos, no processing)
-                return readyPhotoPool.first { $0.processingType == .none }
+                return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
             } else {
                 // 10% - Background removed but no face crop
-                return readyPhotoPool.first { $0.processingType == .backgroundOnly }
+                return readyPhotoPool.first { $0.processingType == .backgroundOnly } ?? readyPhotoPool.first
             }
         }
     }
@@ -161,7 +173,7 @@ class PhotoCacheManager: ObservableObject {
         
         // Decide processing type based on mixed mode percentages
         let randomValue = Int.random(in: 1...100)
-        let processingType: ProcessingType
+        var processingType: ProcessingType
         if randomValue <= 30 {
             processingType = .faceDetection
         } else if randomValue <= 90 {
@@ -188,6 +200,10 @@ class PhotoCacheManager: ObservableObject {
                 if let faceImg = faceImage {
                     backgroundRemovedImage = await removeBackground(from: faceImg)
                 }
+            } else {
+                // No faces found, convert to regular photo
+                processingType = .none
+                backgroundRemovedImage = await removeBackground(from: image)
             }
         case .backgroundOnly:
             backgroundRemovedImage = await removeBackground(from: image)
@@ -195,6 +211,8 @@ class PhotoCacheManager: ObservableObject {
             // Even "regular" photos get background removal in original code
             backgroundRemovedImage = await removeBackground(from: image)
         }
+        
+        print("🔍 CACHE: Preprocessed photo - Type: \(processingType), HasFaces: \(hasFaces), FaceImage: \(faceImage != nil), BgRemoved: \(backgroundRemovedImage != nil)")
         
         return PreprocessedPhoto(
             asset: asset,
