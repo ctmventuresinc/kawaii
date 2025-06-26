@@ -252,8 +252,11 @@ class PhotoCacheManager: ObservableObject {
         
         guard let faceImage = await cropFace(from: image) else { return nil }
         
-        // Apply background removal to face image
-        let backgroundRemovedImage = await removeBackground(from: faceImage)
+        // Apply background removal to face image - MUST succeed
+        guard let backgroundRemovedImage = await removeBackground(from: faceImage) else {
+            print("🔍 CACHE: ❌ Background removal failed for face photo - rejecting")
+            return nil
+        }
         
         print("🔍 CACHE: ✅ Successfully created face photo with background removal")
         
@@ -296,20 +299,38 @@ class PhotoCacheManager: ObservableObject {
             hasFaces = await detectFaces(in: image)
             if hasFaces {
                 faceImage = await cropFace(from: image)
-                // Apply background removal to face image
+                // Apply background removal to face image - MUST succeed
                 if let faceImg = faceImage {
                     backgroundRemovedImage = await removeBackground(from: faceImg)
+                    guard backgroundRemovedImage != nil else {
+                        print("🔍 CACHE: ❌ Background removal failed for face image - rejecting photo")
+                        return nil
+                    }
+                } else {
+                    return nil // Face crop failed
                 }
             } else {
                 // No faces found, convert to regular photo
                 processingType = .none
                 backgroundRemovedImage = await removeBackground(from: image)
+                guard backgroundRemovedImage != nil else {
+                    print("🔍 CACHE: ❌ Background removal failed for regular image - rejecting photo")
+                    return nil
+                }
             }
         case .backgroundOnly:
             backgroundRemovedImage = await removeBackground(from: image)
+            guard backgroundRemovedImage != nil else {
+                print("🔍 CACHE: ❌ Background removal failed for background-only image - rejecting photo")
+                return nil
+            }
         case .none:
             // Even "regular" photos get background removal in original code
             backgroundRemovedImage = await removeBackground(from: image)
+            guard backgroundRemovedImage != nil else {
+                print("🔍 CACHE: ❌ Background removal failed for regular image - rejecting photo")
+                return nil
+            }
         }
         
         print("🔍 CACHE: Preprocessed photo - Type: \(processingType), HasFaces: \(hasFaces), FaceImage: \(faceImage != nil), BgRemoved: \(backgroundRemovedImage != nil)")

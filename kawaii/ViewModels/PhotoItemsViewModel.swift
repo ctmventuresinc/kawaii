@@ -503,17 +503,20 @@ class PhotoItemsViewModel: ObservableObject {
         switch cachedPhoto.processingType {
         case .faceDetection:
             // Use face image with background removed, always framed
-            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.faceImage ?? cachedPhoto.image
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = FaceFrameShape.allCases.randomElement()
             size = CGFloat.random(in: 153...234) // Face crop size range
         case .backgroundOnly:
             // Use background removed image, no frame
-            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.image
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = nil
             size = CGFloat.random(in: 220...350)
         case .none:
             // Use background removed image (all photos get background removal), no frame
-            finalImage = cachedPhoto.backgroundRemovedImage ?? cachedPhoto.image
+            // Background removal is guaranteed to exist (enforced in cache)
+            finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = nil
             size = CGFloat.random(in: 220...350)
         }
