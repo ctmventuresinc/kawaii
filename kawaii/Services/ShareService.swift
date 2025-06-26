@@ -81,11 +81,12 @@ class ShareService: ObservableObject {
                         }
                     }
                 } else {
-                    // Regular photos with rounded corners
+                    // Regular photos with rounded corners and filters
                     Image(uiImage: photoItem.image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: photoItem.size, height: photoItem.size)
+                        .applyPhotoFilter(photoItem.photoFilter)
                         .cornerRadius(16)
                 }
             }

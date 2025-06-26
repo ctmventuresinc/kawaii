@@ -136,11 +136,12 @@ struct PhotoItemView: View {
             if photoItem.frameShape != nil {
                 FramedPhotoView(photoItem: photoItem)
             } else {
-                // Regular photos with rounded corners
+                // Regular photos with rounded corners and filters
                 Image(uiImage: photoItem.image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: photoItem.size, height: photoItem.size)
+                    .applyPhotoFilter(photoItem.photoFilter)
                     .cornerRadius(16)
             }
         }
