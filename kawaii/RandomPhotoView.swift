@@ -87,24 +87,6 @@ struct RandomPhotoView: View {
                     Spacer()
                 }
                 
-                // Mute button overlay in top right corner
-                VStack {
-                    HStack {
-                        Spacer()
-                        
-                        Button(action: {
-                            soundService.isMuted.toggle()
-                        }) {
-                            Image(systemName: soundService.isMuted ? "speaker.slash.fill" : "speaker.2.fill")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.gray.opacity(0.7))
-                        }
-                        .padding(.trailing, 20)
-                    }
-                    .padding(.top, 50)
-                    Spacer()
-                }
-                
                 ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
                         photoItem: photoItem,
@@ -206,8 +188,6 @@ struct RandomPhotoView: View {
                     .animation(.easeInOut(duration: 0.3), value: dragViewModel.faceButtonOpacity)
                     .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
                     .padding(.leading, 20)
-                    
-
                     
                     Spacer()
                     
