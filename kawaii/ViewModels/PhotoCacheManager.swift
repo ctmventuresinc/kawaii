@@ -37,16 +37,6 @@ class PhotoCacheManager: ObservableObject {
     func getCachedPhotoInstantly(for date: Date, photoMode: PhotoMode) -> PreprocessedPhoto? {
         print("🔍 CACHE: Looking for photo - Mode: \(photoMode), Pool size: \(readyPhotoPool.count)")
         print("🔍 CACHE: Pool types: \(readyPhotoPool.map { $0.processingType })")
-        photoTypeDecisionService.logCurrentConfig()
-        
-        // FORCE CLEAR OLD FACE PHOTOS IF CONFIG IS 0% FACES (but keep other photos)
-        if !photoTypeDecisionService.shouldDoAggressiveFaceSearch() {
-            let oldFacePhotos = readyPhotoPool.filter { $0.processingType == .faceDetection }
-            if !oldFacePhotos.isEmpty {
-                print("🔍 CACHE: ⚠️  FOUND \(oldFacePhotos.count) OLD FACE PHOTOS - REMOVING ONLY FACE PHOTOS")
-                readyPhotoPool.removeAll { $0.processingType == .faceDetection }
-            }
-        }
         
         // Return immediately if we have a suitable photo
         guard let photo = getSuitablePhotoFromPool(for: photoMode) else {
@@ -112,15 +102,6 @@ class PhotoCacheManager: ObservableObject {
         cachedFetchResult = nil
         cachedDate = nil
         print("🔍 CACHE: Cache cleared - Pool now empty")
-    }
-    
-    func forceCompleteReset() {
-        print("🔍 CACHE: 🚨 FORCE COMPLETE RESET - CLEARING EVERYTHING")
-        readyPhotoPool.removeAll()
-        cachedFetchResult = nil
-        cachedDate = nil
-        isPreprocessing = false
-        photoTypeDecisionService.logCurrentConfig()
     }
     
     func ensureFacePhotosAvailable(for date: Date) async {

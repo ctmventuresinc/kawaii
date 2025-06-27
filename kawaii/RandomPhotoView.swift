@@ -501,16 +501,12 @@ struct RandomPhotoView: View {
                 DispatchQueue.main.async {
                     self.authorizationStatus = status
                     if status == .authorized || status == .limited {
-                        self.photoItemsViewModel.addTestPhotoItem(backgroundRemover: self.photoViewModel.backgroundRemover, soundService: self.soundService, dateSelection: self.dateSelectionViewModel, photoMode: self.photoModeManager.currentMode) { success in
-                            print("🔍 Manual add button result: \(success)")
-                        }
+                        self.photoItemsViewModel.fetchAndAddRandomPhoto(photoViewModel: self.photoViewModel, soundService: self.soundService)
                     }
                 }
             }
         case .authorized, .limited:
-            photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoModeManager.currentMode) { success in
-                print("🔍 Manual add button result: \(success)")
-            }
+            photoItemsViewModel.fetchAndAddRandomPhoto(photoViewModel: photoViewModel, soundService: soundService)
         case .denied, .restricted:
             openAppSettings()
         @unknown default:
