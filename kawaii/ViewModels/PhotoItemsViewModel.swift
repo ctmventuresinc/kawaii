@@ -513,13 +513,13 @@ class PhotoItemsViewModel: ObservableObject {
             // Background removal is guaranteed to exist (enforced in cache)
             finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = FaceFrameShape.allCases.randomElement()
-            size = CGFloat.random(in: 153...234) // Face crop size range
+            size = CGFloat.random(in: 153...180) // Face crop size range - just small
         case .backgroundOnly:
             // Use background removed image, WITH frame (for visual variety)
             // Background removal is guaranteed to exist (enforced in cache)
             finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = FaceFrameShape.allCases.randomElement()
-            size = CGFloat.random(in: 220...350)
+            size = CGFloat.random(in: 153...250) // Small to medium
         case .none:
             // Use background removed image (all photos get background removal), no frame
             // Background removal is guaranteed to exist (enforced in cache)
