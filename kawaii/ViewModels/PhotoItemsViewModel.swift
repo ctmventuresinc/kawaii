@@ -261,22 +261,25 @@ class PhotoItemsViewModel: ObservableObject {
                 print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
                 self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             case .mixed:
-                // Weighted random: 30% face detection, 60% regular photo, 10% random photo with SVG cutout
-                let randomValue = Int.random(in: 1...100)
+                // USE CENTRALIZED DECISION SERVICE - NO MORE HARDCODED FALLBACK PERCENTAGES!
+                let requestedType = await MainActor.run { 
+                    photoTypeDecisionService.getPhotoTypeForMixedMode() 
+                }
+                await MainActor.run { 
+                    photoTypeDecisionService.logCurrentConfig() 
+                }
                 
-                if randomValue <= 30 {
-                    // 30% - Face detection photos (cropped faces with background removed)
-                    print("🔍 DEBUG: Mixed mode - chose FACE DETECTION (30%)")
+                switch requestedType {
+                case .faceDetection:
+                    print("🔍 DEBUG: Fallback using centralized service - chose FACE DETECTION")
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
-                } else if randomValue <= 90 {
-                    // 60% - Regular random photos (full photos, no processing)
-                    print("🔍 DEBUG: Mixed mode - chose REGULAR PHOTO (60%)")
+                case .none:
+                    print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
                     let randomIndex = Int.random(in: 0..<fetchResult.count)
                     let randomAsset = fetchResult.object(at: randomIndex)
                     self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
-                } else {
-                    // 10% - Random photos with SVG cutout (background removed but not face-cropped)
-                    print("🔍 DEBUG: Mixed mode - chose RANDOM PHOTO WITH SVG CUTOUT (10%)")
+                case .backgroundOnly:
+                    print("🔍 DEBUG: Fallback using centralized service - chose BACKGROUND ONLY")
                     let randomIndex = Int.random(in: 0..<fetchResult.count)
                     let randomAsset = fetchResult.object(at: randomIndex)
                     self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
