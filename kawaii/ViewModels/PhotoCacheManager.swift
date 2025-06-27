@@ -95,7 +95,7 @@ class PhotoCacheManager: ObservableObject {
         readyPhotoPool.removeAll()
         cachedFetchResult = nil
         cachedDate = nil
-        print("🔍 CACHE: Cache cleared")
+        print("🔍 CACHE: Cache cleared - Pool now empty")
     }
     
     func ensureFacePhotosAvailable(for date: Date) async {

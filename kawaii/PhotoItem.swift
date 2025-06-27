@@ -173,8 +173,15 @@ struct PhotoItem: Identifiable {
         // Keep burst shape creation for later use
         self.burstShape = frameShape != nil ? IrregularBurstShape() : nil
         
-        // Random photo filter from all available options
-        self.photoFilter = PhotoFilter.allCases.randomElement() ?? .none
+        // Assign filter based on frame type - exclude red for regular photos without frames
+        if frameShape == nil {
+            // Regular photos without frames - exclude red
+            let regularFilters: [PhotoFilter] = [.none, .yellow, .pink, .orange, .blackAndWhite]
+            self.photoFilter = regularFilters.randomElement() ?? .none
+        } else {
+            // Framed photos - allow all filters including red
+            self.photoFilter = PhotoFilter.allCases.randomElement() ?? .none
+        }
     }
 }
 
