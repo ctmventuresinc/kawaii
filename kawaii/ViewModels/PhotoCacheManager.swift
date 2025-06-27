@@ -21,6 +21,8 @@ class PhotoCacheManager: ObservableObject {
     private let photoTypeDecisionService = PhotoTypeDecisionService()
     
     // DUPLICATE PREVENTION
+    // TODO: Consider removing if performance becomes an issue or if duplicates are acceptable
+    private let preventDuplicates = true // Set to false to allow duplicate photos
     private var usedAssetIds: Set<String> = []
     
     struct PreprocessedPhoto {
@@ -56,7 +58,9 @@ class PhotoCacheManager: ObservableObject {
         // Remove from pool and mark as used
         if let index = readyPhotoPool.firstIndex(where: { $0.asset.localIdentifier == photo.asset.localIdentifier }) {
             readyPhotoPool.remove(at: index)
-            usedAssetIds.insert(photo.asset.localIdentifier)
+            if preventDuplicates {
+                usedAssetIds.insert(photo.asset.localIdentifier)
+            }
         }
         
         // Async refill
@@ -105,7 +109,9 @@ class PhotoCacheManager: ObservableObject {
         readyPhotoPool.removeAll()
         cachedFetchResult = nil
         cachedDate = nil
-        usedAssetIds.removeAll() // Reset duplicates on cache clear
+        if preventDuplicates {
+            usedAssetIds.removeAll() // Reset duplicates on cache clear
+        }
         print("🔍 CACHE: Cache cleared - Pool now empty")
     }
     
@@ -274,15 +280,18 @@ class PhotoCacheManager: ObservableObject {
     }
     
     private func preprocessRandomPhoto(from fetchResult: PHFetchResult<PHAsset>) async -> PreprocessedPhoto? {
-        // Try up to 10 times to find an unused photo
-        for _ in 0..<10 {
+        // Try up to 10 times to find an unused photo (if duplicate prevention enabled)
+        let maxAttempts = preventDuplicates ? 10 : 1
+        for _ in 0..<maxAttempts {
             let randomIndex = Int.random(in: 0..<fetchResult.count)
             let asset = fetchResult.object(at: randomIndex)
             
-            // Skip if already used
-            let alreadyUsed = await MainActor.run { usedAssetIds.contains(asset.localIdentifier) }
-            if alreadyUsed {
-                continue
+            // Skip if already used (only if duplicate prevention enabled)
+            if preventDuplicates {
+                let alreadyUsed = await MainActor.run { usedAssetIds.contains(asset.localIdentifier) }
+                if alreadyUsed {
+                    continue
+                }
             }
             
             // USE CENTRALIZED DECISION SERVICE
