@@ -17,6 +17,9 @@ class PhotoCacheManager: ObservableObject {
     private var readyPhotoPool: [PreprocessedPhoto] = []
     private var isPreprocessing = false
     
+    // CENTRALIZED DECISION SERVICE - SINGLE SOURCE OF TRUTH
+    private let photoTypeDecisionService = PhotoTypeDecisionService()
+    
     struct PreprocessedPhoto {
         let asset: PHAsset
         let image: UIImage
@@ -26,14 +29,9 @@ class PhotoCacheManager: ObservableObject {
         let processingType: ProcessingType
     }
     
-    enum ProcessingType {
-        case none           // 60% - Regular photo
-        case faceDetection  // 30% - Face cropped with background removed
-        case backgroundOnly // 10% - Background removed, no face crop
-    }
+    // ProcessingType moved to PhotoTypeDecisionService - import from there
     
     private let poolSize = 20 // Keep 20 photos ready - need more for aggressive face detection
-    private let minFacePhotos = 6 // Always maintain at least 6 face photos in pool
     private let backgroundQueue = DispatchQueue(label: "photo.preprocessing", qos: .userInitiated)
     
     func getCachedPhotoInstantly(for date: Date, photoMode: PhotoMode) -> PreprocessedPhoto? {
@@ -72,8 +70,16 @@ class PhotoCacheManager: ObservableObject {
             // Regular photos preferred, fallback to any photo
             return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
         case .mixed:
-            // 100% - Regular random photos (full photos, no frames) for testing
-            return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
+            // USE CENTRALIZED DECISION SERVICE - NO MORE SCATTERED LOGIC
+            let requestedType = photoTypeDecisionService.getPhotoTypeForMixedMode()
+            photoTypeDecisionService.logCurrentConfig()
+            
+            if let photo = readyPhotoPool.first(where: { $0.processingType == requestedType }) {
+                return photo
+            }
+            
+            // Fallback to any available photo if requested type not available
+            return readyPhotoPool.first
         }
     }
     
@@ -99,13 +105,16 @@ class PhotoCacheManager: ObservableObject {
     }
     
     func ensureFacePhotosAvailable(for date: Date) async {
-        // Force aggressive face detection if pool is empty or has no faces
-        let currentFacePhotos = readyPhotoPool.filter { $0.processingType == .faceDetection }.count
-        if currentFacePhotos == 0 {
-            print("🔍 CACHE: No face photos available - forcing aggressive search")
-            let fetchResult = await getCachedFetchResult(for: date)
-            if fetchResult.count > 0 {
-                await aggressivelyFindFacePhotos(from: fetchResult, needed: minFacePhotos)
+        // USE CENTRALIZED DECISION SERVICE - only search if config requires faces
+        if photoTypeDecisionService.shouldDoAggressiveFaceSearch() {
+            let currentFacePhotos = readyPhotoPool.filter { $0.processingType == .faceDetection }.count
+            let minRequired = photoTypeDecisionService.getMinimumFacePhotosRequired()
+            if currentFacePhotos == 0 {
+                print("🔍 CACHE: No face photos available - forcing aggressive search")
+                let fetchResult = await getCachedFetchResult(for: date)
+                if fetchResult.count > 0 {
+                    await aggressivelyFindFacePhotos(from: fetchResult, needed: minRequired)
+                }
             }
         }
     }
@@ -129,10 +138,13 @@ class PhotoCacheManager: ObservableObject {
         
         print("🔍 CACHE: Current pool - Total: \(currentPoolSize), Face photos: \(currentFacePhotos)")
         
-        // If we don't have enough face photos, aggressively find them first
-        if currentFacePhotos < minFacePhotos {
-            print("🔍 CACHE: AGGRESSIVE FACE DETECTION - Need \(minFacePhotos - currentFacePhotos) more face photos")
-            await aggressivelyFindFacePhotos(from: fetchResult, needed: minFacePhotos - currentFacePhotos)
+        // USE CENTRALIZED DECISION SERVICE - only do aggressive face search if config requires it
+        if photoTypeDecisionService.shouldDoAggressiveFaceSearch() {
+            let minRequired = photoTypeDecisionService.getMinimumFacePhotosRequired()
+            if currentFacePhotos < minRequired {
+                print("🔍 CACHE: AGGRESSIVE FACE DETECTION - Need \(minRequired - currentFacePhotos) more face photos")
+                await aggressivelyFindFacePhotos(from: fetchResult, needed: minRequired - currentFacePhotos)
+            }
         }
         
         // Then fill rest of pool with mixed content
@@ -260,8 +272,8 @@ class PhotoCacheManager: ObservableObject {
         let randomIndex = Int.random(in: 0..<fetchResult.count)
         let asset = fetchResult.object(at: randomIndex)
         
-        // 100% regular photos for testing
-        var processingType: ProcessingType = .none
+        // USE CENTRALIZED DECISION SERVICE
+        var processingType: ProcessingType = photoTypeDecisionService.getPhotoTypeForPreprocessing()
         
         // Load image with appropriate size
         let isForFaceDetection = processingType == .faceDetection

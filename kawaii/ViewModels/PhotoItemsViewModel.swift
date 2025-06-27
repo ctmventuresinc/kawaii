@@ -16,6 +16,9 @@ class PhotoItemsViewModel: ObservableObject {
     
     private let photoCacheManager = PhotoCacheManager()
     
+    // CENTRALIZED DECISION SERVICE - SINGLE SOURCE OF TRUTH
+    private let photoTypeDecisionService = PhotoTypeDecisionService()
+    
     func prefillCacheForDate(_ date: Date) {
         photoCacheManager.prefillPhotosForDate(date)
     }
@@ -181,7 +184,8 @@ class PhotoItemsViewModel: ObservableObject {
         }
         
         // If cache miss and face mode was requested, try aggressive face search
-        if photoMode == .faceOnly {
+        // USE CENTRALIZED DECISION SERVICE - no more scattered percentage logic
+        if photoMode == .faceOnly || (photoMode == .mixed && photoTypeDecisionService.shouldTriggerAggressiveSearchOnCacheMiss()) {
             print("🔍 DEBUG: Cache miss for face request - trying aggressive search")
             isLoading = true
             soundService.playLoadingSoundIfStillLoading { [weak self] in
