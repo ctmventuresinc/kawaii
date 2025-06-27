@@ -31,9 +31,9 @@ class PhotoTypeDecisionService {
     
     /// Current configuration - CHANGE PERCENTAGES HERE ONLY
     private let currentConfig = PhotoTypeConfig(
-        face: 0,      // 0% face detection (for testing)
-        regular: 100, // 100% regular photos (for testing)
-        background: 0 // 0% background only (for testing)
+        face: 15,     // 15% face detection 
+        regular: 65,  // 65% regular photos
+        background: 20 // 20% background only
     )
     
     // MARK: - Public Interface

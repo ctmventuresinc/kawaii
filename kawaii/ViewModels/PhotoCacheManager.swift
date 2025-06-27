@@ -20,6 +20,9 @@ class PhotoCacheManager: ObservableObject {
     // CENTRALIZED DECISION SERVICE - SINGLE SOURCE OF TRUTH
     private let photoTypeDecisionService = PhotoTypeDecisionService()
     
+    // DUPLICATE PREVENTION
+    private var usedAssetIds: Set<String> = []
+    
     struct PreprocessedPhoto {
         let asset: PHAsset
         let image: UIImage
@@ -50,9 +53,10 @@ class PhotoCacheManager: ObservableObject {
         
         print("🔍 CACHE: Found suitable photo - Type: \(photo.processingType), HasFaces: \(photo.hasFaces)")
         
-        // Remove from pool and start refill
+        // Remove from pool and mark as used
         if let index = readyPhotoPool.firstIndex(where: { $0.asset.localIdentifier == photo.asset.localIdentifier }) {
             readyPhotoPool.remove(at: index)
+            usedAssetIds.insert(photo.asset.localIdentifier)
         }
         
         // Async refill
@@ -101,6 +105,7 @@ class PhotoCacheManager: ObservableObject {
         readyPhotoPool.removeAll()
         cachedFetchResult = nil
         cachedDate = nil
+        usedAssetIds.removeAll() // Reset duplicates on cache clear
         print("🔍 CACHE: Cache cleared - Pool now empty")
     }
     
@@ -269,68 +274,81 @@ class PhotoCacheManager: ObservableObject {
     }
     
     private func preprocessRandomPhoto(from fetchResult: PHFetchResult<PHAsset>) async -> PreprocessedPhoto? {
-        let randomIndex = Int.random(in: 0..<fetchResult.count)
-        let asset = fetchResult.object(at: randomIndex)
+        // Try up to 10 times to find an unused photo
+        for _ in 0..<10 {
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            let asset = fetchResult.object(at: randomIndex)
+            
+            // Skip if already used
+            let alreadyUsed = await MainActor.run { usedAssetIds.contains(asset.localIdentifier) }
+            if alreadyUsed {
+                continue
+            }
+            
+            // USE CENTRALIZED DECISION SERVICE
+            var processingType: ProcessingType = photoTypeDecisionService.getPhotoTypeForPreprocessing()
         
-        // USE CENTRALIZED DECISION SERVICE
-        var processingType: ProcessingType = photoTypeDecisionService.getPhotoTypeForPreprocessing()
+            // Load image with appropriate size
+            let isForFaceDetection = processingType == .faceDetection
+            guard let image = await loadImage(from: asset, isForFaceDetection: isForFaceDetection) else { continue }
         
-        // Load image with appropriate size
-        let isForFaceDetection = processingType == .faceDetection
-        guard let image = await loadImage(from: asset, isForFaceDetection: isForFaceDetection) else { return nil }
-        
-        // Process based on type
-        var hasFaces = false
-        var faceImage: UIImage? = nil
-        var backgroundRemovedImage: UIImage? = nil
-        
-        switch processingType {
-        case .faceDetection:
-            // Single face detection call like original - avoid double detection inconsistencies
-            faceImage = await cropFace(from: image)
-            if let faceImg = faceImage {
-                hasFaces = true
-                // Apply background removal to face image - MUST succeed
-                backgroundRemovedImage = await removeBackground(from: faceImg)
-                guard backgroundRemovedImage != nil else {
-                    print("🔍 CACHE: ❌ Background removal failed for face image - rejecting photo")
-                    return nil
+            // Process based on type
+            var hasFaces = false
+            var faceImage: UIImage? = nil
+            var backgroundRemovedImage: UIImage? = nil
+            
+            switch processingType {
+            case .faceDetection:
+                // Single face detection call like original - avoid double detection inconsistencies
+                faceImage = await cropFace(from: image)
+                if let faceImg = faceImage {
+                    hasFaces = true
+                    // Apply background removal to face image - MUST succeed
+                    backgroundRemovedImage = await removeBackground(from: faceImg)
+                    guard backgroundRemovedImage != nil else {
+                        print("🔍 CACHE: ❌ Background removal failed for face image - trying next photo")
+                        continue
+                    }
+                } else {
+                    // No faces found, convert to regular photo
+                    hasFaces = false
+                    processingType = .none
+                    backgroundRemovedImage = await removeBackground(from: image)
+                    guard backgroundRemovedImage != nil else {
+                        print("🔍 CACHE: ❌ Background removal failed for regular image - trying next photo")
+                        continue
+                    }
                 }
-            } else {
-                // No faces found, convert to regular photo
-                hasFaces = false
-                processingType = .none
+            case .backgroundOnly:
                 backgroundRemovedImage = await removeBackground(from: image)
                 guard backgroundRemovedImage != nil else {
-                    print("🔍 CACHE: ❌ Background removal failed for regular image - rejecting photo")
-                    return nil
+                    print("🔍 CACHE: ❌ Background removal failed for background-only image - trying next photo")
+                    continue
+                }
+            case .none:
+                // Even "regular" photos get background removal in original code
+                backgroundRemovedImage = await removeBackground(from: image)
+                guard backgroundRemovedImage != nil else {
+                    print("🔍 CACHE: ❌ Background removal failed for regular image - trying next photo")
+                    continue
                 }
             }
-        case .backgroundOnly:
-            backgroundRemovedImage = await removeBackground(from: image)
-            guard backgroundRemovedImage != nil else {
-                print("🔍 CACHE: ❌ Background removal failed for background-only image - rejecting photo")
-                return nil
-            }
-        case .none:
-            // Even "regular" photos get background removal in original code
-            backgroundRemovedImage = await removeBackground(from: image)
-            guard backgroundRemovedImage != nil else {
-                print("🔍 CACHE: ❌ Background removal failed for regular image - rejecting photo")
-                return nil
-            }
+            
+            print("🔍 CACHE: Preprocessed photo - Type: \(processingType), HasFaces: \(hasFaces), FaceImage: \(faceImage != nil), BgRemoved: \(backgroundRemovedImage != nil)")
+            
+            return PreprocessedPhoto(
+                asset: asset,
+                image: image,
+                hasFaces: hasFaces,
+                faceImage: faceImage,
+                backgroundRemovedImage: backgroundRemovedImage,
+                processingType: processingType
+            )
         }
         
-        print("🔍 CACHE: Preprocessed photo - Type: \(processingType), HasFaces: \(hasFaces), FaceImage: \(faceImage != nil), BgRemoved: \(backgroundRemovedImage != nil)")
-        
-        return PreprocessedPhoto(
-            asset: asset,
-            image: image,
-            hasFaces: hasFaces,
-            faceImage: faceImage,
-            backgroundRemovedImage: backgroundRemovedImage,
-            processingType: processingType
-        )
+        // If we get here, all 10 attempts failed
+        print("🔍 CACHE: Failed to find suitable unused photo after 10 attempts")
+        return nil
     }
     
     private func loadImage(from asset: PHAsset, isForFaceDetection: Bool = false) async -> UIImage? {
