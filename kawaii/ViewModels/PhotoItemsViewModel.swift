@@ -518,7 +518,7 @@ class PhotoItemsViewModel: ObservableObject {
             // Background removal is guaranteed to exist (enforced in cache)
             finalImage = cachedPhoto.backgroundRemovedImage!
             frameShape = nil
-            size = CGFloat.random(in: 220...350)
+            size = CGFloat.random(in: 153...220)
         }
         
         let photoItem = PhotoItem(

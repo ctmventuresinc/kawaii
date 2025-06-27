@@ -72,22 +72,8 @@ class PhotoCacheManager: ObservableObject {
             // Regular photos preferred, fallback to any photo
             return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
         case .mixed:
-            let randomValue = Int.random(in: 1...100)
-            if randomValue <= 40 {
-                // 40% - Face detection photos (cropped faces with background removed)
-                if let facePhoto = readyPhotoPool.first(where: { $0.processingType == .faceDetection }) {
-                    return facePhoto
-                }
-                // If no face photos available, trigger aggressive search and return nil to force fallback
-                print("🔍 CACHE: No face photos in pool for 40% request - needs aggressive refill")
-                return nil
-            } else if randomValue <= 65 {
-                // 25% - Regular random photos (full photos, no frames)
-                return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
-            } else {
-                // 35% - Background removed with frames but no face crop
-                return readyPhotoPool.first { $0.processingType == .backgroundOnly } ?? readyPhotoPool.first
-            }
+            // 100% - Regular random photos (full photos, no frames) for testing
+            return readyPhotoPool.first { $0.processingType == .none } ?? readyPhotoPool.first
         }
     }
     
@@ -274,16 +260,8 @@ class PhotoCacheManager: ObservableObject {
         let randomIndex = Int.random(in: 0..<fetchResult.count)
         let asset = fetchResult.object(at: randomIndex)
         
-        // Decide processing type based on mixed mode percentages
-        let randomValue = Int.random(in: 1...100)
-        var processingType: ProcessingType
-        if randomValue <= 40 {
-            processingType = .faceDetection
-        } else if randomValue <= 65 {
-            processingType = .none
-        } else {
-            processingType = .backgroundOnly
-        }
+        // 100% regular photos for testing
+        var processingType: ProcessingType = .none
         
         // Load image with appropriate size
         let isForFaceDetection = processingType == .faceDetection
