@@ -275,17 +275,38 @@ class PhotoItemsViewModel: ObservableObject {
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
-                    let randomIndex = Int.random(in: 0..<fetchResult.count)
-                    let randomAsset = fetchResult.object(at: randomIndex)
-                    self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                    if let randomAsset = self.findUnusedAsset(from: fetchResult) {
+                        self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                    } else {
+                        print("🔍 DEBUG: No unused assets found for regular photo")
+                        completion(false)
+                    }
                 case .backgroundOnly:
                     print("🔍 DEBUG: Fallback using centralized service - chose BACKGROUND ONLY")
-                    let randomIndex = Int.random(in: 0..<fetchResult.count)
-                    let randomAsset = fetchResult.object(at: randomIndex)
-                    self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    if let randomAsset = self.findUnusedAsset(from: fetchResult) {
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    } else {
+                        print("🔍 DEBUG: No unused assets found for background only")
+                        completion(false)
+                    }
                 }
             }
         }
+    }
+    
+    private func findUnusedAsset(from fetchResult: PHFetchResult<PHAsset>) -> PHAsset? {
+        // Try up to 10 times to find an unused asset
+        let maxAttempts = FeatureFlags.shared.preventDuplicatePhotos ? 10 : 1
+        for _ in 0..<maxAttempts {
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            let asset = fetchResult.object(at: randomIndex)
+            
+            if !FeatureFlags.shared.isAssetUsed(asset.localIdentifier) {
+                FeatureFlags.shared.markAssetAsUsed(asset.localIdentifier)
+                return asset
+            }
+        }
+        return nil // All attempts failed to find unused asset
     }
     
     private func findPhotoWithFacesFromAssets(_ assets: PHFetchResult<PHAsset>, attempts: Int, maxAttempts: Int, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {

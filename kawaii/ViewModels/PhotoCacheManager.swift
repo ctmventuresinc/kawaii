@@ -21,8 +21,6 @@ class PhotoCacheManager: ObservableObject {
     private let photoTypeDecisionService = PhotoTypeDecisionService()
     
     // DUPLICATE PREVENTION
-    // TODO: Consider removing if performance becomes an issue or if duplicates are acceptable
-    private let preventDuplicates = true // Set to false to allow duplicate photos
     private var usedAssetIds: Set<String> = []
     
     struct PreprocessedPhoto {
@@ -58,7 +56,10 @@ class PhotoCacheManager: ObservableObject {
         // Remove from pool and mark as used
         if let index = readyPhotoPool.firstIndex(where: { $0.asset.localIdentifier == photo.asset.localIdentifier }) {
             readyPhotoPool.remove(at: index)
-            if preventDuplicates {
+            // Mark globally as used across all photo systems
+            FeatureFlags.shared.markAssetAsUsed(photo.asset.localIdentifier)
+            // Also keep local tracking for cache efficiency
+            if FeatureFlags.shared.preventDuplicatePhotos {
                 usedAssetIds.insert(photo.asset.localIdentifier)
             }
         }
@@ -109,8 +110,9 @@ class PhotoCacheManager: ObservableObject {
         readyPhotoPool.removeAll()
         cachedFetchResult = nil
         cachedDate = nil
-        if preventDuplicates {
+        if FeatureFlags.shared.preventDuplicatePhotos {
             usedAssetIds.removeAll() // Reset duplicates on cache clear
+            FeatureFlags.shared.clearUsedAssets() // Clear global tracking too
         }
         print("🔍 CACHE: Cache cleared - Pool now empty")
     }
@@ -209,7 +211,14 @@ class PhotoCacheManager: ObservableObject {
             for await photo in group {
                 if let photo = photo {
                     await MainActor.run {
-                        self.readyPhotoPool.append(photo)
+                        // Final duplicate check before adding to pool (prevent race conditions)
+                        let alreadyInPool = self.readyPhotoPool.contains { $0.asset.localIdentifier == photo.asset.localIdentifier }
+                        if !alreadyInPool {
+                            self.readyPhotoPool.append(photo)
+                            print("🔍 CACHE: Added photo to pool - Total: \(self.readyPhotoPool.count)")
+                        } else {
+                            print("🔍 CACHE: ⚠️  Prevented duplicate from being added to pool")
+                        }
                     }
                 }
             }
@@ -281,15 +290,16 @@ class PhotoCacheManager: ObservableObject {
     
     private func preprocessRandomPhoto(from fetchResult: PHFetchResult<PHAsset>) async -> PreprocessedPhoto? {
         // Try up to 10 times to find an unused photo (if duplicate prevention enabled)
-        let maxAttempts = preventDuplicates ? 10 : 1
+        let maxAttempts = FeatureFlags.shared.preventDuplicatePhotos ? 10 : 1
         for _ in 0..<maxAttempts {
             let randomIndex = Int.random(in: 0..<fetchResult.count)
             let asset = fetchResult.object(at: randomIndex)
             
-            // Skip if already used (only if duplicate prevention enabled)
-            if preventDuplicates {
-                let alreadyUsed = await MainActor.run { usedAssetIds.contains(asset.localIdentifier) }
-                if alreadyUsed {
+            // Skip if already used (check both local cache and global tracking)
+            if FeatureFlags.shared.preventDuplicatePhotos {
+                let locallyUsed = await MainActor.run { usedAssetIds.contains(asset.localIdentifier) }
+                let globallyUsed = await MainActor.run { FeatureFlags.shared.isAssetUsed(asset.localIdentifier) }
+                if locallyUsed || globallyUsed {
                     continue
                 }
             }
@@ -355,8 +365,9 @@ class PhotoCacheManager: ObservableObject {
             )
         }
         
-        // If we get here, all 10 attempts failed
-        print("🔍 CACHE: Failed to find suitable unused photo after 10 attempts")
+        // If we get here, all attempts failed
+        let attempts = FeatureFlags.shared.preventDuplicatePhotos ? "10" : "1"
+        print("🔍 CACHE: Failed to find suitable unused photo after \(attempts) attempts")
         return nil
     }
     
