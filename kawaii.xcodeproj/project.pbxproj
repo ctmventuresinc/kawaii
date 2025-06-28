@@ -517,7 +517,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kawaiiapp-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "This is Your Life";
+				INFOPLIST_KEY_CFBundleDisplayName = Kawaii;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "we use your photo library to bring you your memories";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -553,7 +553,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kawaiiapp-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "This is Your Life";
+				INFOPLIST_KEY_CFBundleDisplayName = Kawaii;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "we use your photo library to bring you your memories";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
