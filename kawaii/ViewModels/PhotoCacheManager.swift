@@ -38,36 +38,9 @@ class PhotoCacheManager: ObservableObject {
     private let backgroundQueue = DispatchQueue(label: "photo.preprocessing", qos: .userInitiated)
     
     func getCachedPhotoInstantly(for date: Date, photoMode: PhotoMode) -> PreprocessedPhoto? {
-        print("🔍 CACHE: Looking for photo - Mode: \(photoMode), Pool size: \(readyPhotoPool.count)")
-        print("🔍 CACHE: Pool types: \(readyPhotoPool.map { $0.processingType })")
-        
-        // Return immediately if we have a suitable photo
-        guard let photo = getSuitablePhotoFromPool(for: photoMode) else {
-            print("🔍 CACHE: No suitable photo found in pool")
-            // Start background refill if pool is low
-            if readyPhotoPool.count < 3 {
-                Task { await refillPhotoPool(for: date) }
-            }
-            return nil
-        }
-        
-        print("🔍 CACHE: Found suitable photo - Type: \(photo.processingType), HasFaces: \(photo.hasFaces)")
-        
-        // Remove from pool and mark as used
-        if let index = readyPhotoPool.firstIndex(where: { $0.asset.localIdentifier == photo.asset.localIdentifier }) {
-            readyPhotoPool.remove(at: index)
-            // Mark globally as used across all photo systems
-            FeatureFlags.shared.markAssetAsUsed(photo.asset.localIdentifier)
-            // Also keep local tracking for cache efficiency
-            if FeatureFlags.shared.preventDuplicatePhotos {
-                usedAssetIds.insert(photo.asset.localIdentifier)
-            }
-        }
-        
-        // Async refill
-        Task { await refillPhotoPool(for: date) }
-        
-        return photo
+        // STEP 1: BYPASS CACHE - Always return nil to force fallback path
+        print("🔍 CACHE: BYPASSED - Always using fallback path")
+        return nil
     }
     
     private func getSuitablePhotoFromPool(for mode: PhotoMode) -> PreprocessedPhoto? {
