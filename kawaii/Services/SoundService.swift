@@ -54,7 +54,7 @@ class SoundService: ObservableObject {
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]
     
     func playMarioSuccessSound() {
-        guard !isMuted else { return } // Skip if muted
+        guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
         
         let randomPair = soundImagePairs.randomElement() ?? soundImagePairs[0]
         
@@ -86,7 +86,7 @@ class SoundService: ObservableObject {
     }
     
     private func playRandomBackgroundSound() {
-        guard !isMuted else { return } // Skip if muted
+        guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
         
         let randomBackgroundSound = backgroundSounds.randomElement() ?? backgroundSounds[0]
         
@@ -133,7 +133,7 @@ class SoundService: ObservableObject {
     }
     
     func playSound(_ soundType: SoundType, delay: TimeInterval = 0) {
-        guard !isMuted else { return } // Skip if muted
+        guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
         
         let fileName = soundType.fileName
         guard let path = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
@@ -166,7 +166,7 @@ class SoundService: ObservableObject {
     }
     
     func playLoadingSoundIfStillLoading(isLoadingCheck: @escaping () -> Bool, delay: TimeInterval = 0.7) {
-        guard !isMuted else { return } // Skip if muted
+        guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
         
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             if isLoadingCheck() {

@@ -49,14 +49,15 @@ struct RandomPhotoView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Blue background
-//                Color.blue
-//                    .ignoresSafeArea()
-                
-				// Wallpaper background - commented out
-				Image("wallpaper")
-					.resizable()
-					.ignoresSafeArea()
+                // Background - switches based on app store review mode
+                if FeatureFlags.shared.appStoreReviewMode {
+                    Color.blue
+                        .ignoresSafeArea()
+                } else {
+                    Image("wallpaper")
+                        .resizable()
+                        .ignoresSafeArea()
+                }
                 
                 // Burst pattern background - commented out temporarily
                 // BurstPatternBackground(rotationAngle: colorPhase * 360)

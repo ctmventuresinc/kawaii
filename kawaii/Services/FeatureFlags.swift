@@ -46,6 +46,12 @@ class FeatureFlags {
     /// Enable verbose logging for photo system debugging
     var enablePhotoSystemLogging: Bool = true
     
+    // MARK: - App Store Review Features
+    
+    /// App Store review mode: mutes all sounds and uses plain blue background
+    /// Set to true during app store submission to ensure clean review experience
+    var appStoreReviewMode: Bool = true
+    
     // MARK: - Future Feature Flags
     // Add new feature flags here as needed
     
@@ -62,6 +68,7 @@ class FeatureFlags {
         print("🚩 FEATURE FLAGS:")
         print("🚩 preventDuplicatePhotos: \(preventDuplicatePhotos)")
         print("🚩 enablePhotoSystemLogging: \(enablePhotoSystemLogging)")
+        print("🚩 appStoreReviewMode: \(appStoreReviewMode)")
         print("🚩 enableNewAnimations: \(enableNewAnimations)")
         print("🚩 enableBetaUI: \(enableBetaUI)")
     }
