@@ -63,7 +63,7 @@ enum FaceFrameShape: CaseIterable {
 
 // Photo filters
 enum PhotoFilter: CaseIterable {
-    case none, red, yellow, pink, orange, blackAndWhite
+    case none, red, pink, orange, blackAndWhite
 }
 
 // Photo filter extension
@@ -73,13 +73,11 @@ extension View {
         case .none:
             return AnyView(self)
         case .red:
-            return AnyView(self.colorMultiply(.red))
-        case .yellow:
-            return AnyView(self.colorMultiply(.yellow))
+            return AnyView(self.colorMultiply(Color(hex: "#FF4757") ?? .red)) // Bright coral-red
         case .pink:
-            return AnyView(self.colorMultiply(.pink))
+            return AnyView(self.colorMultiply(Color(hex: "#FF6B9D") ?? .pink)) // Bright bubblegum pink
         case .orange:
-            return AnyView(self.colorMultiply(.orange))
+            return AnyView(self.colorMultiply(Color(hex: "#FF8C42") ?? .orange)) // Bright tangerine
         case .blackAndWhite:
             return AnyView(self.saturation(0))
         }
@@ -176,7 +174,7 @@ struct PhotoItem: Identifiable {
         // Assign filter based on frame type - exclude red for regular photos without frames
         if frameShape == nil {
             // Regular photos without frames - exclude red
-            let regularFilters: [PhotoFilter] = [.none, .yellow, .pink, .orange, .blackAndWhite]
+            let regularFilters: [PhotoFilter] = [.none, .pink, .orange, .blackAndWhite]
             self.photoFilter = regularFilters.randomElement() ?? .none
         } else {
             // Framed photos - allow all filters including red
