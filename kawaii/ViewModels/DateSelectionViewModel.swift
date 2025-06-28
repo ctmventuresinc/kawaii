@@ -11,13 +11,23 @@ import Foundation
 class DateSelectionViewModel: ObservableObject {
     @Published var selectedDate: Date
     @Published var formattedTravelDate: String = ""
+    @Published var currentMode: DateMode
     
     private let dateNavigator = DateNavigationUseCase.shared
     private let dateFormatter = DateFormattingService.shared
     
     init() {
-        // Start with one month ago as default
-        self.selectedDate = dateNavigator.oneMonthAgo()
+        // Initialize with default weekend mode
+        let mode: DateMode = .weekend // SWITCH THIS TO .daily for old behavior
+        self.currentMode = mode
+        
+        // Set initial date based on mode
+        switch mode {
+        case .daily:
+            self.selectedDate = dateNavigator.oneMonthAgo()
+        case .weekend:
+            self.selectedDate = dateNavigator.lastWeekend()
+        }
         updateFormattedDate()
     }
     
@@ -27,7 +37,12 @@ class DateSelectionViewModel: ObservableObject {
     }
     
     func navigateToOneDayAgo() {
-        selectedDate = dateNavigator.oneDayAgo(from: selectedDate)
+        switch currentMode {
+        case .daily:
+            selectedDate = dateNavigator.oneDayAgo(from: selectedDate)
+        case .weekend:
+            selectedDate = dateNavigator.previousWeekend(from: selectedDate)
+        }
         updateFormattedDate()
     }
     
@@ -42,7 +57,12 @@ class DateSelectionViewModel: ObservableObject {
     }
     
     func getCurrentDateRange() -> (start: Date, end: Date) {
-        return dateNavigator.getCurrentDateRange(for: selectedDate)
+        switch currentMode {
+        case .daily:
+            return dateNavigator.getCurrentDateRange(for: selectedDate)
+        case .weekend:
+            return dateNavigator.getWeekendDateRange(for: selectedDate)
+        }
     }
     
     private func updateFormattedDate() {

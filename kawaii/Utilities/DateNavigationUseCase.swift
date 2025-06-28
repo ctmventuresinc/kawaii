@@ -7,6 +7,11 @@
 
 import Foundation
 
+enum DateMode {
+    case daily        // Original mode - shows today, yesterday, etc.
+    case weekend      // Weekend mode - shows last Fri-Sun
+}
+
 class DateNavigationUseCase {
     static let shared = DateNavigationUseCase()
     
@@ -28,10 +33,37 @@ class DateNavigationUseCase {
         return targetDate
     }
     
+    func lastWeekend(from date: Date = Date()) -> Date {
+        let calendar = Calendar.current
+        
+        // Find the most recent Friday
+        var searchDate = date
+        while calendar.component(.weekday, from: searchDate) != 6 { // 6 = Friday
+            searchDate = calendar.date(byAdding: .day, value: -1, to: searchDate) ?? searchDate
+        }
+        
+        return searchDate
+    }
+    
+    func previousWeekend(from currentWeekendFriday: Date) -> Date {
+        return Calendar.current.date(byAdding: .weekOfYear, value: -1, to: currentWeekendFriday) ?? currentWeekendFriday
+    }
+    
     func getCurrentDateRange(for selectedDate: Date) -> (start: Date, end: Date) {
         let dateService = DateFormattingService.shared
         let startOfDay = dateService.startOfDay(for: selectedDate)
         let endOfDay = dateService.endOfDay(for: selectedDate)
         return (start: startOfDay, end: endOfDay)
+    }
+    
+    func getWeekendDateRange(for fridayDate: Date) -> (start: Date, end: Date) {
+        let calendar = Calendar.current
+        let dateService = DateFormattingService.shared
+        
+        let friday = dateService.startOfDay(for: fridayDate)
+        let sunday = calendar.date(byAdding: .day, value: 2, to: friday) ?? friday
+        let endOfSunday = dateService.endOfDay(for: sunday)
+        
+        return (start: friday, end: endOfSunday)
     }
 }
