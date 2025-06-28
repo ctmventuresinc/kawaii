@@ -72,7 +72,7 @@ struct OnboardingView: View {
 					Button(action: {
 						requestPhotoPermission()
 					}) {
-						Text("Allow full access for los 🥀🥺")
+						Text("Continue")
 							.font(.system(size: 27, weight: .semibold))
 							.foregroundColor(.black)
 					}
