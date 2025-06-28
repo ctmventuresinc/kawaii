@@ -68,11 +68,11 @@ class PhotoTypeDecisionService {
         let randomValue = Int.random(in: 1...100)
         
         if randomValue <= currentConfig.faceDetectionPercent {
-            return .faceDetection
+            return .facesWithFrames
         } else if randomValue <= currentConfig.faceDetectionPercent + currentConfig.regularPhotoPercent {
             return .none
         } else {
-            return .backgroundOnly
+            return .regularWithFrames
         }
     }
     
@@ -97,7 +97,7 @@ class PhotoTypeDecisionService {
 
 /// Processing type enum (moved here for clarity)
 enum ProcessingType {
-    case none           // Regular photo with background removal
-    case faceDetection  // Face cropped with background removed  
-    case backgroundOnly // Background removed, no face crop
+    case none                 // Regular photos (no frames)
+    case facesWithFrames      // Faces with frames (cropped faces with background removed)  
+    case regularWithFrames    // Regular photos with frames (background removed, no face crop)
 }

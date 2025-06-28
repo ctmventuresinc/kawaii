@@ -60,8 +60,10 @@ class PhotoItemsViewModel: ObservableObject {
                     
                     let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
                     
-                    // Standardized size for all photo types - creates cohesive collaging experience
-                    let size: CGFloat = CGFloat.random(in: 153...234)
+                    // Size based on frame type
+                    let size: CGFloat = frameShape == nil ? 
+                        CGFloat.random(in: 220...350) :  // Regular photos (no frames) - medium to large
+                        CGFloat.random(in: 153...234)    // Framed photos - smaller
                     
                     let photoItem = PhotoItem(
                         image: finalImage,
@@ -152,8 +154,10 @@ class PhotoItemsViewModel: ObservableObject {
             
             let frameShape = shouldUseFrames ? FaceFrameShape.allCases.randomElement() : nil
             
-            // Standardized size for all photo types - creates cohesive collaging experience
-            let size: CGFloat = CGFloat.random(in: 153...234)
+            // Size based on frame type
+            let size: CGFloat = frameShape == nil ? 
+                CGFloat.random(in: 220...350) :  // Regular photos (no frames) - medium to large
+                CGFloat.random(in: 153...234)    // Framed photos - smaller
             
             let photoItem = PhotoItem(
                 image: finalImage,
@@ -230,8 +234,8 @@ class PhotoItemsViewModel: ObservableObject {
                 }
                 
                 switch requestedType {
-                case .faceDetection:
-                    print("🔍 DEBUG: Fallback using centralized service - chose FACE DETECTION")
+                case .facesWithFrames:
+                    print("🔍 DEBUG: Fallback using centralized service - chose FACES WITH FRAMES")
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
@@ -241,12 +245,12 @@ class PhotoItemsViewModel: ObservableObject {
                         print("🔍 DEBUG: No unused assets found for regular photo")
                         completion(false)
                     }
-                case .backgroundOnly:
-                    print("🔍 DEBUG: Fallback using centralized service - chose BACKGROUND ONLY")
+                case .regularWithFrames:
+                    print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTOS WITH FRAMES")
                     if let randomAsset = self.findUnusedAsset(from: fetchResult) {
                         self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     } else {
-                        print("🔍 DEBUG: No unused assets found for background only")
+                        print("🔍 DEBUG: No unused assets found for regular photos with frames")
                         completion(false)
                     }
                 }
