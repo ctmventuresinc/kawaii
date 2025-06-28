@@ -1,22 +1,17 @@
-//
-//  FeatureFlags.swift
-//  kawaii
-//
-//  Created by Amp on 6/27/25.
-//
-
 import Foundation
 
-/// Centralized feature flag management
-/// Use this to control experimental or optional features across the app
 class FeatureFlags {
-    
-    // MARK: - Singleton
     static let shared = FeatureFlags()
     private init() {}
     
-    // MARK: - Shared Duplicate Tracking
-    /// Global set of used asset IDs across all photo creation systems
+    // FEATURE FLAGS - EDIT THESE
+    var appStoreReviewMode: Bool = true
+    var preventDuplicatePhotos: Bool = true
+    var enablePhotoSystemLogging: Bool = true
+    var enableNewAnimations: Bool = false
+    var enableBetaUI: Bool = false
+    
+    // DUPLICATE TRACKING - used by preventDuplicatePhotos
     private var globalUsedAssetIds: Set<String> = []
     
     func markAssetAsUsed(_ assetId: String) {
@@ -37,38 +32,11 @@ class FeatureFlags {
         return globalUsedAssetIds.count
     }
     
-    // MARK: - Photo System Features
-    
-    /// Prevents duplicate photos from appearing (fallback system handles this naturally)
-    /// Set to false if performance becomes an issue or duplicates are acceptable
-    var preventDuplicatePhotos: Bool = true
-    
-    /// Enable verbose logging for photo system debugging
-    var enablePhotoSystemLogging: Bool = true
-    
-    // MARK: - App Store Review Features
-    
-    /// App Store review mode: mutes all sounds and uses plain blue background
-    /// Set to true during app store submission to ensure clean review experience
-    var appStoreReviewMode: Bool = true
-    
-    // MARK: - Future Feature Flags
-    // Add new feature flags here as needed
-    
-    /// Example: Enable new animation system
-    var enableNewAnimations: Bool = false
-    
-    /// Example: Enable beta UI components
-    var enableBetaUI: Bool = false
-    
-    // MARK: - Utility Methods
-    
-    /// Print all current feature flag states for debugging
     func logAllFlags() {
         print("🚩 FEATURE FLAGS:")
+        print("🚩 appStoreReviewMode: \(appStoreReviewMode)")
         print("🚩 preventDuplicatePhotos: \(preventDuplicatePhotos)")
         print("🚩 enablePhotoSystemLogging: \(enablePhotoSystemLogging)")
-        print("🚩 appStoreReviewMode: \(appStoreReviewMode)")
         print("🚩 enableNewAnimations: \(enableNewAnimations)")
         print("🚩 enableBetaUI: \(enableBetaUI)")
     }
