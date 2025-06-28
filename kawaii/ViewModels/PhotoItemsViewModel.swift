@@ -18,13 +18,12 @@ class PhotoItemsViewModel: ObservableObject {
     private let photoTypeDecisionService = PhotoTypeDecisionService()
     
     func prefillCacheForDate(_ date: Date) {
-        // STEP 2: Cache integration removed - this function now does nothing
-        print("🔍 DEBUG: prefillCacheForDate called but cache removed")
+        // Cache system removed - this function is now a no-op
     }
     
     func handleDateChange(_ newDate: Date) {
         print("🔍 DEBUG: Date changed to \(newDate)")
-        // STEP 2: Cache integration removed - no cache prefill needed
+        // Cache system removed - no action needed on date change
     }
     
     func fetchAndAddRandomPhoto(photoViewModel: PhotoViewModel, soundService: SoundService) {
@@ -174,11 +173,8 @@ class PhotoItemsViewModel: ObservableObject {
     func addTestPhotoItem(backgroundRemover: BackgroundRemover, soundService: SoundService, dateSelection: DateSelectionViewModel, photoMode: PhotoMode, completion: @escaping (Bool) -> Void) {
         print("🔍 DEBUG: addTestElement() called - START")
         
-        // STEP 2: Cache integration removed - go directly to fallback path
-        print("🔍 DEBUG: No cache - using fallback path directly")
-        
-        // Fallback to original slow path
-        print("🔍 DEBUG: Cache miss - falling back to slow fetch")
+        // No cache system - use direct photo fetching
+        print("🔍 DEBUG: Using direct photo fetching")
         isLoading = true
         soundService.playLoadingSoundIfStillLoading { [weak self] in
             return self?.isLoading ?? false
@@ -481,7 +477,7 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    // STEP 2: createPhotoItemFromCachedPhoto removed - no longer needed without cache
+
     
     func convertToFramedPhoto(at index: Int) {
         guard index < photoItems.count else { return }

@@ -39,7 +39,7 @@ class FeatureFlags {
     
     // MARK: - Photo System Features
     
-    /// Prevents duplicate photos from appearing until cache is cleared
+    /// Prevents duplicate photos from appearing (fallback system handles this naturally)
     /// Set to false if performance becomes an issue or duplicates are acceptable
     var preventDuplicatePhotos: Bool = true
     

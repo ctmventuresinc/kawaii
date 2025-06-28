@@ -81,23 +81,7 @@ class PhotoTypeDecisionService {
         return getPhotoTypeForMixedMode() // Same logic, centralized
     }
     
-    /// Should we do aggressive face photo searching?
-    /// Returns false if face percentage is 0
-    func shouldDoAggressiveFaceSearch() -> Bool {
-        return currentConfig.faceDetectionPercent > 0
-    }
-    
-    /// Should we trigger aggressive face search for a cache miss?
-    /// Returns false if face percentage is 0
-    func shouldTriggerAggressiveSearchOnCacheMiss() -> Bool {
-        return currentConfig.faceDetectionPercent > 0
-    }
-    
-    /// Get minimum face photos to maintain in pool
-    /// Returns 0 if face percentage is 0
-    func getMinimumFacePhotosRequired() -> Int {
-        return currentConfig.faceDetectionPercent > 0 ? 6 : 0
-    }
+
     
     /// Get current configuration for debugging
     func getCurrentConfig() -> PhotoTypeConfig {
