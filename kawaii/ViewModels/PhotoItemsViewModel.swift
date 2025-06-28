@@ -209,7 +209,7 @@ class PhotoItemsViewModel: ObservableObject {
                 print("🔍 DEBUG: No photos found from selected date: \(debugDate)")
                 print("🔍 DEBUG: Falling back to any photo from library")
                 
-                // Fallback: fetch any photo from the library
+                // FALLBACK FOR APP STORE REVIEW: Ensures app always shows photos even with limited library access
                 let fallbackOptions = PHFetchOptions()
                 fallbackOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
                 fallbackOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", PHAssetMediaSubtype.photoScreenshot.rawValue)
@@ -227,28 +227,21 @@ class PhotoItemsViewModel: ObservableObject {
                     return
                 }
                 
+                let randomAsset = { fallbackResult.object(at: Int.random(in: 0..<fallbackResult.count)) }
+                
                 switch photoMode {
                 case .faceOnly:
                     self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .anyPhoto:
-                    // Pick any random photo from fallback assets
-                    let randomIndex = Int.random(in: 0..<fallbackResult.count)
-                    let asset = fallbackResult.object(at: randomIndex)
-                    self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .mixed:
-                    // Use PhotoTypeDecisionService for mixed mode
-                    let photoTypeDecision = PhotoTypeDecisionService().getPhotoTypeForMixedMode()
-                    switch photoTypeDecision {
+                    switch PhotoTypeDecisionService().getPhotoTypeForMixedMode() {
                     case .facesWithFrames:
                         self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .regularWithFrames:
-                        let randomIndex = Int.random(in: 0..<fallbackResult.count)
-                        let asset = fallbackResult.object(at: randomIndex)
-                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .none:
-                        let randomIndex = Int.random(in: 0..<fallbackResult.count)
-                        let asset = fallbackResult.object(at: randomIndex)
-                        self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     }
                 }
                 return
