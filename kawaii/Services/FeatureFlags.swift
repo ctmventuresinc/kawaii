@@ -1,3 +1,10 @@
+//
+//  PhotoItemsManager.swift
+//  kawaii
+//
+//  Created by AI Assistant on 6/22/25.
+//
+
 import Foundation
 
 class FeatureFlags {
