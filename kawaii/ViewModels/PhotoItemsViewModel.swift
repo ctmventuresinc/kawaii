@@ -207,9 +207,49 @@ class PhotoItemsViewModel: ObservableObject {
             guard fetchResult.count > 0 else {
                 let debugDate = await MainActor.run { dateSelection.getDebugDate() }
                 print("🔍 DEBUG: No photos found from selected date: \(debugDate)")
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    completion(false)
+                print("🔍 DEBUG: Falling back to any photo from library")
+                
+                // Fallback: fetch any photo from the library
+                let fallbackOptions = PHFetchOptions()
+                fallbackOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                fallbackOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", PHAssetMediaSubtype.photoScreenshot.rawValue)
+                fallbackOptions.fetchLimit = 100
+                
+                let fallbackResult = PHAsset.fetchAssets(with: .image, options: fallbackOptions)
+                print("🔍 DEBUG: Fallback found \(fallbackResult.count) photos")
+                
+                guard fallbackResult.count > 0 else {
+                    print("🔍 DEBUG: No photos found in entire library")
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        completion(false)
+                    }
+                    return
+                }
+                
+                switch photoMode {
+                case .faceOnly:
+                    self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                case .anyPhoto:
+                    // Pick any random photo from fallback assets
+                    let randomIndex = Int.random(in: 0..<fallbackResult.count)
+                    let asset = fallbackResult.object(at: randomIndex)
+                    self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                case .mixed:
+                    // Use PhotoTypeDecisionService for mixed mode
+                    let photoTypeDecision = PhotoTypeDecisionService().getPhotoTypeForMixedMode()
+                    switch photoTypeDecision {
+                    case .facesWithFrames:
+                        self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    case .regularWithFrames:
+                        let randomIndex = Int.random(in: 0..<fallbackResult.count)
+                        let asset = fallbackResult.object(at: randomIndex)
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    case .none:
+                        let randomIndex = Int.random(in: 0..<fallbackResult.count)
+                        let asset = fallbackResult.object(at: randomIndex)
+                        self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    }
                 }
                 return
             }
