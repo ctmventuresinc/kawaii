@@ -274,15 +274,21 @@ class PhotoItemsViewModel: ObservableObject {
                 case .faceOnly:
                     self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .anyPhoto:
-                    self.tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                    self.tryMultiplePhotosWithRetry(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "regular", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                        self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, method: .recentPhotos, completion: completion)
+                    }, completion: completion)
                 case .mixed:
                     switch PhotoTypeDecisionService().getPhotoTypeForMixedMode() {
                     case .facesWithFrames:
                         self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .regularWithFrames:
-                        self.tryMultiplePhotosForSVGCutout(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                        self.tryMultiplePhotosWithRetry(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "SVG", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                            self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, completion: completion)
+                        }, completion: completion)
                     case .none:
-                        self.tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                        self.tryMultiplePhotosWithRetry(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "regular", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                            self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, method: .recentPhotos, completion: completion)
+                        }, completion: completion)
                     }
                 }
                 return
@@ -297,7 +303,9 @@ class PhotoItemsViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Any photo mode - trying photos until one can be cut out")
-                self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                self.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "regular", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                    self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, method: .recentPhotos, completion: completion)
+                }, completion: completion)
             case .mixed:
                 // USE CENTRALIZED DECISION SERVICE - NO MORE HARDCODED FALLBACK PERCENTAGES!
                 let requestedType = await MainActor.run { 
@@ -313,10 +321,14 @@ class PhotoItemsViewModel: ObservableObject {
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
-                    self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                    self.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "regular", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                        self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, method: .recentPhotos, completion: completion)
+                    }, completion: completion)
                 case .regularWithFrames:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTOS WITH FRAMES")
-                    self.tryMultiplePhotosForSVGCutout(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+                    self.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "SVG", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, completion: completion)
+                    }, completion: completion)
                 }
             }
         }
@@ -345,7 +357,9 @@ class PhotoItemsViewModel: ObservableObject {
             let randomAsset = assets.object(at: randomIndex)
             // Fallback when no faces found - try multiple photos
             let fallbackResult = PHAsset.fetchAssets(with: .image, options: nil)
-            tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
+            tryMultiplePhotosWithRetry(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, photoType: "regular", photoProcessor: { asset, bgRemover, soundSvc, completion in
+                self.loadImageAndCreatePhotoItem(asset: asset, backgroundRemover: bgRemover, soundService: soundSvc, method: .recentPhotos, completion: completion)
+            }, completion: completion)
             return
         }
         
@@ -378,9 +392,18 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    private func tryMultiplePhotosUntilSuccess(from fetchResult: PHFetchResult<PHAsset>, backgroundRemover: BackgroundRemover, soundService: SoundService, attempts: Int, maxAttempts: Int, completion: @escaping (Bool) -> Void) {
+    private func tryMultiplePhotosWithRetry(
+        from fetchResult: PHFetchResult<PHAsset>, 
+        backgroundRemover: BackgroundRemover, 
+        soundService: SoundService, 
+        attempts: Int, 
+        maxAttempts: Int, 
+        photoType: String,
+        photoProcessor: @escaping (PHAsset, BackgroundRemover, SoundService, @escaping (Bool) -> Void) -> Void,
+        completion: @escaping (Bool) -> Void
+    ) {
         guard attempts < maxAttempts, fetchResult.count > 0 else {
-            print("🔍 DEBUG: Could not find any photos that can be cut out after \(attempts) attempts")
+            print("🔍 DEBUG: Could not find any \(photoType) photos that can be cut out after \(attempts) attempts")
             completion(false)
             return
         }
@@ -388,32 +411,12 @@ class PhotoItemsViewModel: ObservableObject {
         let randomIndex = Int.random(in: 0..<fetchResult.count)
         let randomAsset = fetchResult.object(at: randomIndex)
         
-        loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos) { success in
+        photoProcessor(randomAsset, backgroundRemover, soundService) { success in
             if success {
                 completion(true)
             } else {
                 // Try another photo
-                self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, completion: completion)
-            }
-        }
-    }
-    
-    private func tryMultiplePhotosForSVGCutout(from fetchResult: PHFetchResult<PHAsset>, backgroundRemover: BackgroundRemover, soundService: SoundService, attempts: Int, maxAttempts: Int, completion: @escaping (Bool) -> Void) {
-        guard attempts < maxAttempts, fetchResult.count > 0 else {
-            print("🔍 DEBUG: Could not find any photos for SVG cutout after \(attempts) attempts")
-            completion(false)
-            return
-        }
-        
-        let randomIndex = Int.random(in: 0..<fetchResult.count)
-        let randomAsset = fetchResult.object(at: randomIndex)
-        
-        loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService) { success in
-            if success {
-                completion(true)
-            } else {
-                // Try another photo
-                self.tryMultiplePhotosForSVGCutout(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, completion: completion)
+                self.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, photoType: photoType, photoProcessor: photoProcessor, completion: completion)
             }
         }
     }
