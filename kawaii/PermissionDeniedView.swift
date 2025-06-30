@@ -11,14 +11,14 @@ struct PermissionDeniedView: View {
     var body: some View {
         ZStack {
             // Full red background
-            Color.red
+			Color.purple
                 .ignoresSafeArea()
             
             VStack(spacing: 40) {
                 Spacer()
                 
                 // Middle text message
-                Text("allow full access for the danger boys")
+                Text("Allow full access to your photos so the app can create a personalized collage using images from your library.")
                     .font(.system(size: 19, weight: .regular))
                     .foregroundColor(.white)
                 
