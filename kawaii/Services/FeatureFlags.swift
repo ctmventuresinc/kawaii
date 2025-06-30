@@ -12,7 +12,7 @@ class FeatureFlags {
     private init() {}
     
     // FEATURE FLAGS - EDIT THESE
-	var appStoreReviewMode: Bool = false
+	var appStoreReviewMode: Bool = true
     var preventDuplicatePhotos: Bool = true
     var enablePhotoSystemLogging: Bool = true
     var enableNewAnimations: Bool = false
