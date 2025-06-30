@@ -128,6 +128,40 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
+    func addPhotoItemWithBackgroundRemovalNoFrames(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
+        // Force background removal but no frames for regular photos
+        backgroundRemover.removeBackground(of: image) { processedImage in
+            // Use processed image or fail gracefully
+            guard let finalImage = processedImage else {
+                print("🔍 DEBUG: Background removal failed for regular photo")
+                DispatchQueue.main.async {
+                    completion()
+                }
+                return
+            }
+            
+            let screenWidth = UIScreen.main.bounds.width
+            let screenHeight = UIScreen.main.bounds.height
+            let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+            let randomY = CGFloat.random(in: 100...(screenHeight - 200))
+            
+            // No frames for regular photos
+            let size: CGFloat = CGFloat.random(in: 250...500)
+            
+            let photoItem = PhotoItem(
+                image: finalImage,
+                position: CGPoint(x: randomX, y: randomY),
+                frameShape: nil,
+                size: size
+            )
+            
+            DispatchQueue.main.async {
+                self.photoItems.append(photoItem)
+                completion()
+            }
+        }
+    }
+    
     func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
         // Remove background from the image first
         backgroundRemover.removeBackground(of: image) { processedImage in
@@ -233,7 +267,7 @@ class PhotoItemsViewModel: ObservableObject {
                 case .faceOnly:
                     self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .anyPhoto:
-                    self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
                 case .mixed:
                     switch PhotoTypeDecisionService().getPhotoTypeForMixedMode() {
                     case .facesWithFrames:
@@ -241,7 +275,7 @@ class PhotoItemsViewModel: ObservableObject {
                     case .regularWithFrames:
                         self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .none:
-                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
                     }
                 }
                 return
@@ -256,7 +290,7 @@ class PhotoItemsViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
-                self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             case .mixed:
                 // USE CENTRALIZED DECISION SERVICE - NO MORE HARDCODED FALLBACK PERCENTAGES!
                 let requestedType = await MainActor.run { 
@@ -273,7 +307,7 @@ class PhotoItemsViewModel: ObservableObject {
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
                     if let randomAsset = self.findUnusedAsset(from: fetchResult) {
-                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
                     } else {
                         print("🔍 DEBUG: No unused assets found for regular photo")
                         completion(false)
@@ -312,7 +346,7 @@ class PhotoItemsViewModel: ObservableObject {
             // Fallback to regular photo if no faces found
             let randomIndex = Int.random(in: 0..<assets.count)
             let randomAsset = assets.object(at: randomIndex)
-            loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
             return
         }
         
@@ -360,7 +394,7 @@ class PhotoItemsViewModel: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                self.addPhotoItem(from: image, actualMethod: method, currentMethod: method, backgroundRemover: backgroundRemover) {
+                self.addPhotoItemWithBackgroundRemovalNoFrames(from: image, backgroundRemover: backgroundRemover) {
                     // Play sound and show overlay (same as add button)
                     soundService.playMarioSuccessSound()
                     self.isLoading = false
