@@ -63,7 +63,11 @@ enum FaceFrameShape: CaseIterable {
 
 // Photo filters
 enum PhotoFilter: CaseIterable {
-    case none, red, pink, orange, blackAndWhite
+    case none, red, pink, orange, blackAndWhite, customColor(String)
+    
+    static var allCases: [PhotoFilter] {
+        return [.none, .red, .pink, .orange, .blackAndWhite]
+    }
 }
 
 // Photo filter extension
@@ -80,6 +84,8 @@ extension View {
             return AnyView(self.colorMultiply(Color(hex: "#FF8C42") ?? .orange)) // Bright tangerine
         case .blackAndWhite:
             return AnyView(self.saturation(0))
+        case .customColor(let hexColor):
+            return AnyView(self.colorMultiply(Color(hex: hexColor) ?? .clear))
         }
     }
 }
@@ -171,8 +177,15 @@ struct PhotoItem: Identifiable {
         // Keep burst shape creation for later use
         self.burstShape = frameShape != nil ? IrregularBurstShape() : nil
         
-        // Assign filter randomly from available filters
-        self.photoFilter = PhotoFilter.allCases.randomElement() ?? .none
+        // Assign filter based on frame type
+        if frameShape != nil {
+            // Framed photos - use the third color from the combination as filter
+            self.photoFilter = .customColor(selectedCombo.inviteButtonColor)
+        } else {
+            // Regular photos without frames - only none or black and white
+            let regularFilters: [PhotoFilter] = [.none, .blackAndWhite]
+            self.photoFilter = regularFilters.randomElement() ?? .none
+        }
     }
 }
 
