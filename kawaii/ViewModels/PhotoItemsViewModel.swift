@@ -93,14 +93,14 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addPhotoItemWithForcedBackgroundRemoval(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
+    func addPhotoItemWithForcedBackgroundRemoval(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping (Bool) -> Void) {
         // Force background removal for SVG cutout effect
         backgroundRemover.removeBackground(of: image) { processedImage in
             // Use processed image or fail gracefully
             guard let finalImage = processedImage else {
                 print("🔍 DEBUG: Background removal failed for SVG cutout")
                 DispatchQueue.main.async {
-                    completion()
+                    completion(false)
                 }
                 return
             }
@@ -123,7 +123,7 @@ class PhotoItemsViewModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.photoItems.append(photoItem)
-                completion()
+                completion(true)
             }
         }
     }
@@ -162,10 +162,17 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
+    func addPhotoItem(from image: UIImage, actualMethod: PhotoRetrievalMethod, currentMethod: PhotoRetrievalMethod, backgroundRemover: BackgroundRemover, completion: @escaping (Bool) -> Void) {
         // Remove background from the image first
         backgroundRemover.removeBackground(of: image) { processedImage in
-            let finalImage = processedImage ?? image // Use original if background removal fails
+            // Only proceed if background removal succeeded
+            guard let finalImage = processedImage else {
+                print("🔍 DEBUG: Background removal failed for face photo")
+                DispatchQueue.main.async {
+                    completion(false)
+                }
+                return
+            }
             
             let screenWidth = UIScreen.main.bounds.width
             let screenHeight = UIScreen.main.bounds.height
@@ -203,7 +210,7 @@ class PhotoItemsViewModel: ObservableObject {
             // Only UI updates on main thread
             DispatchQueue.main.async {
                 self.photoItems.append(photoItem)
-                completion()
+                completion(true)
             }
         }
     }
@@ -273,7 +280,7 @@ class PhotoItemsViewModel: ObservableObject {
                     case .facesWithFrames:
                         self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .regularWithFrames:
-                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.tryMultiplePhotosForSVGCutout(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                     case .none:
                         self.tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                     }
@@ -309,12 +316,7 @@ class PhotoItemsViewModel: ObservableObject {
                     self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                 case .regularWithFrames:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTOS WITH FRAMES")
-                    if let randomAsset = self.findUnusedAsset(from: fetchResult) {
-                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
-                    } else {
-                        print("🔍 DEBUG: No unused assets found for regular photos with frames")
-                        completion(false)
-                    }
+                    self.tryMultiplePhotosForSVGCutout(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                 }
             }
         }
@@ -360,7 +362,15 @@ class PhotoItemsViewModel: ObservableObject {
         loadImageAndDetectFaces(asset: asset) { [weak self] faceImage in
             if let faceImage = faceImage {
                 // Found a face! Create photo item with frame
-                self?.createPhotoItemWithFrame(from: faceImage, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                self?.createPhotoItemWithFrame(from: faceImage, backgroundRemover: backgroundRemover, soundService: soundService) { success in
+                    if success {
+                        completion(true)
+                    } else {
+                        // Background removal failed on face photo, try next one
+                        print("🔍 DEBUG: Face photo background removal failed, trying another photo")
+                        self?.findPhotoWithFacesFromAssets(assets, attempts: attempts + 1, maxAttempts: maxAttempts, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    }
+                }
             } else {
                 // No faces in this image, try next one
                 self?.findPhotoWithFacesFromAssets(assets, attempts: attempts + 1, maxAttempts: maxAttempts, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
@@ -384,6 +394,26 @@ class PhotoItemsViewModel: ObservableObject {
             } else {
                 // Try another photo
                 self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, completion: completion)
+            }
+        }
+    }
+    
+    private func tryMultiplePhotosForSVGCutout(from fetchResult: PHFetchResult<PHAsset>, backgroundRemover: BackgroundRemover, soundService: SoundService, attempts: Int, maxAttempts: Int, completion: @escaping (Bool) -> Void) {
+        guard attempts < maxAttempts, fetchResult.count > 0 else {
+            print("🔍 DEBUG: Could not find any photos for SVG cutout after \(attempts) attempts")
+            completion(false)
+            return
+        }
+        
+        let randomIndex = Int.random(in: 0..<fetchResult.count)
+        let randomAsset = fetchResult.object(at: randomIndex)
+        
+        loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService) { success in
+            if success {
+                completion(true)
+            } else {
+                // Try another photo
+                self.tryMultiplePhotosForSVGCutout(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, completion: completion)
             }
         }
     }
@@ -452,10 +482,16 @@ class PhotoItemsViewModel: ObservableObject {
             
             // Force background removal for SVG cutout effect
             DispatchQueue.main.async {
-                self.addPhotoItemWithForcedBackgroundRemoval(from: image, backgroundRemover: backgroundRemover) {
-                    soundService.playMarioSuccessSound()
-                    self.isLoading = false
-                    completion(true)
+                self.addPhotoItemWithForcedBackgroundRemoval(from: image, backgroundRemover: backgroundRemover) { success in
+                    if success {
+                        soundService.playMarioSuccessSound()
+                        self.isLoading = false
+                        completion(true)
+                    } else {
+                        print("🔍 DEBUG: SVG background removal failed, retrying with different photo")
+                        self.isLoading = false
+                        completion(false)
+                    }
                 }
             }
         }
@@ -463,11 +499,17 @@ class PhotoItemsViewModel: ObservableObject {
     
     private func createPhotoItemWithFrame(from faceImage: UIImage, backgroundRemover: BackgroundRemover, soundService: SoundService, completion: @escaping (Bool) -> Void) {
         DispatchQueue.main.async {
-            self.addPhotoItem(from: faceImage, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) {
-                // Play sound and show overlay (same as add button)
-                soundService.playMarioSuccessSound()
-                self.isLoading = false
-                completion(true)
+            self.addPhotoItem(from: faceImage, actualMethod: .facePhotosLastMonth, currentMethod: .facePhotosLastMonth, backgroundRemover: backgroundRemover) { success in
+                if success {
+                    // Play sound and show overlay (same as add button)
+                    soundService.playMarioSuccessSound()
+                    self.isLoading = false
+                    completion(true)
+                } else {
+                    print("🔍 DEBUG: Face photo background removal failed")
+                    self.isLoading = false
+                    completion(false)
+                }
             }
         }
     }
