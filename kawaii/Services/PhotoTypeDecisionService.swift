@@ -38,6 +38,7 @@ class PhotoTypeDecisionService {
         case optionH // "Balanced Target" - 35/50/15 (3 face, 4 regular, 1 background)
         case optionI // "More Background Variety" - 30/50/20 (2-3 face, 4 regular, 1-2 background)
         case optionJ // "100% Regular Photos" - 0/100/0 (no faces, all regular, no background removal)
+		case optionK
         
         var config: PhotoTypeConfig {
             switch self {
@@ -51,12 +52,14 @@ class PhotoTypeDecisionService {
                 return PhotoTypeConfig(name: "Option I - More Background Variety", face: 25, regular: 55, background: 20)
             case .optionJ:
                 return PhotoTypeConfig(name: "Option J - 100% Regular Photos", face: 0, regular: 100, background: 0)
+			case .optionK:
+				return PhotoTypeConfig(name: "Option J - 100% Regular Photos", face: 22, regular: 63, background: 15)
             }
         }
     }
     
     /// CHANGE THIS TO EXPERIMENT WITH DIFFERENT CONFIGURATIONS
-    private let selectedPreset: PresetConfig = .optionJ
+    private let selectedPreset: PresetConfig = .optionK
     
     /// Current configuration - automatically uses selected preset
     private var currentConfig: PhotoTypeConfig {
