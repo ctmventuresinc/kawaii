@@ -18,7 +18,7 @@ class DateSelectionViewModel: ObservableObject {
     
     init() {
         // Initialize with default weekend mode
-        let mode: DateMode = .weekend // SWITCH THIS TO .daily for old behavior
+		let mode: DateMode = .daily // SWITCH THIS TO .daily for old behavior
         self.currentMode = mode
         
         // Set initial date based on mode
