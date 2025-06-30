@@ -62,7 +62,7 @@ class PhotoItemsViewModel: ObservableObject {
                     
                     // Size based on frame type
                     let size: CGFloat = frameShape == nil ? 
-                        CGFloat.random(in: 250...500) :  // Regular photos (no frames) - larger
+                        CGFloat.random(in: 150...500) :  // Regular photos (no frames) - larger
                         CGFloat.random(in: 153...234)    // Framed photos - smaller
                     
                     let photoItem = PhotoItem(
@@ -146,7 +146,7 @@ class PhotoItemsViewModel: ObservableObject {
             let randomY = CGFloat.random(in: 100...(screenHeight - 200))
             
             // No frames for regular photos
-            let size: CGFloat = CGFloat.random(in: 250...500)
+            let size: CGFloat = CGFloat.random(in: 150...500)
             
             let photoItem = PhotoItem(
                 image: finalImage,

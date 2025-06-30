@@ -63,7 +63,7 @@ enum FaceFrameShape: CaseIterable {
 
 // Photo filters
 enum PhotoFilter: CaseIterable {
-    case none, red, pink, orange, blackAndWhite
+    case none, orange, lapisBlue, blackAndWhite
 }
 
 // Photo filter extension
@@ -72,12 +72,10 @@ extension View {
         switch filter {
         case .none:
             return AnyView(self)
-        case .red:
-            return AnyView(self.colorMultiply(Color(hex: "#FF4757") ?? .red)) // Bright coral-red
-        case .pink:
-            return AnyView(self.colorMultiply(Color(hex: "#FF6B9D") ?? .pink)) // Bright bubblegum pink
         case .orange:
-            return AnyView(self.colorMultiply(Color(hex: "#FF8C42") ?? .orange)) // Bright tangerine
+            return AnyView(self.overlay((Color(hex: "#FF8C42") ?? Color.orange).opacity(0.15).blendMode(.screen))) // Light orange tint
+        case .lapisBlue:
+            return AnyView(self.overlay((Color(hex: "#26619C") ?? Color.blue).opacity(0.15).blendMode(.screen))) // Light lapis lazuli blue tint
         case .blackAndWhite:
             return AnyView(self.saturation(0))
         }
@@ -171,15 +169,8 @@ struct PhotoItem: Identifiable {
         // Keep burst shape creation for later use
         self.burstShape = frameShape != nil ? IrregularBurstShape() : nil
         
-        // Assign filter based on frame type - exclude red for regular photos without frames
-        if frameShape == nil {
-            // Regular photos without frames - exclude red
-            let regularFilters: [PhotoFilter] = [.none, .pink, .orange, .blackAndWhite]
-            self.photoFilter = regularFilters.randomElement() ?? .none
-        } else {
-            // Framed photos - allow all filters including red
-            self.photoFilter = PhotoFilter.allCases.randomElement() ?? .none
-        }
+        // Assign filter randomly from available filters
+        self.photoFilter = PhotoFilter.allCases.randomElement() ?? .none
     }
 }
 
