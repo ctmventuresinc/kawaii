@@ -233,7 +233,7 @@ class PhotoItemsViewModel: ObservableObject {
                 case .faceOnly:
                     self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .anyPhoto:
-                    self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                    self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .mixed:
                     switch PhotoTypeDecisionService().getPhotoTypeForMixedMode() {
                     case .facesWithFrames:
@@ -241,7 +241,7 @@ class PhotoItemsViewModel: ObservableObject {
                     case .regularWithFrames:
                         self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .none:
-                        self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     }
                 }
                 return
@@ -256,7 +256,7 @@ class PhotoItemsViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
                 print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
-                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
             case .mixed:
                 // USE CENTRALIZED DECISION SERVICE - NO MORE HARDCODED FALLBACK PERCENTAGES!
                 let requestedType = await MainActor.run { 
@@ -273,7 +273,7 @@ class PhotoItemsViewModel: ObservableObject {
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
                     if let randomAsset = self.findUnusedAsset(from: fetchResult) {
-                        self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                        self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     } else {
                         print("🔍 DEBUG: No unused assets found for regular photo")
                         completion(false)
@@ -312,7 +312,7 @@ class PhotoItemsViewModel: ObservableObject {
             // Fallback to regular photo if no faces found
             let randomIndex = Int.random(in: 0..<assets.count)
             let randomAsset = assets.object(at: randomIndex)
-            loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
             return
         }
         
