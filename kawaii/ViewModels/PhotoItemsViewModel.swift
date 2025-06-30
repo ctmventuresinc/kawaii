@@ -128,14 +128,14 @@ class PhotoItemsViewModel: ObservableObject {
         }
     }
     
-    func addPhotoItemWithBackgroundRemovalNoFrames(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping () -> Void) {
+    func addPhotoItemWithBackgroundRemovalNoFrames(from image: UIImage, backgroundRemover: BackgroundRemover, completion: @escaping (Bool) -> Void) {
         // Force background removal but no frames for regular photos
         backgroundRemover.removeBackground(of: image) { processedImage in
-            // Use processed image or fail gracefully
+            // Only proceed if background removal succeeded
             guard let finalImage = processedImage else {
-                print("🔍 DEBUG: Background removal failed for regular photo")
+                print("🔍 DEBUG: Background removal failed - photo cannot be cut out, skipping")
                 DispatchQueue.main.async {
-                    completion()
+                    completion(false)
                 }
                 return
             }
@@ -157,7 +157,7 @@ class PhotoItemsViewModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.photoItems.append(photoItem)
-                completion()
+                completion(true)
             }
         }
     }
@@ -267,7 +267,7 @@ class PhotoItemsViewModel: ObservableObject {
                 case .faceOnly:
                     self.findPhotoWithFacesFromAssets(fallbackResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .anyPhoto:
-                    self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                    self.tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                 case .mixed:
                     switch PhotoTypeDecisionService().getPhotoTypeForMixedMode() {
                     case .facesWithFrames:
@@ -275,7 +275,7 @@ class PhotoItemsViewModel: ObservableObject {
                     case .regularWithFrames:
                         self.loadImageAndCreatePhotoItemWithBackgroundRemoval(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                     case .none:
-                        self.loadImageAndCreatePhotoItem(asset: randomAsset(), backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                        self.tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                     }
                 }
                 return
@@ -289,8 +289,8 @@ class PhotoItemsViewModel: ObservableObject {
                 // Random photo only
                 let randomIndex = Int.random(in: 0..<fetchResult.count)
                 let randomAsset = fetchResult.object(at: randomIndex)
-                print("🔍 DEBUG: Any photo mode - selected photo at index \(randomIndex)")
-                self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+                print("🔍 DEBUG: Any photo mode - trying photos until one can be cut out")
+                self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
             case .mixed:
                 // USE CENTRALIZED DECISION SERVICE - NO MORE HARDCODED FALLBACK PERCENTAGES!
                 let requestedType = await MainActor.run { 
@@ -306,12 +306,7 @@ class PhotoItemsViewModel: ObservableObject {
                     self.findPhotoWithFacesFromAssets(fetchResult, attempts: 0, maxAttempts: 50, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
                 case .none:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTO")
-                    if let randomAsset = self.findUnusedAsset(from: fetchResult) {
-                        self.loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
-                    } else {
-                        print("🔍 DEBUG: No unused assets found for regular photo")
-                        completion(false)
-                    }
+                    self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
                 case .regularWithFrames:
                     print("🔍 DEBUG: Fallback using centralized service - chose REGULAR PHOTOS WITH FRAMES")
                     if let randomAsset = self.findUnusedAsset(from: fetchResult) {
@@ -346,7 +341,9 @@ class PhotoItemsViewModel: ObservableObject {
             // Fallback to regular photo if no faces found
             let randomIndex = Int.random(in: 0..<assets.count)
             let randomAsset = assets.object(at: randomIndex)
-            loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos, completion: completion)
+            // Fallback when no faces found - try multiple photos
+            let fallbackResult = PHAsset.fetchAssets(with: .image, options: nil)
+            tryMultiplePhotosUntilSuccess(from: fallbackResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: 0, maxAttempts: 10, completion: completion)
             return
         }
         
@@ -367,6 +364,26 @@ class PhotoItemsViewModel: ObservableObject {
             } else {
                 // No faces in this image, try next one
                 self?.findPhotoWithFacesFromAssets(assets, attempts: attempts + 1, maxAttempts: maxAttempts, backgroundRemover: backgroundRemover, soundService: soundService, completion: completion)
+            }
+        }
+    }
+    
+    private func tryMultiplePhotosUntilSuccess(from fetchResult: PHFetchResult<PHAsset>, backgroundRemover: BackgroundRemover, soundService: SoundService, attempts: Int, maxAttempts: Int, completion: @escaping (Bool) -> Void) {
+        guard attempts < maxAttempts, fetchResult.count > 0 else {
+            print("🔍 DEBUG: Could not find any photos that can be cut out after \(attempts) attempts")
+            completion(false)
+            return
+        }
+        
+        let randomIndex = Int.random(in: 0..<fetchResult.count)
+        let randomAsset = fetchResult.object(at: randomIndex)
+        
+        loadImageAndCreatePhotoItem(asset: randomAsset, backgroundRemover: backgroundRemover, soundService: soundService, method: .recentPhotos) { success in
+            if success {
+                completion(true)
+            } else {
+                // Try another photo
+                self.tryMultiplePhotosUntilSuccess(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, completion: completion)
             }
         }
     }
@@ -394,11 +411,18 @@ class PhotoItemsViewModel: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                self.addPhotoItemWithBackgroundRemovalNoFrames(from: image, backgroundRemover: backgroundRemover) {
-                    // Play sound and show overlay (same as add button)
-                    soundService.playMarioSuccessSound()
-                    self.isLoading = false
-                    completion(true)
+                self.addPhotoItemWithBackgroundRemovalNoFrames(from: image, backgroundRemover: backgroundRemover) { success in
+                    if success {
+                        // Play sound and show overlay (same as add button)
+                        soundService.playMarioSuccessSound()
+                        self.isLoading = false
+                        completion(true)
+                    } else {
+                        // Background removal failed, try another photo
+                        print("🔍 DEBUG: Background removal failed, retrying with different photo")
+                        self.isLoading = false
+                        completion(false)
+                    }
                 }
             }
         }
