@@ -63,7 +63,7 @@ enum FaceFrameShape: CaseIterable {
 
 // Photo filters
 enum PhotoFilter: CaseIterable {
-    case none, orange, lapisBlue, blackAndWhite
+    case none, red, pink, orange, blackAndWhite
 }
 
 // Photo filter extension
@@ -72,10 +72,12 @@ extension View {
         switch filter {
         case .none:
             return AnyView(self)
+        case .red:
+            return AnyView(self.colorMultiply(Color(hex: "#FF4757") ?? .red)) // Bright coral-red
+        case .pink:
+            return AnyView(self.colorMultiply(Color(hex: "#FF6B9D") ?? .pink)) // Bright bubblegum pink
         case .orange:
-            return AnyView(self.overlay((Color(hex: "#FF8C42") ?? Color.orange).opacity(0.15).blendMode(.screen))) // Light orange tint
-        case .lapisBlue:
-            return AnyView(self.overlay((Color(hex: "#26619C") ?? Color.blue).opacity(0.15).blendMode(.screen))) // Light lapis lazuli blue tint
+            return AnyView(self.colorMultiply(Color(hex: "#FF8C42") ?? .orange)) // Bright tangerine
         case .blackAndWhite:
             return AnyView(self.saturation(0))
         }
