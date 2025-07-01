@@ -12,12 +12,17 @@ class FeatureFlags {
     private init() {}
     
     // FEATURE FLAGS - EDIT THESE
-	var appStoreReviewMode: Bool = false
+	
+	//app store
+	var appStoreReviewMode: Bool = true
+	var disablePushNotificationRequests: Bool = true
+	
+	//regylar
     var preventDuplicatePhotos: Bool = true
     var enablePhotoSystemLogging: Bool = true
     var enableNewAnimations: Bool = false
     var enableBetaUI: Bool = false
-    var disablePushNotificationRequests: Bool = true
+    
     
     // DUPLICATE TRACKING - used by preventDuplicatePhotos
     private var globalUsedAssetIds: Set<String> = []
