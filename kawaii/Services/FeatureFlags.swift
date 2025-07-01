@@ -14,8 +14,8 @@ class FeatureFlags {
     // FEATURE FLAGS - EDIT THESE
 	
 	//app store
-	var appStoreReviewMode: Bool = true
-	var disablePushNotificationRequests: Bool = true
+	var appStoreReviewMode: Bool = false
+	var disablePushNotificationRequests: Bool = false
 	
 	//regylar
     var preventDuplicatePhotos: Bool = true
