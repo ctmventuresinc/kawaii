@@ -17,6 +17,7 @@ class FeatureFlags {
     var enablePhotoSystemLogging: Bool = true
     var enableNewAnimations: Bool = false
     var enableBetaUI: Bool = false
+    var disablePushNotificationRequests: Bool = true
     
     // DUPLICATE TRACKING - used by preventDuplicatePhotos
     private var globalUsedAssetIds: Set<String> = []
@@ -46,5 +47,6 @@ class FeatureFlags {
         print("🚩 enablePhotoSystemLogging: \(enablePhotoSystemLogging)")
         print("🚩 enableNewAnimations: \(enableNewAnimations)")
         print("🚩 enableBetaUI: \(enableBetaUI)")
+        print("🚩 disablePushNotificationRequests: \(disablePushNotificationRequests)")
     }
 }
