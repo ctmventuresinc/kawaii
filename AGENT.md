@@ -1,136 +1,182 @@
 # Kawaii App - Development Guide
 
-## 🏗️ Architecture & Code Organization
+## 🏛️ Architecture & Patterns (Priority #1)
 
-### Recent Refactoring (June 2025)
-- **Extracted ButtonStyles** from `RandomPhotoView.swift` to `ButtonStyles.swift`
-- **Reduced main view file** from 1700+ lines to ~1580 lines
-- **Improved separation of concerns** - UI components are now modular and reusable
-
-### File Structure
+### Current Architecture Overview
 ```
 kawaii/
-├── RandomPhotoView.swift       # Main view (should be further refactored)
-├── ButtonStyles.swift          # Reusable button style components
-├── BackgroundRemover.swift     # AI background removal functionality
-└── Assets/                     # Images, wallpapers, sounds
+├── ViewModels/
+│   ├── PhotoItemsViewModel.swift    # Core photo logic (639 lines - NEEDS REFACTORING)
+│   ├── PhotoViewModel.swift         # Photo fetching logic
+│   └── DateSelectionViewModel.swift # Date navigation
+├── Services/
+│   ├── PhotoTypeDecisionService.swift  # Centralized photo type percentages
+│   ├── SoundService.swift             # Audio playback management
+│   ├── FeatureFlags.swift             # Feature toggles & app store review mode
+│   ├── BackgroundRemover.swift        # AI background removal
+│   └── ShareService.swift             # Share functionality
+├── Components/                      # Reusable UI components
+├── Models/                         # Data structures
+├── Utilities/                      # Helper functions
+└── RandomPhotoView.swift           # Main view (671 lines - manageable)
 ```
 
-## 🚨 Critical Refactoring Needed
+### 🔧 **IMPLEMENTED PATTERNS**
 
-### 1. **RandomPhotoView.swift is still too large (1580 lines)**
-**Recommended splits:**
-- `PhotoManager.swift` - Extract the entire PhotoManager class
-- `PhotoItem.swift` - Extract PhotoItem struct and related models
-- `SoundManager.swift` - Extract audio playback functionality  
-- `DragGestureHandler.swift` - Extract drag/drop logic
-- `AnimationHelpers.swift` - Extract animation state and functions
+#### 1. **Generic Retry Pattern** ✅
+**Problem Solved:** Three similar retry functions for different photo types  
+**Solution:** Single `tryMultiplePhotosWithRetry()` with closure-based photo processors
+```swift
+tryMultiplePhotosWithRetry(
+    photoType: "regular",
+    photoProcessor: { asset, bgRemover, soundSvc, completion in
+        // Custom processing logic
+    }
+)
+```
 
-### 2. **Performance Optimizations Applied**
-- ✅ **All Photos framework operations** moved to background queues
-- ✅ **Vision framework** (face detection, background removal) on background threads
-- ✅ **Main thread** only for UI updates
-- ✅ **High-quality image loading** (2700px source → 153-234px display)
+#### 2. **Service Layer Pattern** ✅
+- **PhotoTypeDecisionService** - Single source of truth for photo percentages
+- **SoundService** - Centralized audio management
+- **FeatureFlags** - Configuration management
+- **BackgroundRemover** - AI processing abstraction
 
-### 3. **UI Components Architecture**
-- ✅ **ButtonStyles.swift** - Clean, reusable button components
-- ✅ **ActivityView** - Standardized share sheet implementation
-- ⚠️ **More extraction needed** - Custom shapes, filters, animations
+#### 3. **MVVM Pattern** ✅
+- **ViewModels** handle business logic
+- **Views** only handle UI state
+- Clear separation of concerns
 
-## 🧪 Testing & Development
+#### 4. **Feature Flag Pattern** ✅
+```swift
+FeatureFlags.shared.appStoreReviewMode  // Disables sounds, changes background
+FeatureFlags.shared.preventDuplicatePhotos  // Photo deduplication
+```
 
-### Build Commands
+### 🚨 **URGENT REFACTORING NEEDED**
+
+#### **PhotoItemsViewModel.swift (639 lines) - VIOLATES SINGLE RESPONSIBILITY**
+**Recommended extractions:**
+```
+PhotoItemsViewModel (639 lines) →
+├── PhotoItemFactory.swift        (~200 lines) - Photo creation logic
+├── PhotoRetryService.swift       (~100 lines) - Retry logic coordination  
+├── FaceDetectionService.swift    (~100 lines) - Face detection & cropping
+├── PhotoLibraryService.swift     (~150 lines) - PHAsset fetching & filtering
+└── PhotoItemsViewModel.swift     (~89 lines) - Pure view state management
+```
+
+### 🎯 **AVAILABLE ARCHITECTURAL PATTERNS**
+
+#### **Enterprise Patterns**
+- **Repository Pattern** - Abstract data access (PhotoRepository)
+- **Use Cases/Interactors** - Clean Architecture business logic
+- **Dependency Injection** - Loose coupling with protocols
+- **Coordinator Pattern** - Navigation flow management
+- **Command Pattern** - Encapsulate photo operations
+- **Observer Pattern** - Reactive photo updates
+- **Factory Pattern** - PhotoItem creation strategies
+
+#### **iOS-Specific Patterns**  
+- **Combine/Publisher** - Reactive photo streams
+- **AsyncSequence** - Modern async photo processing
+- **Actor Pattern** - Thread-safe photo management
+- **Protocol-Oriented Programming** - Swift interfaces
+- **Result Type** - Explicit error handling
+
+#### **Organization Patterns**
+- **Feature Modules** - Group by functionality
+- **Layer Architecture** - UI → Business → Data
+- **Hexagonal Architecture** - Ports & adapters
+- **Clean Architecture** - Dependency inversion
+
+## 🎨 **Current App State**
+
+### Photo Configuration
+- **Photo Types**: 100% regular photos (Option J)
+- **Photo Sizes**: 150-500px (no frames), 153-234px (with frames)  
+- **Background Removal**: Required for ALL photos (no full originals ever shown)
+- **Retry Logic**: Up to 10 attempts per photo type until cutout succeeds
+
+### Color System
+- **Framed Photos**: 13 color combinations (background + stroke + filter from 3rd color)
+- **Regular Photos**: Only `none` or `blackAndWhite` filters (50/50)
+- **Filter Colors**: Red (#FF4757), Pink (#FF6B9D), Orange (#FF8C42) + custom frame colors
+
+### App Store Review Mode
+- **appStoreReviewMode = true** currently active
+- **Changes**: All sounds OFF, blue background (vs wallpaper)
+- **Purpose**: Clean, silent experience for App Store approval
+
+## 🔧 **Build & Development**
+
+### Commands
 ```bash
 # Build and run
 cmd+r
 
-# Check for issues
+# Check diagnostics  
 # Use Xcode diagnostics panel
 ```
 
-### Performance Testing
-- **No UI hangs** - All heavy operations on background queues
-- **Responsive buttons** - Loading states with smooth animations  
-- **Memory efficient** - High-res loading with proper disposal
+### Performance Standards
+- ✅ **All Photos/Vision framework** operations on background queues
+- ✅ **Main thread** only for UI updates  
+- ✅ **High-quality image loading** with proper disposal
+- ✅ **Responsive UI** - No blocking operations
 
-## 📋 Code Standards
+## 📋 **Code Standards & Philosophy**
 
-### 1. **File Organization**
-- **Single responsibility** - One main purpose per file
-- **Reusable components** - Extract to separate files
-- **Maximum 500 lines** per file (current main view violates this)
+### File Organization
+- **Maximum 500 lines** per file (PhotoItemsViewModel violates this)
+- **Single responsibility** principle
+- **Protocol-oriented** abstractions
+- **Reusable components** extracted to separate files
 
-### 2. **Performance Requirements**
-- **All Photos/Vision framework calls** must be on background queues
-- **UI updates only** on main thread
-- **No blocking operations** on main thread
+### Development Philosophy
+**"We are not junior juvenile devs"** - Always:
+1. **Consider refactoring FIRST** using architectural patterns
+2. **Separate concerns** before adding features
+3. **Use framework capabilities** (don't over-engineer)
+4. **Prioritize maintainability** over quick fixes
+5. **Extract reusable components**
 
-### 3. **Component Design**
-- **ButtonStyles** - Separate file, protocol-based
-- **ViewModels** - Extract business logic from views
-- **Models** - Separate data structures
+## ⚠️ **Critical Lessons Learned**
 
-## 🎯 Next Priority Refactors
+### 1. **Photo Selection Logic**
+**Issue**: App was showing full original images when background removal failed  
+**Solution**: Implemented retry pattern with background removal validation
+**Lesson**: Never compromise on core app requirements (transparency-only)
 
-1. **Extract PhotoManager** (~200 lines) to separate file
-2. **Extract PhotoItem models** (~100 lines) to separate file  
-3. **Extract drag/drop logic** (~150 lines) to separate handler
-4. **Extract sound management** (~50 lines) to separate file
-5. **Break down main view** into smaller, focused components
-
-## 🏛️ Architectural Patterns & Options
-
-When implementing new features, **ALWAYS CONSIDER REFACTORING FIRST** using these patterns:
-
-### Core Patterns
-- **Manager classes** - Current approach for business logic
-- **Coordinator pattern** - Navigation and flow control
-- **Service layer** - External dependencies and APIs
-- **ViewModels (MVVM)** - UI state and business logic separation
-- **Use Cases / Interactors** - Clean Architecture business logic
-- **Repository pattern** - Data access abstraction
-- **Dependency injection containers** - Loose coupling
-
-### Organization Patterns
-- **Feature modules** - Group related functionality
-- **Extensions folders** (e.g. UIView+Extensions.swift)
-- **Constants/Config files** - Centralized configuration
-- **Protocol-oriented abstractions** - Interface segregation
-- **Utilities/Helpers folder** - Reusable utilities
-- **Resources grouping** (Assets, Strings, etc.)
-
-### Infrastructure Patterns
-- **Environment/Build configurations** - Different environments
-- **AppDelegate/SceneDelegate separation** - App lifecycle
-- **Network layer abstraction** (e.g. APIClient)
-- **Error handling layer** - Centralized error management
-- **Logging/Analytics wrappers** - Observability
-
-### Testing Patterns
-- **Unit test targets per module** - Modular testing
-- **Mock/Stub classes for testing** - Test isolation
-
-## 💡 Development Philosophy
-
-**"We are not junior juvenile devs"** - Always consider:
-- **Refactoring opportunities FIRST** using patterns above
-- **Separation of concerns** before adding code
-- **Reusability** of components  
-- **File organization** and architecture
-- **Performance implications** of main thread usage
-- **Maintainability** over quick fixes
-
-## ⚠️ Common Mistakes to Avoid
-
-### 1. **Over-Engineering Framework Capabilities**
-**Mistake Made:** When filtering out screenshots from PhotoKit, I initially created multiple helper methods with retry loops to check `asset.mediaSubtypes.contains(.photoScreenshot)` for each photo individually.
-
-**Simple Solution:** PhotoKit already supports filtering at the database level using predicates:
+### 2. **Framework Over-Engineering** 
+**Mistake**: Custom photo filtering logic  
+**Solution**: Use PhotoKit predicates for database-level filtering
 ```swift
-fetchOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", PHAssetMediaSubtype.photoScreenshot.rawValue)
+fetchOptions.predicate = NSPredicate(format: "NOT (mediaSubtypes & %d) != 0", 
+                                   PHAssetMediaSubtype.photoScreenshot.rawValue)
 ```
 
-**Lesson:** Always check if the framework has built-in capabilities before implementing custom logic. PhotoKit, CoreData, etc. often have powerful filtering/querying features.
+### 3. **Code Duplication**
+**Issue**: Three similar retry functions  
+**Solution**: Generic retry pattern with closure-based processors
+**Lesson**: Look for patterns and extract common logic immediately
+
+## 🚀 **Next Architectural Priorities**
+
+1. **Extract PhotoItemFactory** from PhotoItemsViewModel (~200 lines)
+2. **Implement Repository Pattern** for photo data access
+3. **Add Dependency Injection** for service management  
+4. **Consider Clean Architecture** layers for complex features
+5. **Protocol-based abstractions** for testability
+
+## 🏗️ **Refactoring Approach**
+
+When adding features:
+1. **Identify architectural pattern** from options above
+2. **Check if existing services** can be extended
+3. **Consider extraction opportunities** if files >500 lines
+4. **Use protocol abstractions** for loose coupling
+5. **Test in isolation** with proper separation
 
 ---
-*Last updated: June 25, 2025*
+*Last updated: December 30, 2025*
+*Current state: 100% regular photos, background removal required, app store review mode active*
