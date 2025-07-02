@@ -37,6 +37,7 @@ struct RandomPhotoView: View {
     @State private var hasPendingTimeTravel = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var hasShownAppLaunchNotificationPrompt = false
     
     init() {
         let shareService = ShareService()
@@ -460,10 +461,7 @@ struct RandomPhotoView: View {
             
             // Cache system removed - no prefill needed
             
-            // Check for notification alert on app launch
-            if FeatureFlags.shared.showAppLaunchNotificationPrompt {
-                showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
-            }
+            // Notification prompt now happens after first photo is added
         }
 
         .alert(alertTitle, isPresented: $showEnjoymentAlert) {
@@ -480,6 +478,18 @@ struct RandomPhotoView: View {
         .onChange(of: dateSelectionViewModel.selectedDate) { oldDate, newDate in
             print("🔍 DEBUG: Date selection changed from \(oldDate) to \(newDate)")
             photoItemsViewModel.handleDateChange(newDate)
+        }
+        .onChange(of: photoItemsViewModel.photoItems.count) { oldCount, newCount in
+            // Show notification prompt after first photo is added
+            if FeatureFlags.shared.showAppLaunchNotificationPrompt 
+                && !hasShownAppLaunchNotificationPrompt 
+                && newCount > 0 {
+                hasShownAppLaunchNotificationPrompt = true
+                // Small delay to let the photo render
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
+                }
+            }
         }
     }
     
