@@ -487,7 +487,7 @@ struct RandomPhotoView: View {
                 hasShownAppLaunchNotificationPrompt = true
                 // Small delay to let the photo render
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
+                    showNotificationAlert(title: "Get Nostalgia Reminders", message: "approve notifications for recaps from the past weeks of your life")
                 }
             }
         }
