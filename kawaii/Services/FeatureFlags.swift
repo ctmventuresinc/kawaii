@@ -15,7 +15,10 @@ class FeatureFlags {
 	
 	//app store
 	var appStoreReviewMode: Bool = false
-	var disablePushNotificationRequests: Bool = false
+	
+	// PUSH NOTIFICATION CONTROLS
+	var requireNotificationForRewind: Bool = false        // When false, rewind works without notifications
+	var showAppLaunchNotificationPrompt: Bool = true     // When false, no notification prompt on app launch
 	
 	//regylar
     var preventDuplicatePhotos: Bool = true
@@ -48,10 +51,11 @@ class FeatureFlags {
     func logAllFlags() {
         print("🚩 FEATURE FLAGS:")
         print("🚩 appStoreReviewMode: \(appStoreReviewMode)")
+        print("🚩 requireNotificationForRewind: \(requireNotificationForRewind)")
+        print("🚩 showAppLaunchNotificationPrompt: \(showAppLaunchNotificationPrompt)")
         print("🚩 preventDuplicatePhotos: \(preventDuplicatePhotos)")
         print("🚩 enablePhotoSystemLogging: \(enablePhotoSystemLogging)")
         print("🚩 enableNewAnimations: \(enableNewAnimations)")
         print("🚩 enableBetaUI: \(enableBetaUI)")
-        print("🚩 disablePushNotificationRequests: \(disablePushNotificationRequests)")
     }
 }

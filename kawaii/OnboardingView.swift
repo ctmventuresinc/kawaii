@@ -161,11 +161,6 @@ struct OnboardingView: View {
 	}
 	
 	private func requestNotificationPermission() {
-		// Skip if push notification requests are disabled
-		if FeatureFlags.shared.disablePushNotificationRequests {
-			return
-		}
-		
 		OneSignal.Notifications.requestPermission({ accepted in
 			print("User accepted notifications: \(accepted)")
 			// Navigation will be handled by ContentView observing the change

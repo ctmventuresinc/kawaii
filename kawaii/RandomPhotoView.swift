@@ -461,7 +461,7 @@ struct RandomPhotoView: View {
             // Cache system removed - no prefill needed
             
             // Check for notification alert on app launch
-            if !FeatureFlags.shared.disablePushNotificationRequests {
+            if FeatureFlags.shared.showAppLaunchNotificationPrompt {
                 showNotificationAlert(title: "Get Nostalgia Reminders", message: "remember the past weeks of your life")
             }
         }
@@ -617,8 +617,8 @@ struct RandomPhotoView: View {
     }
     
     private func handleRewindAction() {
-        // If push notification requests are disabled, do rewind immediately
-        if FeatureFlags.shared.disablePushNotificationRequests {
+        // If notification requirement is disabled, do rewind immediately
+        if !FeatureFlags.shared.requireNotificationForRewind {
             soundService.playSound(.timetravel)
             showTravelMessage()
             return
@@ -638,11 +638,6 @@ struct RandomPhotoView: View {
     }
     
     private func showNotificationAlert(title: String, message: String) {
-        // Skip if push notification requests are disabled
-        if FeatureFlags.shared.disablePushNotificationRequests {
-            return
-        }
-        
         // Check if notifications are already authorized
         let permissionState = OneSignal.Notifications.permission
         if permissionState != true {
@@ -661,11 +656,6 @@ struct RandomPhotoView: View {
     }
     
     private func requestNotificationPermission() {
-        // Skip if push notification requests are disabled
-        if FeatureFlags.shared.disablePushNotificationRequests {
-            return
-        }
-        
         OneSignal.Notifications.requestPermission({ accepted in
             print("User accepted notifications: \(accepted)")
             DispatchQueue.main.async {
