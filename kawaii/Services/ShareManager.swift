@@ -37,7 +37,7 @@ class ShareManager: ObservableObject {
             await MainActor.run {
                 if let screenshot = screenshot {
                     // Create share items with cute text and TestFlight link
-                    let shareText = "this is so cute https://testflight.apple.com/join/sGSyN2hM"
+                    let shareText = "this is so cute https://apps.apple.com/us/app/id6747457695"
                     shareService.shareImage = screenshot
                     shareService.shareText = shareText
                     shareService.showShareSheet = true
