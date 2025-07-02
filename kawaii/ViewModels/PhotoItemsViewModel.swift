@@ -404,19 +404,27 @@ class PhotoItemsViewModel: ObservableObject {
     ) {
         guard attempts < maxAttempts, fetchResult.count > 0 else {
             print("🔍 DEBUG: Could not find any \(photoType) photos that can be cut out after \(attempts) attempts")
-            completion(false)
+            DispatchQueue.main.async {
+                completion(false)
+            }
             return
         }
+        
+        print("🔍 DEBUG: \(photoType) retry attempt \(attempts + 1)/\(maxAttempts)")
         
         let randomIndex = Int.random(in: 0..<fetchResult.count)
         let randomAsset = fetchResult.object(at: randomIndex)
         
-        photoProcessor(randomAsset, backgroundRemover, soundService) { success in
+        photoProcessor(randomAsset, backgroundRemover, soundService) { [weak self] success in
             if success {
-                completion(true)
+                DispatchQueue.main.async {
+                    completion(true)
+                }
             } else {
-                // Try another photo
-                self.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, photoType: photoType, photoProcessor: photoProcessor, completion: completion)
+                // Try another photo with a small delay to prevent overwhelming the system
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self?.tryMultiplePhotosWithRetry(from: fetchResult, backgroundRemover: backgroundRemover, soundService: soundService, attempts: attempts + 1, maxAttempts: maxAttempts, photoType: photoType, photoProcessor: photoProcessor, completion: completion)
+                }
             }
         }
     }
