@@ -82,6 +82,16 @@ struct RandomPhotoView: View {
                         handleScreenTap()
                     }
                 
+                // Dock image at bottom of screen - behind ALL buttons
+                VStack {
+                    Spacer()
+                    Image("dock")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                }
+                .ignoresSafeArea(.all, edges: .bottom)
+                
                 // Independent top text that cycles through phrases
                 VStack {
                     Text(topText)
