@@ -177,11 +177,11 @@ struct RandomPhotoView: View {
                     // Face button aligned to far left and Share button aligned to far right
                     HStack {
                     Button(action: {
-                    soundService.playSound(.click)
-                        photoModeManager.cycleToNextMode()
+                    // soundService.playSound(.click)
+                    // photoModeManager.cycleToNextMode()
                     }) {
-                        Image(systemName: photoModeManager.currentMode.icon)
-                            .font(.system(size: 32, weight: .medium))
+                    Image(systemName: "tortoise.fill")
+                    .font(.system(size: 32, weight: .medium))
                     }
                     .buttonStyle(GlossyEnvelopeButtonStyle())
                     .scaleEffect(0.6 * dragViewModel.faceButtonScale)
