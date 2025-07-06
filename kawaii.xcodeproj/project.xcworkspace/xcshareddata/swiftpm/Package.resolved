@@ -1,6 +1,15 @@
 {
-  "originHash" : "9d514f78689aebbc7d632682de3b7d2f15dc43b006d47cb0650c98d174c8faed",
+  "originHash" : "2716eafa45768b6092f5cd6598b8290ae0821dac74e21e4c52454dc9c9d74d39",
   "pins" : [
+    {
+      "identity" : "morphmodalkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jsmmth/MorphModalKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "9c6b928da883d8dff97722945d644f7df2b389dd"
+      }
+    },
     {
       "identity" : "onesignal-ios-sdk",
       "kind" : "remoteSourceControl",
