@@ -182,16 +182,16 @@ struct PhotoItem: Identifiable {
             // Framed photos - use the third color from the combination as filter
             self.photoFilter = .customColor(selectedCombo.inviteButtonColor)
         } else {
-            // Regular photos without frames - cycle through all tertiary colors or none
-            let tertiaryColors = [
-                "#FF5C8D", "#FFEA00", "#F03889", "#FF0095", "#178E96", 
-                "#FBECCF", "#FA7921", "#FF2A93", "#C19875", "#E447D1"
-            ]
-            
+            // Regular photos without frames - 50% none, 50% split between 4 filter options
             let shouldApplyFilter = Bool.random()
             if shouldApplyFilter {
-                let randomTertiaryColor = tertiaryColors.randomElement() ?? "#FF5C8D"
-                self.photoFilter = .customColor(randomTertiaryColor)
+                let filterOptions: [PhotoFilter] = [
+                    .blackAndWhite,
+                    .customColor("#FFEA00"),  // Yellow
+                    .customColor("#FBECCF"),  // Cream  
+                    .customColor("#FA7921")   // Orange
+                ]
+                self.photoFilter = filterOptions.randomElement() ?? .blackAndWhite
             } else {
                 self.photoFilter = .none
             }
