@@ -28,116 +28,124 @@ struct ColorCombinationPreview: View {
     ]
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+        VStack(spacing: 0) {
+            // Top half - scrollable color combinations
+            VStack(spacing: 8) {
                 Text("Frame Color Combinations")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .padding(.bottom)
+                    .padding(.top)
                 
-                ForEach(0..<colorCombinations.count, id: \.self) { index in
-                    let combo = colorCombinations[index]
-                    
-                    HStack(spacing: 20) {
-                        Text("\(index + 1)")
-                            .font(.headline)
-                            .frame(width: 30)
-                        
-                        VStack(spacing: 4) {
-                            Rectangle()
-                                .fill(Color(hex: combo.background))
-                                .frame(width: 80, height: 60)
-                                .overlay(
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(0..<colorCombinations.count, id: \.self) { index in
+                            let combo = colorCombinations[index]
+                            
+                            HStack(spacing: 20) {
+                                Text("\(index + 1)")
+                                    .font(.headline)
+                                    .frame(width: 30)
+                                
+                                VStack(spacing: 4) {
                                     Rectangle()
-                                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                )
-                            Text("Background")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Rectangle()
-                                .fill(Color(hex: combo.button))
-                                .frame(width: 80, height: 60)
-                                .overlay(
+                                        .fill(Color(hex: combo.background))
+                                        .frame(width: 80, height: 60)
+                                        .overlay(
+                                            Rectangle()
+                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                                        )
+                                    Text("Background")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                VStack(spacing: 4) {
                                     Rectangle()
-                                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                )
-                            Text("Stroke")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Rectangle()
-                                .fill(Color(hex: combo.inviteButtonColor))
-                                .frame(width: 80, height: 60)
-                                .overlay(
+                                        .fill(Color(hex: combo.button))
+                                        .frame(width: 80, height: 60)
+                                        .overlay(
+                                            Rectangle()
+                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                                        )
+                                    Text("Stroke")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                VStack(spacing: 4) {
                                     Rectangle()
-                                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                )
-                            Text("Photo Filter")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                        .fill(Color(hex: combo.inviteButtonColor))
+                                        .frame(width: 80, height: 60)
+                                        .overlay(
+                                            Rectangle()
+                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                                        )
+                                    Text("Photo Filter")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                VStack(spacing: 4) {
+                                    Text(combo.background)
+                                        .font(.caption)
+                                        .monospaced()
+                                    Text(combo.button)
+                                        .font(.caption)
+                                        .monospaced()
+                                    Text(combo.inviteButtonColor)
+                                        .font(.caption)
+                                        .monospaced()
+                                }
+                                .frame(width: 80)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedCombination = index
+                                createSamplePhotoItem(for: index)
+                            }
+                            
+                            Divider()
                         }
-                        
-                        VStack(spacing: 4) {
-                            Text(combo.background)
-                                .font(.caption)
-                                .monospaced()
-                            Text(combo.button)
-                                .font(.caption)
-                                .monospaced()
-                            Text(combo.inviteButtonColor)
-                                .font(.caption)
-                                .monospaced()
-                        }
-                        .frame(width: 80)
-                        
-                        Spacer()
                     }
-                    .padding(.horizontal)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        print("Tapped combination \(index + 1)")
-                        selectedCombination = index
-                        createSamplePhotoItem(for: index)
-                    }
-                    
-                    Divider()
-                }
-                
-                // Show sample frame if one is selected
-                if let samplePhotoItem = samplePhotoItem {
-                    VStack(spacing: 16) {
-                        Text("Frame Preview - Combination \(selectedCombination! + 1)")
-                            .font(.headline)
-                        
-                        SampleFramedPhotoView(photoItem: samplePhotoItem)
-                            .frame(width: 200, height: 200)
-                        
-                        Button("Close Preview") {
-                            selectedCombination = nil
-                            self.samplePhotoItem = nil
-                        }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(12)
                     .padding(.horizontal)
                 }
             }
-            .padding()
+            .frame(maxHeight: .infinity)
+            
+            // Bottom half - always visible preview
+            VStack {
+                Divider()
+                
+                if let samplePhotoItem = samplePhotoItem {
+                    VStack(spacing: 12) {
+                        Text("Combination \(selectedCombination! + 1) Preview")
+                            .font(.headline)
+                        
+                        SampleFramedPhotoView(photoItem: samplePhotoItem)
+                            .frame(width: 180, height: 180)
+                    }
+                } else {
+                    VStack(spacing: 12) {
+                        Text("Tap a combination to preview")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 60))
+                            .foregroundColor(.secondary.opacity(0.5))
+                    }
+                }
+            }
+            .frame(height: 250)
+            .frame(maxWidth: .infinity)
+            .background(Color.gray.opacity(0.05))
         }
     }
     
     private func createSamplePhotoItem(for combinationIndex: Int) {
-        print("Creating sample for combination \(combinationIndex + 1)")
         let sampleImage = createSampleImage()
         let combo = colorCombinations[combinationIndex]
         
@@ -149,9 +157,7 @@ struct ColorCombinationPreview: View {
             photoFilter: .customColor(combo.inviteButtonColor)
         )
         
-        print("Setting samplePhotoItem...")
         self.samplePhotoItem = photoItem
-        print("samplePhotoItem set: \(self.samplePhotoItem != nil)")
     }
     
     private func createSampleImage() -> UIImage {
