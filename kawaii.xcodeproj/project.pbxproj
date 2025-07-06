@@ -11,6 +11,7 @@
 		1930E2852E0A56600037DD06 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2842E0A56600037DD06 /* OneSignalExtension */; };
 		1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2862E0A56600037DD06 /* OneSignalFramework */; };
 		1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2882E0A56600037DD06 /* OneSignalInAppMessages */; };
+		193CDDDB2E1ABAB100C047D6 /* MorphModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 193CDDDA2E1ABAB100C047D6 /* MorphModalKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +102,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				193CDDDB2E1ABAB100C047D6 /* MorphModalKit in Frameworks */,
 				1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */,
 				1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */,
 			);
@@ -179,6 +181,7 @@
 			packageProductDependencies = (
 				1930E2862E0A56600037DD06 /* OneSignalFramework */,
 				1930E2882E0A56600037DD06 /* OneSignalInAppMessages */,
+				193CDDDA2E1ABAB100C047D6 /* MorphModalKit */,
 			);
 			productName = kawaii;
 			productReference = 191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */;
@@ -290,6 +293,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
+				193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 191FDE9D2E030FCC00D2AF6D /* Products */;
@@ -761,6 +765,14 @@
 				minimumVersion = 5.2.14;
 			};
 		};
+		193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jsmmth/MorphModalKit.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -778,6 +790,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
 			productName = OneSignalInAppMessages;
+		};
+		193CDDDA2E1ABAB100C047D6 /* MorphModalKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */;
+			productName = MorphModalKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

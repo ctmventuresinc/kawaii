@@ -159,7 +159,11 @@ struct PhotoItemView: View {
                 DragGesture(coordinateSpace: .global)
                 .onChanged { value in
                     if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
-                        photoItems[index].dragOffset = value.translation
+                        let scaledTranslation = CGSize(
+                            width: value.translation.width / photoItem.scale,
+                            height: value.translation.height / photoItem.scale
+                        )
+                        photoItems[index].dragOffset = scaledTranslation
                         if !photoItems[index].isDragging {
                             photoItems[index].isDragging = true
                             dragViewModel.isDraggingAny = true
@@ -167,8 +171,8 @@ struct PhotoItemView: View {
                         
                         // Check if currently over trash bin, star button, or share button
                         let currentPosition = CGPoint(
-                            x: photoItem.position.x + value.translation.width,
-                            y: photoItem.position.y + value.translation.height
+                            x: photoItem.position.x + scaledTranslation.width,
+                            y: photoItem.position.y + scaledTranslation.height
                         )
                         dragViewModel.isHoveringOverTrash = dragViewModel.isOverTrashBin?(currentPosition, photoItem, geometry) ?? false
                         dragViewModel.isHoveringOverShare = dragViewModel.isOverShareButton?(currentPosition, photoItem, geometry) ?? false
@@ -183,16 +187,20 @@ struct PhotoItemView: View {
                 }
                 .onEnded { value in
                     if let index = photoItems.firstIndex(where: { $0.id == photoItem.id }) {
+                        let scaledTranslation = CGSize(
+                            width: value.translation.width / photoItem.scale,
+                            height: value.translation.height / photoItem.scale
+                        )
                         let finalPosition = CGPoint(
-                            x: photoItem.position.x + value.translation.width,
-                            y: photoItem.position.y + value.translation.height
+                            x: photoItem.position.x + scaledTranslation.width,
+                            y: photoItem.position.y + scaledTranslation.height
                         )
                         
                         // Check if dropped on trash bin, share button, or star button
                         if dragViewModel.isOverTrashBin?(finalPosition, photoItem, geometry) == true {
                             // Keep the item in its dragged position for deletion animation
-                            photoItems[index].position.x += value.translation.width
-                            photoItems[index].position.y += value.translation.height
+                            photoItems[index].position.x += scaledTranslation.width
+                            photoItems[index].position.y += scaledTranslation.height
                             photoItems[index].dragOffset = .zero
                             photoItems[index].isDragging = false
                             
@@ -208,8 +216,8 @@ struct PhotoItemView: View {
                             }
                         } else if dragViewModel.isOverShareButton?(finalPosition, photoItem, geometry) == true {
                             // Share photo functionality
-                            photoItems[index].position.x += value.translation.width
-                            photoItems[index].position.y += value.translation.height
+                            photoItems[index].position.x += scaledTranslation.width
+                            photoItems[index].position.y += scaledTranslation.height
                             photoItems[index].dragOffset = .zero
                             photoItems[index].isDragging = false
                             
@@ -225,8 +233,8 @@ struct PhotoItemView: View {
                             }
                         } else if dragViewModel.isOverStarButton?(finalPosition, photoItem, geometry) == true && photoItem.frameShape == nil {
                             // Convert frameless photo to framed photo
-                            photoItems[index].position.x += value.translation.width
-                            photoItems[index].position.y += value.translation.height
+                            photoItems[index].position.x += scaledTranslation.width
+                            photoItems[index].position.y += scaledTranslation.height
                             photoItems[index].dragOffset = .zero
                             photoItems[index].isDragging = false
                             
@@ -242,8 +250,8 @@ struct PhotoItemView: View {
                             }
                         } else {
                             // Normal drop
-                            photoItems[index].position.x += value.translation.width
-                            photoItems[index].position.y += value.translation.height
+                            photoItems[index].position.x += scaledTranslation.width
+                            photoItems[index].position.y += scaledTranslation.height
                             photoItems[index].dragOffset = .zero
                             photoItems[index].isDragging = false
                             
