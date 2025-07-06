@@ -14,6 +14,7 @@ enum ColorType {
 struct ColorCombinationPreview: View {
     @State private var selectedCombination: Int? = nil
     @State private var samplePhotoItem: SamplePhotoItem? = nil
+    @State private var showToast = false
     @State private var showingColorPicker = false
     @State private var editingColorType: ColorType? = nil
     @State private var editingCombinationIndex: Int? = nil
@@ -66,7 +67,7 @@ struct ColorCombinationPreview: View {
                                     ))
                                     .labelsHidden()
                                     .frame(width: 60, height: 40)
-                                    Text("Background")
+                                    Text("Bground")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -117,6 +118,14 @@ struct ColorCombinationPreview: View {
                                         .monospaced()
                                 }
                                 .frame(width: 70)
+                                .onTapGesture {
+                                    let hexString = "\(combo.background), \(combo.button), \(combo.inviteButtonColor)"
+                                    UIPasteboard.general.string = hexString
+                                    showToast = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                        showToast = false
+                                    }
+                                }
                                 
                                 Button(action: {
                                     selectedCombination = index
@@ -174,6 +183,21 @@ struct ColorCombinationPreview: View {
             .frame(maxWidth: .infinity)
             .background(Color.gray.opacity(0.05))
         }
+        .overlay(
+            Group {
+                if showToast {
+                    Text("Copied")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.7))
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: showToast),
+            alignment: .bottom
+        )
     }
     
     private func createSamplePhotoItem(for combinationIndex: Int) {
