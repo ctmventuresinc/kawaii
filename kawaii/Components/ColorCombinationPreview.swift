@@ -7,11 +7,19 @@
 
 import SwiftUI
 
+enum ColorType {
+    case background, stroke, photoFilter
+}
+
 struct ColorCombinationPreview: View {
     @State private var selectedCombination: Int? = nil
     @State private var samplePhotoItem: SamplePhotoItem? = nil
+    @State private var showingColorPicker = false
+    @State private var editingColorType: ColorType? = nil
+    @State private var editingCombinationIndex: Int? = nil
+    @State private var tempColor: Color = .white
     
-    let colorCombinations: [(background: String, button: String, inviteButtonColor: String)] = [
+    @State private var colorCombinations: [(background: String, button: String, inviteButtonColor: String)] = [
         ("#4D9DE1", "#FF5C8D", "#FF5C8D"),
         ("#FF0095", "#FFEA00", "#FFEA00"),
         ("#F5F5F5", "#F03889", "#F03889"),
@@ -37,75 +45,98 @@ struct ColorCombinationPreview: View {
                     .padding(.top)
                 
                 ScrollView {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 8) {
                         ForEach(0..<colorCombinations.count, id: \.self) { index in
                             let combo = colorCombinations[index]
                             
-                            HStack(spacing: 20) {
+                            HStack(spacing: 12) {
                                 Text("\(index + 1)")
                                     .font(.headline)
-                                    .frame(width: 30)
+                                    .frame(width: 25)
                                 
-                                VStack(spacing: 4) {
-                                    Rectangle()
-                                        .fill(Color(hex: combo.background))
-                                        .frame(width: 80, height: 60)
-                                        .overlay(
-                                            Rectangle()
-                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                        )
+                                VStack(spacing: 2) {
+                                    ColorPicker("", selection: Binding(
+                                        get: { Color(hex: combo.background) },
+                                        set: { newColor in
+                                            colorCombinations[index].background = newColor.toHex()
+                                            if selectedCombination == index {
+                                                createSamplePhotoItem(for: index)
+                                            }
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .frame(width: 60, height: 40)
                                     Text("Background")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                VStack(spacing: 4) {
-                                    Rectangle()
-                                        .fill(Color(hex: combo.button))
-                                        .frame(width: 80, height: 60)
-                                        .overlay(
-                                            Rectangle()
-                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                        )
+                                VStack(spacing: 2) {
+                                    ColorPicker("", selection: Binding(
+                                        get: { Color(hex: combo.button) },
+                                        set: { newColor in
+                                            colorCombinations[index].button = newColor.toHex()
+                                            if selectedCombination == index {
+                                                createSamplePhotoItem(for: index)
+                                            }
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .frame(width: 60, height: 40)
                                     Text("Stroke")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                VStack(spacing: 4) {
-                                    Rectangle()
-                                        .fill(Color(hex: combo.inviteButtonColor))
-                                        .frame(width: 80, height: 60)
-                                        .overlay(
-                                            Rectangle()
-                                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                                        )
-                                    Text("Photo Filter")
+                                VStack(spacing: 2) {
+                                    ColorPicker("", selection: Binding(
+                                        get: { Color(hex: combo.inviteButtonColor) },
+                                        set: { newColor in
+                                            colorCombinations[index].inviteButtonColor = newColor.toHex()
+                                            if selectedCombination == index {
+                                                createSamplePhotoItem(for: index)
+                                            }
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .frame(width: 60, height: 40)
+                                    Text("Filter")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                VStack(spacing: 4) {
+                                VStack(spacing: 2) {
                                     Text(combo.background)
-                                        .font(.caption)
+                                        .font(.caption2)
                                         .monospaced()
                                     Text(combo.button)
-                                        .font(.caption)
+                                        .font(.caption2)
                                         .monospaced()
                                     Text(combo.inviteButtonColor)
-                                        .font(.caption)
+                                        .font(.caption2)
                                         .monospaced()
                                 }
-                                .frame(width: 80)
+                                .frame(width: 70)
+                                
+                                Button(action: {
+                                    selectedCombination = index
+                                    createSamplePhotoItem(for: index)
+                                }) {
+                                    VStack(spacing: 2) {
+                                        Image(systemName: "eye")
+                                            .font(.title3)
+                                        Text("Preview")
+                                            .font(.caption2)
+                                    }
+                                    .foregroundColor(.blue)
+                                    .frame(width: 50, height: 40)
+                                    .background(Color.blue.opacity(0.1))
+                                    .cornerRadius(6)
+                                }
                                 
                                 Spacer()
                             }
                             .padding(.horizontal)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedCombination = index
-                                createSamplePhotoItem(for: index)
-                            }
                             
                             Divider()
                         }
@@ -163,6 +194,27 @@ struct ColorCombinationPreview: View {
     private func createSampleImage() -> UIImage {
         // Use the actual cutoutpngfreya asset from the app
         return UIImage(named: "cutoutpngfreya") ?? UIImage()
+    }
+    
+    private func updateColor(_ newColor: Color) {
+        guard let combinationIndex = editingCombinationIndex,
+              let colorType = editingColorType else { return }
+        
+        let hexString = newColor.toHex()
+        
+        switch colorType {
+        case .background:
+            colorCombinations[combinationIndex].background = hexString
+        case .stroke:
+            colorCombinations[combinationIndex].button = hexString
+        case .photoFilter:
+            colorCombinations[combinationIndex].inviteButtonColor = hexString
+        }
+        
+        // Update preview if this combination is currently selected
+        if selectedCombination == combinationIndex {
+            createSamplePhotoItem(for: combinationIndex)
+        }
     }
 }
 
@@ -230,6 +282,8 @@ struct SampleFramedPhotoView: View {
         }
     }
 }
+
+
 
 #Preview {
     ColorCombinationPreview()
