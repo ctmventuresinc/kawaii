@@ -93,7 +93,7 @@ PhotoItemsViewModel (639 lines) →
 
 ### Photo Configuration
 - **Photo Types**: 100% regular photos (Option J)
-- **Photo Sizes**: 150-500px (no frames), 153-234px (with frames)  
+- **Photo Sizes**: 150-500px (no frames), 100-230px (with frames)  
 - **Background Removal**: Required for ALL photos (no full originals ever shown)
 - **Retry Logic**: Up to 10 attempts per photo type until cutout succeeds
 

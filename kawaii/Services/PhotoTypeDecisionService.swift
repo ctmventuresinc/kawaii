@@ -7,11 +7,20 @@
 
 import Foundation
 
-/// Single source of truth for all photo type decisions
-/// This service owns ALL percentage logic and photo type selection
+/// Single source of truth for all photo type decisions and sizes
+/// This service owns ALL percentage logic, photo type selection, and size ranges
 class PhotoTypeDecisionService {
     
-    // MARK: - Configuration (ONLY PLACE TO CHANGE PERCENTAGES)
+    // MARK: - Size Configuration (SINGLE SOURCE OF TRUTH FOR SIZES)
+    
+    /// Photo size ranges - ONLY PLACE TO CHANGE SIZES
+    struct PhotoSizeConfig {
+        static let regularPhotoRange: ClosedRange<CGFloat> = 150...500      // No frames
+        static let framedPhotoRange: ClosedRange<CGFloat> = 100...230       // With frames
+        static let regularPhotoAltRange: ClosedRange<CGFloat> = 250...500   // Alternative range for some functions
+    }
+    
+    // MARK: - Photo Type Configuration (ONLY PLACE TO CHANGE PERCENTAGES)
     
     /// Current photo type percentages - SINGLE SOURCE OF TRUTH
     struct PhotoTypeConfig {

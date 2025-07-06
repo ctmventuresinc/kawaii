@@ -62,8 +62,8 @@ class PhotoItemsViewModel: ObservableObject {
                     
                     // Size based on frame type
                     let size: CGFloat = frameShape == nil ? 
-                        CGFloat.random(in: 150...500) :  // Regular photos (no frames) - larger
-                        CGFloat.random(in: 153...234)    // Framed photos - smaller
+                        CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.regularPhotoRange) :  // Regular photos (no frames) - larger
+                        CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.framedPhotoRange)    // Framed photos - smaller
                     
                     let photoItem = PhotoItem(
                         image: finalImage,
@@ -112,7 +112,7 @@ class PhotoItemsViewModel: ObservableObject {
             
             // Always use frames for SVG cutout effect
             let frameShape = FaceFrameShape.allCases.randomElement()
-            let size: CGFloat = CGFloat.random(in: 153...234)
+            let size: CGFloat = CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.framedPhotoRange)
             
             let photoItem = PhotoItem(
                 image: finalImage,
@@ -146,7 +146,7 @@ class PhotoItemsViewModel: ObservableObject {
             let randomY = CGFloat.random(in: 100...(screenHeight - 200))
             
             // No frames for regular photos
-            let size: CGFloat = CGFloat.random(in: 150...500)
+            let size: CGFloat = CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.regularPhotoRange)
             
             let photoItem = PhotoItem(
                 image: finalImage,
@@ -197,8 +197,8 @@ class PhotoItemsViewModel: ObservableObject {
             
             // Size based on frame type
             let size: CGFloat = frameShape == nil ? 
-                CGFloat.random(in: 250...500) :  // Regular photos (no frames) - larger
-                CGFloat.random(in: 153...234)    // Framed photos - smaller
+                CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.regularPhotoAltRange) :  // Regular photos (no frames) - larger
+                CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.framedPhotoRange)    // Framed photos - smaller
             
             let photoItem = PhotoItem(
                 image: finalImage,
@@ -633,7 +633,7 @@ class PhotoItemsViewModel: ObservableObject {
         // Create new PhotoItem with frame
         let currentItem = photoItems[index]
         let frameShape = FaceFrameShape.allCases.randomElement()
-        let newSize = CGFloat.random(in: 153...234) // Face crop size range
+        let newSize = CGFloat.random(in: PhotoTypeDecisionService.PhotoSizeConfig.framedPhotoRange) // Face crop size range
         
         // Update the existing PhotoItem
         photoItems[index] = PhotoItem(
