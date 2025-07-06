@@ -39,6 +39,9 @@ struct RandomPhotoView: View {
     @State private var alertMessage = ""
     @State private var hasShownAppLaunchNotificationPrompt = false
     
+    // State to control splash screen visibility
+    @State private var showingSplash = true
+    
     init() {
         let shareService = ShareService()
         let soundService = SoundService()
@@ -59,6 +62,12 @@ struct RandomPhotoView: View {
                         .resizable()
                         .ignoresSafeArea()
                 }
+                
+                // Show splash screen or main content
+                if showingSplash {
+                    SplashScreen()
+                } else {
+                    // Main app content
                 
                 // Burst pattern background - commented out temporarily
                 // BurstPatternBackground(rotationAngle: colorPhase * 360)
@@ -424,7 +433,13 @@ struct RandomPhotoView: View {
                         .opacity(showTravelOverlay ? 1.0 : 0.0)
                         .animation(.easeInOut(duration: 0.3), value: showTravelOverlay)
                 }
+                } // End of main app content conditional
             }
+        }
+        .task {
+            // Show splash screen for exactly 2 seconds
+            try? await Task.sleep(for: .seconds(2))
+            showingSplash = false
         }
         .sheet(isPresented: $shareService.showShareSheet) {
             let activityItems: [Any] = {
