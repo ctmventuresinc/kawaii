@@ -51,3 +51,13 @@ struct ContentView: View {
 #Preview {
 	ContentView()
 }
+
+
+/*
+ 
+ 2. none
+ 8. none
+ 11. none
+ 13. none
+ 
+ */

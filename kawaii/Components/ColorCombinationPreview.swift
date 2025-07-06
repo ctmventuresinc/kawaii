@@ -15,26 +15,8 @@ struct ColorCombinationPreview: View {
     @State private var selectedCombination: Int? = nil
     @State private var samplePhotoItem: SamplePhotoItem? = nil
     @State private var showToast = false
-    @State private var showingColorPicker = false
-    @State private var editingColorType: ColorType? = nil
-    @State private var editingCombinationIndex: Int? = nil
-    @State private var tempColor: Color = .white
     
-    @State private var colorCombinations: [(background: String, button: String, inviteButtonColor: String)] = [
-        ("#4D9DE1", "#FF5C8D", "#FF5C8D"),
-        ("#FF0095", "#FFEA00", "#FFEA00"),
-        ("#F5F5F5", "#F03889", "#F03889"),
-        ("#5500CC", "#FF0095", "#FF0095"),
-        ("#E86A58", "#178E96", "#178E96"),
-        ("#A8DADC", "#178E96", "#178E96"),
-        ("#A8DADC", "#FBECCF", "#FBECCF"),
-        ("#33A1FD", "#FA7921", "#FA7921"),
-        ("#7DE0E6", "#FA7921", "#FA7921"),
-        ("#7DE0E6", "#FF2A93", "#FF2A93"),
-        ("#FF0095", "#77CC00", "#77CC00"),
-        ("#F9F6F0", "#C19875", "#C19875"),
-        ("#F70000", "#E447D1", "#E447D1")
-    ]
+    @ObservedObject private var colorManager = ColorCombinationsManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
@@ -47,8 +29,8 @@ struct ColorCombinationPreview: View {
                 
                 ScrollView {
                     VStack(spacing: 8) {
-                        ForEach(0..<colorCombinations.count, id: \.self) { index in
-                            let combo = colorCombinations[index]
+                        ForEach(0..<colorManager.colorCombinations.count, id: \.self) { index in
+                            let combo = colorManager.colorCombinations[index]
                             
                             HStack(spacing: 12) {
                                 Text("\(index + 1)")
@@ -59,7 +41,7 @@ struct ColorCombinationPreview: View {
                                     ColorPicker("", selection: Binding(
                                         get: { Color(hex: combo.background) },
                                         set: { newColor in
-                                            colorCombinations[index].background = newColor.toHex()
+                                            colorManager.colorCombinations[index].background = newColor.toHex()
                                             if selectedCombination == index {
                                                 createSamplePhotoItem(for: index)
                                             }
@@ -76,7 +58,7 @@ struct ColorCombinationPreview: View {
                                     ColorPicker("", selection: Binding(
                                         get: { Color(hex: combo.button) },
                                         set: { newColor in
-                                            colorCombinations[index].button = newColor.toHex()
+                                            colorManager.colorCombinations[index].button = newColor.toHex()
                                             if selectedCombination == index {
                                                 createSamplePhotoItem(for: index)
                                             }
@@ -93,7 +75,7 @@ struct ColorCombinationPreview: View {
                                     ColorPicker("", selection: Binding(
                                         get: { Color(hex: combo.inviteButtonColor) },
                                         set: { newColor in
-                                            colorCombinations[index].inviteButtonColor = newColor.toHex()
+                                            colorManager.colorCombinations[index].inviteButtonColor = newColor.toHex()
                                             if selectedCombination == index {
                                                 createSamplePhotoItem(for: index)
                                             }
@@ -202,7 +184,7 @@ struct ColorCombinationPreview: View {
     
     private func createSamplePhotoItem(for combinationIndex: Int) {
         let sampleImage = createSampleImage()
-        let combo = colorCombinations[combinationIndex]
+        let combo = colorManager.colorCombinations[combinationIndex]
         
         // Create a sample PhotoItem with custom colors
         let photoItem = SamplePhotoItem(
@@ -220,26 +202,7 @@ struct ColorCombinationPreview: View {
         return UIImage(named: "cutoutpngfreya") ?? UIImage()
     }
     
-    private func updateColor(_ newColor: Color) {
-        guard let combinationIndex = editingCombinationIndex,
-              let colorType = editingColorType else { return }
-        
-        let hexString = newColor.toHex()
-        
-        switch colorType {
-        case .background:
-            colorCombinations[combinationIndex].background = hexString
-        case .stroke:
-            colorCombinations[combinationIndex].button = hexString
-        case .photoFilter:
-            colorCombinations[combinationIndex].inviteButtonColor = hexString
-        }
-        
-        // Update preview if this combination is currently selected
-        if selectedCombination == combinationIndex {
-            createSamplePhotoItem(for: combinationIndex)
-        }
-    }
+
 }
 
 // Sample PhotoItem for preview purposes  

@@ -160,24 +160,9 @@ struct PhotoItem: Identifiable {
         self.frameShape = frameShape
         self.size = size
         
-        // Color combinations for stroke and background
-        let colorCombinations: [(background: String, button: String, inviteButtonColor: String)] = [
-            ("#4D9DE1", "#FF5C8D", "#FF5C8D"),
-            ("#FF0095", "#FFEA00", "#FFEA00"),
-            ("#F5F5F5", "#F03889", "#F03889"),
-            ("#5500CC", "#FF0095", "#FF0095"),
-            ("#E86A58", "#178E96", "#178E96"),
-            ("#A8DADC", "#178E96", "#178E96"),
-            ("#A8DADC", "#FBECCF", "#FBECCF"),
-            ("#33A1FD", "#FA7921", "#FA7921"),
-            ("#7DE0E6", "#FA7921", "#FA7921"),
-            ("#7DE0E6", "#FF2A93", "#FF2A93"),
-            ("#FF0095", "#77CC00", "#77CC00"),
-            ("#F9F6F0", "#C19875", "#C19875"),
-            ("#F70000", "#E447D1", "#E447D1")
-        ]
-        
-        let selectedCombo = colorCombinations.randomElement() ?? colorCombinations[0]
+        // Use shared color combinations manager
+        let colorManager = ColorCombinationsManager.shared
+        let (comboIndex, selectedCombo) = colorManager.getRandomCombination()
         self.backgroundColor = Color(hex: selectedCombo.background)
         self.strokeColor = Color(hex: selectedCombo.button)
         
@@ -190,8 +175,13 @@ struct PhotoItem: Identifiable {
         
         // Assign filter based on frame type
         if frameShape != nil {
-            // Framed photos - use the third color from the combination as filter
-            self.photoFilter = .customColor(selectedCombo.inviteButtonColor)
+            // Framed photos - only apply color filter for specific combinations (2, 8, 11, 13)
+            if colorManager.shouldApplyColorFilter(for: comboIndex) {
+                self.photoFilter = .customColor(selectedCombo.inviteButtonColor)
+            } else {
+                // For other framed photos, use none or blackAndWhite
+                self.photoFilter = Bool.random() ? .none : .blackAndWhite
+            }
         } else {
             // Regular photos without frames - 50% none, 50% split between 4 filter options
             let shouldApplyFilter = Bool.random()
