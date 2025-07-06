@@ -1,28 +1,67 @@
+//
+//  SplashScreen.swift
+//  kawaii
+//
+//  Created by Los Mayers on 7/6/25.
+//
+
 import SwiftUI
 
 struct SplashScreen: View {
+    
     var body: some View {
-        ZStack {
-            // Background
-            Color.clear
-                .ignoresSafeArea()
-            
-            // Centered text
-            VStack(spacing: 16) {
-                Text("kawaii")
-                    .font(.system(size: 48, weight: .light))
-                    .foregroundColor(.white)
-                    .opacity(0.9)
+        Group {
+            ZStack {
                 
-                Text("loading...")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.white.opacity(0.6))
+//                Color.clear
+//                    .ignoresSafeArea()
+				
+				Image(.blankwallpaper)
+					.resizable()
+					.ignoresSafeArea()
+                
+                // Absolutely centered "kawaii" text
+                Text("kawaii")
+                    .font(.system(size: 48, weight: .bold))
+					.foregroundColor(.black)
+                    
+                
+                // Bottom content
+                VStack {
+                    Spacer()
+                    
+                    // Build section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("build")
+                            .font(.system(size: 16, design: .monospaced))
+                            .foregroundColor(.black)
+                        Text("los, bunny, marc, mihir")
+                            .font(.system(size: 24, design: .monospaced))
+                            .foregroundColor(.black)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Spacer()
+                        .frame(height: 40)
+                    
+                    // Release section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("release")
+                            .font(.system(size: 16, design: .monospaced))
+                            .foregroundColor(.black)
+                        Text("danger testing")
+                            .font(.system(size: 24, design: .monospaced))
+                            .foregroundColor(.black)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(40)
             }
         }
     }
 }
 
+
 #Preview {
     SplashScreen()
-        .background(Color.blue)
 }
