@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SplashScreen: View {
+    @State private var randomColorCombo = ColorCombinationsManager.shared.getRandomCombination()
     
     var body: some View {
         Group {
@@ -19,6 +20,27 @@ struct SplashScreen: View {
 				Image(.blankwallpaper)
 					.resizable()
 					.ignoresSafeArea()
+                
+                // Framed star background
+                ZStack {
+                    // Outermost stroke
+                    Image("harmonyshape")
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 360, height: 360)
+                        .foregroundColor(Color(hex: randomColorCombo.combo.button))
+                        .shadow(color: Color(hex: randomColorCombo.combo.button).opacity(0.6), radius: 12, x: 0, y: 0)
+                    
+                    // Background shape
+                    Image("harmonyshape")
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 320, height: 320)
+                        .foregroundColor(Color(hex: randomColorCombo.combo.background))
+                        .shadow(color: Color(hex: randomColorCombo.combo.background).opacity(0.6), radius: 12, x: 0, y: 0)
+                }
                 
                 // Absolutely centered "kawaii" text
                 Text("kawaii")
