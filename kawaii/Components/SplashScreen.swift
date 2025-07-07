@@ -22,6 +22,18 @@ struct SplashScreen: View {
                 
                 StarShapeView(size: 320)
                 
+                // Small star behind release section
+                VStack {
+                    Spacer()
+                    HStack {
+                        StarShapeView(size: 120)
+                            .offset(x: -20, y: -50)
+                        Spacer()
+                    }
+                }
+                .padding(.leading, 10)
+                .padding(.bottom, 40)
+                
                 // Absolutely centered "kawaii" text
                 Text("kawaii")
                     .font(.system(size: 48, weight: .bold))
