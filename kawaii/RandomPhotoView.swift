@@ -449,7 +449,7 @@ struct RandomPhotoView: View {
         }
         .task {
             // Show splash screen for exactly 2 seconds
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(for: .seconds(3))
             showingSplash = false
         }
         .sheet(isPresented: $shareService.showShareSheet) {
