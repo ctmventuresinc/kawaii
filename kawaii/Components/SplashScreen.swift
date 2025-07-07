@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct SplashScreen: View {
+    @State private var bigStarOpacity: Double = 0
+    @State private var smallStarOpacity: Double = 0
     
     var body: some View {
         Group {
@@ -21,6 +23,7 @@ struct SplashScreen: View {
 					.ignoresSafeArea()
                 
                 StarShapeView(size: 320)
+                    .opacity(bigStarOpacity)
                 
                 // Small star behind release section
                 VStack {
@@ -28,6 +31,7 @@ struct SplashScreen: View {
                     HStack {
                         StarShapeView(size: 120)
                             .offset(x: -20, y: -50)
+                            .opacity(smallStarOpacity)
                         Spacer()
                     }
                 }
@@ -70,6 +74,17 @@ struct SplashScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(40)
+            }
+            .onAppear {
+                withAnimation(.easeIn(duration: 0.8)) {
+                    bigStarOpacity = 1.0
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    withAnimation(.easeIn(duration: 0.8)) {
+                        smallStarOpacity = 1.0
+                    }
+                }
             }
         }
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct StarShapeView: View {
-    private let randomColorCombo = ColorCombinationsManager.shared.getRandomCombination()
+    @State private var randomColorCombo = ColorCombinationsManager.shared.getRandomCombination()
     let size: CGFloat
     
     init(size: CGFloat = 320) {
