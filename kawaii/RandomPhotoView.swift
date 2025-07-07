@@ -164,6 +164,9 @@ struct RandomPhotoView: View {
                             .foregroundColor(.black)
                             .opacity(blinkingOpacity)
                             .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: blinkingOpacity)
+                            .onAppear {
+                                blinkingOpacity = 1.0
+                            }
                     }
                     
                     Spacer()
@@ -451,6 +454,10 @@ struct RandomPhotoView: View {
             // Show splash screen for exactly 2 seconds
 			try? await Task.sleep(for: .seconds(2.5))
             showingSplash = false
+            
+            // Start animations and sounds after splash screen disappears
+            startTopTextCycle()
+            soundService.playSound(.intro)
         }
         .sheet(isPresented: $shareService.showShareSheet) {
             let activityItems: [Any] = {
@@ -482,8 +489,7 @@ struct RandomPhotoView: View {
             dragViewModel.sharePhotoItem = shareService.sharePhotoItem
             dragViewModel.convertToFramedPhoto = convertToFramedPhoto
             
-            // Start gentle blinking animation
-            blinkingOpacity = 1.0
+            // Blinking animation now starts after splash screen in .task
             
             // Cache system removed - no prefill needed
             
@@ -637,6 +643,7 @@ struct RandomPhotoView: View {
         }
     }
     
+
     private func showTravelMessage() {
         // Navigate to one day before current selected date
         dateSelectionViewModel.navigateToOneDayAgo()
