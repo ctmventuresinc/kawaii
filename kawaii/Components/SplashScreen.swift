@@ -8,8 +8,18 @@
 import SwiftUI
 
 struct SplashScreen: View {
-    @State private var bigStarOpacity: Double = 0
-    @State private var smallStarOpacity: Double = 0
+    @State private var showBigStar = false
+    @State private var showSmallStar = false
+    @State private var randomStars: [RandomStar] = []
+    
+    struct RandomStar {
+        let id = UUID()
+        let x: CGFloat
+        let y: CGFloat
+        let size: CGFloat
+        let delay: Double
+        var isVisible: Bool = false
+    }
     
     var body: some View {
         Group {
@@ -22,21 +32,29 @@ struct SplashScreen: View {
 					.resizable()
 					.ignoresSafeArea()
                 
-                StarShapeView(size: 320)
-                    .opacity(bigStarOpacity)
+                if showBigStar {
+                    StarShapeView(size: 320)
+                }
                 
                 // Small star behind release section
-                VStack {
-                    Spacer()
-                    HStack {
-                        StarShapeView(size: 120)
-                            .offset(x: -20, y: -50)
-                            .opacity(smallStarOpacity)
+                if showSmallStar {
+                    VStack {
                         Spacer()
+                        HStack {
+                            StarShapeView(size: 120)
+                                .offset(x: -20, y: -50)
+                            Spacer()
+                        }
                     }
+                    .padding(.leading, 10)
+                    .padding(.bottom, 40)
                 }
-                .padding(.leading, 10)
-                .padding(.bottom, 40)
+                
+                // Random stars
+                ForEach(randomStars.filter(\.isVisible), id: \.id) { star in
+                    StarShapeView(size: star.size)
+                        .offset(x: star.x, y: star.y)
+                }
                 
                 // Absolutely centered "kawaii" text
                 Text("kawaii")
@@ -76,13 +94,29 @@ struct SplashScreen: View {
                 .padding(40)
             }
             .onAppear {
-                withAnimation(.easeIn(duration: 0.8)) {
-                    bigStarOpacity = 1.0
+                // Generate random stars
+                randomStars = (0..<15).map { _ in
+                    RandomStar(
+                        x: CGFloat.random(in: -200...200),
+                        y: CGFloat.random(in: -300...300),
+                        size: CGFloat.random(in: 30...100),
+                        delay: Double.random(in: 0.8...3.0)
+                    )
                 }
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                    withAnimation(.easeIn(duration: 0.8)) {
-                        smallStarOpacity = 1.0
+                // Show main stars
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    showBigStar = true
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    showSmallStar = true
+                }
+                
+                // Show random stars
+                for (index, star) in randomStars.enumerated() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + star.delay) {
+                        randomStars[index].isVisible = true
                     }
                 }
             }
