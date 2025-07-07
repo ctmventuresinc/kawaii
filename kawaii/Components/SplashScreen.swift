@@ -11,7 +11,7 @@ struct SplashScreen: View {
     @State private var showBigStar = false
     @State private var showSmallStar = false
     @State private var randomStars: [RandomStar] = []
-    @State private var allContentOpacity: Double = 1.0
+    // @State private var allContentOpacity: Double = 1.0
     
     struct RandomStar {
         let id = UUID()
@@ -94,7 +94,7 @@ struct SplashScreen: View {
                 }
                 .padding(40)
             }
-            .opacity(allContentOpacity)
+            // .opacity(allContentOpacity)
             .onAppear {
                 // Generate random stars with progressive timing (slow to fast)
                 randomStars = (0..<30).map { index in
@@ -129,11 +129,11 @@ struct SplashScreen: View {
                 }
                 
                 // Fade out everything with 0.5s left (assuming 3s total splash duration)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    withAnimation(.easeOut(duration: 0.5)) {
-                        allContentOpacity = 0.0
-                    }
-                }
+                // DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                //     withAnimation(.easeOut(duration: 0.5)) {
+                //         allContentOpacity = 0.0
+                //     }
+                // }
             }
         }
     }
