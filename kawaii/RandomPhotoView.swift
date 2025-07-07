@@ -89,6 +89,7 @@ struct RandomPhotoView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(maxWidth: .infinity)
+                        .scaleEffect(x: 1.0, y: 1.35, anchor: .bottom)
                 }
                 .ignoresSafeArea(.all, edges: .bottom)
                 

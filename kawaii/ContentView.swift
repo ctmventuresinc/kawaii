@@ -18,7 +18,7 @@ struct ContentView: View {
 	var body: some View {
 		
 		if testing {
-			ColorCombinationPreview()
+			SplashScreen()
 		} else {
 			Group {
 				switch authorizationStatus {
