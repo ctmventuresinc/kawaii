@@ -58,7 +58,7 @@ struct SplashScreen: View {
                 }
                 
                 // Absolutely centered "kawaii" text
-                Text("kawaii")
+                Text("cuck")
                     .font(.system(size: 48, weight: .bold))
 					.foregroundColor(.black)
                     
@@ -72,7 +72,7 @@ struct SplashScreen: View {
                         Text("build")
                             .font(.system(size: 16, design: .monospaced))
                             .foregroundColor(.black)
-                        Text("los, bunny, marc, mihir")
+                        Text("everyone who plays games with los")
                             .font(.system(size: 24, design: .monospaced))
                             .foregroundColor(.black)
                     }
@@ -86,7 +86,7 @@ struct SplashScreen: View {
                         Text("release")
                             .font(.system(size: 16, design: .monospaced))
                             .foregroundColor(.black)
-                        Text("danger testing")
+                        Text("los")
                             .font(.system(size: 24, design: .monospaced))
                             .foregroundColor(.black)
                     }

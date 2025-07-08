@@ -23,7 +23,8 @@ struct ContentView: View {
 			Group {
 				switch authorizationStatus {
 				case .authorized:
-					RandomPhotoView()
+//					RandomPhotoView()
+					RandomChairView()
 				case .denied, .restricted, .limited:
 					PermissionDeniedView()
 				case .notDetermined:
