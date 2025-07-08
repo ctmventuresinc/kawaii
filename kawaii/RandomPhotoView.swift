@@ -87,8 +87,7 @@ struct RandomPhotoView: View {
                 
                 // Blue background overlay (above current background, below dock)
                 if isTurtleMode {
-                    Color.blue
-                        .ignoresSafeArea(.all)
+                    TurtleModeBackgroundView()
                         .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 }
                 
@@ -176,8 +175,9 @@ struct RandomPhotoView: View {
                         Text("Touch the Touch Screen to continue.")
                             .font(.system(size: 19, weight: .medium))
                             .foregroundColor(.black)
-                            .opacity(blinkingOpacity)
+                            .opacity(isTurtleMode ? 0 : blinkingOpacity)
                             .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: blinkingOpacity)
+                            .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                             .onAppear {
                                 blinkingOpacity = 1.0
                             }
@@ -739,7 +739,14 @@ struct RandomPhotoView: View {
         withAnimation(.easeInOut(duration: 0.3)) {
             isTurtleMode.toggle()
         }
+        
+        // Always play click sound first for immediate feedback
         soundService.playSound(.click)
+        
+        // If entering turtle mode, play japan3 after a short delay
+        if isTurtleMode {
+            soundService.playSound(.japan3, delay: 0.3)
+        }
     }
 
 }

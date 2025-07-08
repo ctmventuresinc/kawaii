@@ -14,6 +14,7 @@ enum SoundType {
     case nandeska
     case loading
     case timetravel
+    case japan3
     case custom(String)
     
     var fileName: String {
@@ -28,6 +29,8 @@ enum SoundType {
             return "loading"
         case .timetravel:
             return "timetravel"
+        case .japan3:
+            return "japan3"
         case .custom(let name):
             return name
         }
