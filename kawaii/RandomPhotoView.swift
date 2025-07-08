@@ -42,6 +42,9 @@ struct RandomPhotoView: View {
     // State to control splash screen visibility
     @State private var showingSplash = true
     
+    // State to control turtle mode
+    @State private var isTurtleMode = false
+    
     init() {
         let shareService = ShareService()
         let soundService = SoundService()
@@ -82,6 +85,13 @@ struct RandomPhotoView: View {
                         handleScreenTap()
                     }
                 
+                // Blue background overlay (above current background, below dock)
+                if isTurtleMode {
+                    Color.blue
+                        .ignoresSafeArea(.all)
+                        .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
+                }
+                
                 // Dock image at bottom of screen - behind ALL buttons
                 VStack {
                     Spacer()
@@ -108,6 +118,8 @@ struct RandomPhotoView: View {
                         }
                     Spacer()
                 }
+                .opacity(isTurtleMode ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 
                 ForEach(photoItemsViewModel.photoItems) { photoItem in
                     PhotoItemView(
@@ -117,6 +129,8 @@ struct RandomPhotoView: View {
                         dragViewModel: dragViewModel
                     )
                 }
+                .opacity(isTurtleMode ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 
                 // Add button - TEMPORARILY HIDDEN
                 /*
@@ -183,11 +197,17 @@ struct RandomPhotoView: View {
                         
                         // Rewind button on top
                         Button(action: {
-                            soundService.playSound(.click)
-                            handleRewindAction()
-                        }) {
-                            Text("Rewind")
-                        }
+                        soundService.playSound(.click)
+                        if isTurtleMode {
+                                photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoModeManager.currentMode) { success in
+                                print("Photo added via try now: \(success)")
+                                }
+                             } else {
+                                 handleRewindAction()
+                             }
+                         }) {
+                             Text(isTurtleMode ? "Try Now" : "Rewind")
+                         }
                     }
                     .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
                     .disabled(false)
@@ -200,10 +220,9 @@ struct RandomPhotoView: View {
                     // Face button aligned to far left and Share button aligned to far right
                     HStack {
                     Button(action: {
-                    // soundService.playSound(.click)
-                    // photoModeManager.cycleToNextMode()
+                    toggleTurtleMode()
                     }) {
-                    Image(systemName: "tortoise.fill")
+                    Image(systemName: isTurtleMode ? "xmark.circle.fill" : "tortoise.fill")
                     .font(.system(size: 32, weight: .medium))
                     }
                     .buttonStyle(GlossyEnvelopeButtonStyle())
@@ -232,7 +251,7 @@ struct RandomPhotoView: View {
                     }
                     }
                     .padding(.bottom, 50)
-                }
+                    }
                 
                 // Photo method selector in top right - TEMPORARILY COMMENTED OUT
                 /*
@@ -324,6 +343,8 @@ struct RandomPhotoView: View {
                         Spacer()
                     }
                 }
+                .opacity(isTurtleMode ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 .onChange(of: dragViewModel.isDraggingAny) { _, isDragging in
                     dragViewModel.updateDragStates(isDragging: isDragging)
                     animationViewModel.updateAddButtonVisibility(isDragging: isDragging)
@@ -373,6 +394,8 @@ struct RandomPhotoView: View {
                         .padding(.bottom, 20)
                     }
                 }
+                .opacity(isTurtleMode ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 
                 // Share button in bottom center
                 VStack {
@@ -710,6 +733,13 @@ struct RandomPhotoView: View {
                 }
             }
         }, fallbackToSettings: false)
+    }
+    
+    private func toggleTurtleMode() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isTurtleMode.toggle()
+        }
+        soundService.playSound(.click)
     }
 
 }
