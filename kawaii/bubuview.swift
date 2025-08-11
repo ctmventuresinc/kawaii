@@ -47,39 +47,58 @@ struct bubuview: View {
             
             // U-shaped ball chain
             GeometryReader { geometry in
-                ForEach(0..<32, id: \.self) { index in
-                    let t = Double(index) / 31.0 // 0 to 1
-                    
-                    // Create U shape: top left to bottom center to top right
-                    let startX = geometry.size.width * 0.1  // 10% from left
-                    let endX = geometry.size.width * 0.9    // 90% from left  
-                    let topY = 0.0                          // Start from actual top
-                    let bottomY = geometry.size.height * 0.6 // Bottom of U
-                    
-                    // Quadratic bezier curve for U shape
-                    let x = (1-t)*(1-t)*startX + 2*(1-t)*t*(geometry.size.width/2) + t*t*endX
-                    let y = (1-t)*(1-t)*topY + 2*(1-t)*t*bottomY + t*t*topY
-                    
-                    ZStack {
-                        // Connecting wire between beads
-                        if index > 0 {
-                            let prevT = Double(index - 1) / 31.0
-                            let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*(geometry.size.width/2) + prevT*prevT*endX
-                            let prevY = (1-prevT)*(1-prevT)*topY + 2*(1-prevT)*prevT*bottomY + prevT*prevT*topY
-                            
-                            let wireAngle = atan2(y - prevY, x - prevX) * 180 / .pi
-                            let wireLength = sqrt((x - prevX) * (x - prevX) + (y - prevY) * (y - prevY))
-                            
-                            ConnectingWire()
-                                .frame(width: wireLength, height: 1)
-                                .rotationEffect(.degrees(wireAngle))
-                                .position(x: (x + prevX) / 2, y: (y + prevY) / 2)
-                        }
+                let startX = geometry.size.width * 0.1
+                let endX = geometry.size.width * 0.9
+                let topY = 0.0
+                let controlY = geometry.size.height * 0.6
+                let centerX = geometry.size.width / 2
+                
+                // Calculate bottom bead position (t = 0.5 for quadratic bezier)
+                let t: CGFloat = 0.5
+                let bottomBeadX = centerX
+                let bottomBeadY = 2 * (1-t) * t * controlY  // actual bottom of curve
+                
+                ZStack {
+                    // Chain beads
+                    ForEach(0..<32, id: \.self) { index in
+                        let t = Double(index) / 31.0
                         
-                        // The bead
-                        BallChainBead()
-                            .position(x: x, y: y)
+                        let x = (1-t)*(1-t)*startX + 2*(1-t)*t*centerX + t*t*endX
+                        let y = (1-t)*(1-t)*topY + 2*(1-t)*t*controlY + t*t*topY
+                        
+                        ZStack {
+                            // Connecting wire between beads
+                            if index > 0 {
+                                let prevT = Double(index - 1) / 31.0
+                                let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*centerX + prevT*prevT*endX
+                                let prevY = (1-prevT)*(1-prevT)*topY + 2*(1-prevT)*prevT*controlY + prevT*prevT*topY
+                                
+                                let wireAngle = atan2(y - prevY, x - prevX) * 180 / .pi
+                                let wireLength = sqrt((x - prevX) * (x - prevX) + (y - prevY) * (y - prevY))
+                                
+                                ConnectingWire()
+                                    .frame(width: wireLength, height: 1)
+                                    .rotationEffect(.degrees(wireAngle))
+                                    .position(x: (x + prevX) / 2, y: (y + prevY) / 2)
+                            }
+                            
+                            BallChainBead()
+                                .position(x: x, y: y)
+                        }
                     }
+                    
+                    // Connector wire from bottom bead to pendant
+                    ConnectingWire()
+                        .frame(width: 6, height: 1)
+                        .rotationEffect(.degrees(90))
+                        .position(x: bottomBeadX, y: bottomBeadY + 4 + 3) // bead radius + half wire
+                    
+                    // Pendant hanging from bottom bead
+                    Image("gay")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 40, height: 40)
+                        .position(x: bottomBeadX, y: bottomBeadY + 4 + 6 + 20) // bead + wire + half pendant
                 }
             }
             .ignoresSafeArea()
