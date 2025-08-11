@@ -6,6 +6,37 @@
 //
 
 import SwiftUI
+import Foundation
+
+struct BallChainBead: View {
+    var body: some View {
+        ZStack {
+            // Main metal ball
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.75, green: 0.75, blue: 0.8),
+                            Color(red: 0.9, green: 0.9, blue: 0.95),
+                            Color(red: 0.6, green: 0.6, blue: 0.65)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 8, height: 8)
+                .shadow(color: .black.opacity(0.4), radius: 1, x: 0.5, y: 0.5)
+        }
+    }
+}
+
+struct ConnectingWire: View {
+    var body: some View {
+        Rectangle()
+            .fill(Color(red: 0.7, green: 0.7, blue: 0.75))
+            .frame(width: 3, height: 1)
+    }
+}
 
 struct bubuview: View {
     var body: some View {
@@ -14,58 +45,57 @@ struct bubuview: View {
             Color.black.opacity(0.05)
                 .ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Chain around neck area
-                HStack(spacing: -10) {
-                    ForEach(0..<8, id: \.self) { _ in
-                        ChainLink(size: CGSize(width: 45, height: 30), wall: 6)
-                            .rotationEffect(.degrees(Double.random(in: -15...15)))
-                    }
-                }
-                .padding(.bottom, 20)
-                
-                // Face
-                ZStack {
-                    // Head (circle)
-                    Circle()
-                        .fill(Color(red: 0.95, green: 0.87, blue: 0.8))
-                        .stroke(Color.black.opacity(0.1), lineWidth: 2)
-                        .frame(width: 200, height: 200)
+            // U-shaped ball chain
+            ZStack {
+                ForEach(0..<32, id: \.self) { index in
+                    let t = Double(index) / 31.0 // 0 to 1
                     
-                    VStack(spacing: 15) {
-                        // Eyes
-                        HStack(spacing: 40) {
-                            // Left eye
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 15, height: 15)
+                    // Create U shape: top left to bottom center to top right
+                    let startX = -UIScreen.main.bounds.width * 0.4
+                    let endX = UIScreen.main.bounds.width * 0.4
+                    let topY = UIScreen.main.bounds.height * 0.15
+                    let bottomY = UIScreen.main.bounds.height * 0.7
+                    
+                    // Quadratic bezier curve for U shape
+                    let x = (1-t)*(1-t)*startX + 2*(1-t)*t*0 + t*t*endX
+                    let y = (1-t)*(1-t)*topY + 2*(1-t)*t*bottomY + t*t*topY
+                    
+                    ZStack {
+                        // Connecting wire between beads
+                        if index > 0 {
+                            let prevT = Double(index - 1) / 31.0
+                            let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*0 + prevT*prevT*endX
+                            let prevY = (1-prevT)*(1-prevT)*topY + 2*(1-prevT)*prevT*bottomY + prevT*prevT*topY
                             
-                            // Right eye
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 15, height: 15)
+                            let wireAngle = atan2(y - prevY, x - prevX) * 180 / .pi
+                            let wireLength = sqrt((x - prevX) * (x - prevX) + (y - prevY) * (y - prevY))
+                            
+                            ConnectingWire()
+                                .frame(width: wireLength, height: 1)
+                                .rotationEffect(.degrees(wireAngle))
+                                .offset(x: (x + prevX) / 2, y: (y + prevY) / 2)
                         }
-                        .offset(y: -20)
                         
-                        // Nose (small triangle)
-                        Triangle()
-                            .fill(Color.pink.opacity(0.6))
-                            .frame(width: 8, height: 6)
-                            .offset(y: -10)
-                        
-                        // Mouth (arc)
-                        Arc(startAngle: 0, endAngle: 180)
-                            .stroke(Color.black.opacity(0.7), lineWidth: 3)
-                            .frame(width: 30, height: 15)
-                            .offset(y: -5)
+                        // The bead
+                        BallChainBead()
+                            .offset(x: x, y: y)
                     }
                 }
                 
-                // Neck area
-                Rectangle()
-                    .fill(Color(red: 0.95, green: 0.87, blue: 0.8))
-                    .frame(width: 60, height: 40)
-                    .offset(y: -10)
+                // Pendant at the center (bottom of U)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.yellow.opacity(0.9), Color.orange.opacity(0.7), Color.red.opacity(0.5)],
+                            center: .topLeading,
+                            startRadius: 1,
+                            endRadius: 15
+                        )
+                    )
+                    .stroke(Color.black.opacity(0.3), lineWidth: 1)
+                    .frame(width: 25, height: 25)
+                    .offset(x: 0, y: UIScreen.main.bounds.height * 0.7)
+                    .shadow(color: .black.opacity(0.4), radius: 3, x: 1, y: 2)
             }
         }
     }
