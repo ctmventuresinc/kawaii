@@ -208,10 +208,10 @@ struct ChainVisualOverlay: View {
             
             // Visual pendant synced with physics
             if let pendant = scene.pendantNode {
-                Image("gay")
+				Image(.bubucutout)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 540, height: 540)
                     .position(x: pendant.position.x, y: geometry.size.height - pendant.position.y)
             }
         }
