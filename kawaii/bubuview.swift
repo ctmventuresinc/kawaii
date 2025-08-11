@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Foundation
+import SpriteKit
+import CoreMotion
 
 struct BallChainBead: View {
     var body: some View {
@@ -38,70 +40,180 @@ struct ConnectingWire: View {
     }
 }
 
+class ChainPhysicsScene: SKScene, ObservableObject {
+    private var motionManager = CMMotionManager()
+    @Published var beadNodes: [SKSpriteNode] = []
+    @Published var pendantNode: SKSpriteNode?
+    private let beadCount = 32
+    private var updateTimer: Timer?
+    
+    override func didMove(to view: SKView) {
+        setupPhysics()
+        createChain()
+        createPendant()
+        startMotionUpdates()
+        startPositionUpdates()
+    }
+    
+    private func setupPhysics() {
+        physicsWorld.gravity = CGVector(dx: 0, dy: -9.8)
+        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+    }
+    
+    private func createChain() {
+        let startX = size.width * 0.1
+        let endX = size.width * 0.9
+        let topY = size.height - 50  // Start from top
+        let controlY = size.height * 0.75  // Bottom control point - only 50% depth
+        let centerX = size.width / 2
+        
+        // Create beads along bezier curve
+        for i in 0..<beadCount {
+            let t = CGFloat(i) / CGFloat(beadCount - 1)
+            
+            // Quadratic bezier calculation
+            let x = pow(1-t, 2) * startX + 2*(1-t)*t*centerX + pow(t, 2) * endX
+            let y = pow(1-t, 2) * topY + 2*(1-t)*t*controlY + pow(t, 2) * topY
+            
+            // Create bead physics body
+            let bead = SKSpriteNode(color: .gray, size: CGSize(width: 8, height: 8))
+            bead.position = CGPoint(x: x, y: y)
+            bead.physicsBody = SKPhysicsBody(circleOfRadius: 4)
+            bead.physicsBody?.isDynamic = (i == 0 || i == beadCount - 1) ? false : true  // Fix endpoints
+            bead.physicsBody?.mass = 0.1
+            bead.physicsBody?.friction = 0.2
+            bead.physicsBody?.restitution = 0.1
+            
+            addChild(bead)
+            beadNodes.append(bead)
+            
+            // Connect to previous bead with distance constraint
+            if i > 0 {
+                let prevBead = beadNodes[i-1]
+                let distance = sqrt(pow(x - prevBead.position.x, 2) + pow(y - prevBead.position.y, 2))
+                
+                let joint = SKPhysicsJointLimit.joint(
+                    withBodyA: prevBead.physicsBody!,
+                    bodyB: bead.physicsBody!,
+                    anchorA: prevBead.position,  // Use actual world positions
+                    anchorB: bead.position       // Not zero!
+                )
+                joint.maxLength = distance * 1.05  // Small stretch allowance
+                physicsWorld.add(joint)
+            }
+        }
+    }
+    
+    private func createPendant() {
+        // Find middle bead (bottom of U)
+        let middleIndex = beadCount / 2
+        let middleBead = beadNodes[middleIndex]
+        
+        // Create pendant
+        let pendant = SKSpriteNode(color: .clear, size: CGSize(width: 40, height: 40))
+        pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20)
+        pendant.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 40, height: 40))
+        pendant.physicsBody?.mass = 0.2  // Lighter so it doesn't drag chain down
+        pendant.physicsBody?.friction = 0.1
+        pendant.physicsBody?.restitution = 0.2
+        
+        addChild(pendant)
+        pendantNode = pendant
+        
+        // Connect pendant to middle bead with limited distance
+        let joint = SKPhysicsJointLimit.joint(
+            withBodyA: middleBead.physicsBody!,
+            bodyB: pendant.physicsBody!,
+            anchorA: middleBead.position,   // Use actual positions
+            anchorB: pendant.position      // Not zero!
+        )
+        joint.maxLength = 20.0  // Short pendant chain
+        physicsWorld.add(joint)
+    }
+    
+    private func startMotionUpdates() {
+        guard motionManager.isDeviceMotionAvailable else { return }
+        
+        motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
+        motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, error in
+            guard let motion = motion else { return }
+            
+            // Convert device orientation to gravity vector
+            let gravity = motion.gravity
+            let gravityVector = CGVector(
+                dx: gravity.x * 9.8,
+                dy: gravity.y * 9.8
+            )
+            
+            self?.physicsWorld.gravity = gravityVector
+        }
+    }
+    
+    private func startPositionUpdates() {
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.objectWillChange.send()
+            }
+        }
+    }
+    
+    deinit {
+        motionManager.stopDeviceMotionUpdates()
+        updateTimer?.invalidate()
+    }
+}
+
 struct bubuview: View {
+    @StateObject private var physicsScene = ChainPhysicsScene()
+    
     var body: some View {
         ZStack {
             // Background
             Color.black.opacity(0.05)
                 .ignoresSafeArea()
             
-            // U-shaped ball chain
+            // Physics-enabled chain
             GeometryReader { geometry in
-                let startX = geometry.size.width * 0.1
-                let endX = geometry.size.width * 0.9
-                let topY = 0.0
-                let controlY = geometry.size.height * 0.6
-                let centerX = geometry.size.width / 2
-                
-                // Calculate bottom bead position (t = 0.5 for quadratic bezier)
-                let t: CGFloat = 0.5
-                let bottomBeadX = centerX
-                let bottomBeadY = 2 * (1-t) * t * controlY  // actual bottom of curve
-                
                 ZStack {
-                    // Chain beads
-                    ForEach(0..<32, id: \.self) { index in
-                        let t = Double(index) / 31.0
-                        
-                        let x = (1-t)*(1-t)*startX + 2*(1-t)*t*centerX + t*t*endX
-                        let y = (1-t)*(1-t)*topY + 2*(1-t)*t*controlY + t*t*topY
-                        
-                        ZStack {
-                            // Connecting wire between beads
-                            if index > 0 {
-                                let prevT = Double(index - 1) / 31.0
-                                let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*centerX + prevT*prevT*endX
-                                let prevY = (1-prevT)*(1-prevT)*topY + 2*(1-prevT)*prevT*controlY + prevT*prevT*topY
-                                
-                                let wireAngle = atan2(y - prevY, x - prevX) * 180 / .pi
-                                let wireLength = sqrt((x - prevX) * (x - prevX) + (y - prevY) * (y - prevY))
-                                
-                                ConnectingWire()
-                                    .frame(width: wireLength, height: 1)
-                                    .rotationEffect(.degrees(wireAngle))
-                                    .position(x: (x + prevX) / 2, y: (y + prevY) / 2)
-                            }
-                            
-                            BallChainBead()
-                                .position(x: x, y: y)
-                        }
-                    }
+                    // SpriteKit physics scene (invisible beads)
+                    SpriteView(scene: configureScene(geometry: geometry))
+                        .ignoresSafeArea()
                     
-                    // Connector wire from bottom bead to pendant
-                    ConnectingWire()
-                        .frame(width: 6, height: 1)
-                        .rotationEffect(.degrees(90))
-                        .position(x: bottomBeadX, y: bottomBeadY + 4 + 3) // bead radius + half wire
-                    
-                    // Pendant hanging from bottom bead
-                    Image("gay")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 40, height: 40)
-                        .position(x: bottomBeadX, y: bottomBeadY + 4 + 6 + 20) // bead + wire + half pendant
+                    // Visual overlay - sync with physics positions
+                    ChainVisualOverlay(scene: physicsScene, geometry: geometry)
                 }
             }
             .ignoresSafeArea()
+        }
+    }
+    
+    private func configureScene(geometry: GeometryProxy) -> ChainPhysicsScene {
+        physicsScene.size = CGSize(width: geometry.size.width, height: geometry.size.height)
+        physicsScene.scaleMode = .resizeFill
+        return physicsScene
+    }
+}
+
+struct ChainVisualOverlay: View {
+    @ObservedObject var scene: ChainPhysicsScene
+    let geometry: GeometryProxy
+    
+    var body: some View {
+        ZStack {
+            // Visual beads synced with physics
+            ForEach(Array(scene.beadNodes.enumerated()), id: \.offset) { index, bead in
+                BallChainBead()
+                    .position(x: bead.position.x, y: geometry.size.height - bead.position.y)
+            }
+            
+            // Visual pendant synced with physics
+            if let pendant = scene.pendantNode {
+                Image("gay")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 40, height: 40)
+                    .position(x: pendant.position.x, y: geometry.size.height - pendant.position.y)
+            }
         }
     }
 }
