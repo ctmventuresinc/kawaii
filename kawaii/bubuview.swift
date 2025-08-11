@@ -46,25 +46,25 @@ struct bubuview: View {
                 .ignoresSafeArea()
             
             // U-shaped ball chain
-            ZStack {
+            GeometryReader { geometry in
                 ForEach(0..<32, id: \.self) { index in
                     let t = Double(index) / 31.0 // 0 to 1
                     
                     // Create U shape: top left to bottom center to top right
-                    let startX = -UIScreen.main.bounds.width * 0.4
-                    let endX = UIScreen.main.bounds.width * 0.4
-                    let topY = -UIScreen.main.bounds.height * 0.3
-                    let bottomY = UIScreen.main.bounds.height * 0.1
+                    let startX = geometry.size.width * 0.1  // 10% from left
+                    let endX = geometry.size.width * 0.9    // 90% from left  
+                    let topY = 50.0                         // Start from top of screen
+                    let bottomY = geometry.size.height * 0.6 // Bottom of U
                     
                     // Quadratic bezier curve for U shape
-                    let x = (1-t)*(1-t)*startX + 2*(1-t)*t*0 + t*t*endX
+                    let x = (1-t)*(1-t)*startX + 2*(1-t)*t*(geometry.size.width/2) + t*t*endX
                     let y = (1-t)*(1-t)*topY + 2*(1-t)*t*bottomY + t*t*topY
                     
                     ZStack {
                         // Connecting wire between beads
                         if index > 0 {
                             let prevT = Double(index - 1) / 31.0
-                            let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*0 + prevT*prevT*endX
+                            let prevX = (1-prevT)*(1-prevT)*startX + 2*(1-prevT)*prevT*(geometry.size.width/2) + prevT*prevT*endX
                             let prevY = (1-prevT)*(1-prevT)*topY + 2*(1-prevT)*prevT*bottomY + prevT*prevT*topY
                             
                             let wireAngle = atan2(y - prevY, x - prevX) * 180 / .pi
@@ -73,16 +73,14 @@ struct bubuview: View {
                             ConnectingWire()
                                 .frame(width: wireLength, height: 1)
                                 .rotationEffect(.degrees(wireAngle))
-                                .offset(x: (x + prevX) / 2, y: (y + prevY) / 2)
+                                .position(x: (x + prevX) / 2, y: (y + prevY) / 2)
                         }
                         
                         // The bead
                         BallChainBead()
-                            .offset(x: x, y: y)
+                            .position(x: x, y: y)
                     }
                 }
-                
-               
             }
         }
     }
