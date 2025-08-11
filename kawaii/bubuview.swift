@@ -53,8 +53,8 @@ struct bubuview: View {
                     // Create U shape: top left to bottom center to top right
                     let startX = -UIScreen.main.bounds.width * 0.4
                     let endX = UIScreen.main.bounds.width * 0.4
-                    let topY = UIScreen.main.bounds.height * 0.15
-                    let bottomY = UIScreen.main.bounds.height * 0.7
+                    let topY = -UIScreen.main.bounds.height * 0.3
+                    let bottomY = UIScreen.main.bounds.height * 0.1
                     
                     // Quadratic bezier curve for U shape
                     let x = (1-t)*(1-t)*startX + 2*(1-t)*t*0 + t*t*endX
@@ -82,20 +82,7 @@ struct bubuview: View {
                     }
                 }
                 
-                // Pendant at the center (bottom of U)
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.yellow.opacity(0.9), Color.orange.opacity(0.7), Color.red.opacity(0.5)],
-                            center: .topLeading,
-                            startRadius: 1,
-                            endRadius: 15
-                        )
-                    )
-                    .stroke(Color.black.opacity(0.3), lineWidth: 1)
-                    .frame(width: 25, height: 25)
-                    .offset(x: 0, y: UIScreen.main.bounds.height * 0.7)
-                    .shadow(color: .black.opacity(0.4), radius: 3, x: 1, y: 2)
+               
             }
         }
     }
