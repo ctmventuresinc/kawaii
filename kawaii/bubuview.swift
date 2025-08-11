@@ -53,7 +53,7 @@ struct bubuview: View {
                     // Create U shape: top left to bottom center to top right
                     let startX = geometry.size.width * 0.1  // 10% from left
                     let endX = geometry.size.width * 0.9    // 90% from left  
-                    let topY = 50.0                         // Start from top of screen
+                    let topY = 0.0                          // Start from actual top
                     let bottomY = geometry.size.height * 0.6 // Bottom of U
                     
                     // Quadratic bezier curve for U shape
@@ -82,6 +82,7 @@ struct bubuview: View {
                     }
                 }
             }
+            .ignoresSafeArea()
         }
     }
 }
