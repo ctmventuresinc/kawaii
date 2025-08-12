@@ -209,17 +209,21 @@ struct ChainVisualOverlay: View {
             // Visual pendant synced with physics
             // New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
-				VStack(spacing: 0) {
-					Image("bigbubu_top")
-						.resizable()
-						.aspectRatio(contentMode: .fit)
-						.frame(width: 250, height: 273)  // 250 * (511/469) to maintain aspect ratio
-					
-					Image("bigbubu_bottom")
-						.resizable()
-						.aspectRatio(contentMode: .fit)
-						.frame(width: 250, height: 227)  // 250 * (424.5/469) to maintain aspect ratio
-				}
+				ZStack(alignment: .center) {
+						VStack(spacing: -72) {  // Negative spacing allows overlap
+							Image("bigbubu_top")
+								.resizable()
+								.aspectRatio(contentMode: .fit)
+								.frame(width: 250, height: 273)
+								.zIndex(1)
+							
+							Image("bigbubu_bottom")
+								.resizable()
+								.aspectRatio(contentMode: .fit)
+								.frame(width: 250, height: 227)
+								.zIndex(0)
+						}
+					}
 				// Position the pendant so its top-center touches the bead.
 				// Bead is in SpriteKit (origin bottom-left); convert to SwiftUI coords and offset by half the pendant height.
 				.position(
