@@ -206,29 +206,30 @@ struct ChainVisualOverlay: View {
                     .position(x: bead.position.x, y: geometry.size.height - bead.position.y)
             }
             
-            // Visual pendant synced with physics
-            // New pendant anchored to the middle (bottom-most) bead
+
+			// Visual pendant synced with physics
+			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
 				ZStack(alignment: .center) {
-						VStack(spacing: -72) {  // Negative spacing allows overlap
-							Image("bigbubu_top")
-								.resizable()
-								.aspectRatio(contentMode: .fit)
-								.frame(width: 250, height: 273)
-								.zIndex(1)
-							
-							Image("bigbubu_bottom")
-								.resizable()
-								.aspectRatio(contentMode: .fit)
-								.frame(width: 250, height: 227)
-								.zIndex(0)
-						}
+					VStack(spacing: -72) {  // Adjusted for perfect alignment
+						Image("bigbubu_top")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+							.frame(width: 250, height: 273)
+							.zIndex(1)  // Bring top to front
+						
+						Image("bigbubu_bottom")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+							.frame(width: 250, height: 227)
+							.zIndex(0)  // Keep bottom behind
 					}
+				}
 				// Position the pendant so its top-center touches the bead.
-				// Bead is in SpriteKit (origin bottom-left); convert to SwiftUI coords and offset by half the pendant height.
+				// With -71 spacing, the visual center is higher, so we need less offset
 				.position(
 					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 250 // 250 = (273 + 227) / 2
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 // Reduced offset to account for the visual centering
 				)
 			}
         }
