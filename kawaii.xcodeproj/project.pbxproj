@@ -69,11 +69,29 @@
 			);
 			target = 1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */;
 		};
+		196EEAF92E4BD52A00BD606D /* Exceptions for "kawaii" folder in "kawaiiapp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TestBuViewq.swift,
+			);
+			target = 191FDE9B2E030FCC00D2AF6D /* kawaiiapp */;
+		};
+		196EEAFA2E4BD52A00BD606D /* Exceptions for "kawaii" folder in "OneSignalNotificationServiceExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TestBuViewq.swift,
+			);
+			target = 1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		191FDE9E2E030FCC00D2AF6D /* kawaii */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				196EEAF92E4BD52A00BD606D /* Exceptions for "kawaii" folder in "kawaiiapp" target */,
+				196EEAFA2E4BD52A00BD606D /* Exceptions for "kawaii" folder in "OneSignalNotificationServiceExtension" target */,
+			);
 			path = kawaii;
 			sourceTree = "<group>";
 		};

@@ -208,18 +208,25 @@ struct ChainVisualOverlay: View {
             
             // Visual pendant synced with physics
             // New pendant anchored to the middle (bottom-most) bead
-            if !scene.beadNodes.isEmpty {
-				Image(.bigbubu)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 500, height: 500)   // Fixed pendant size
-                    // Position the pendant so its top-center touches the bead.
-                    // Bead is in SpriteKit (origin bottom-left); convert to SwiftUI coords and offset by half the pendant height.
-                    .position(
-                        x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-                        y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 250 // 250 = 500 / 2
-                    )
-            }
+			if !scene.beadNodes.isEmpty {
+				VStack(spacing: 0) {
+					Image("bigbubu_top")
+						.resizable()
+						.aspectRatio(contentMode: .fit)
+						.frame(width: 250, height: 273)  // 250 * (511/469) to maintain aspect ratio
+					
+					Image("bigbubu_bottom")
+						.resizable()
+						.aspectRatio(contentMode: .fit)
+						.frame(width: 250, height: 227)  // 250 * (424.5/469) to maintain aspect ratio
+				}
+				// Position the pendant so its top-center touches the bead.
+				// Bead is in SpriteKit (origin bottom-left); convert to SwiftUI coords and offset by half the pendant height.
+				.position(
+					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 250 // 250 = (273 + 227) / 2
+				)
+			}
         }
     }
 }
@@ -253,6 +260,25 @@ struct Arc: Shape {
         )
         return path
     }
+}
+
+struct LabubuClosedView: View {
+	var body: some View {
+//		VStack(spacing: -60) {
+//			Image("bigbubu_top")
+//				.resizable()
+//				.scaledToFit()
+//				.frame(width: 200)
+//			Image("bigbubu_bottom")
+//				.resizable()
+//				.scaledToFit()
+//				.frame(width: 200)
+//			
+//		}
+		Image(.bigbubu)
+			.resizable()
+			.aspectRatio(contentMode: .fit)
+	}
 }
 
 #Preview {
