@@ -211,7 +211,7 @@ struct ChainVisualOverlay: View {
 			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
 				ZStack(alignment: .center) {
-					VStack(spacing: mouthOpen ? -30 : -72) {  // Adjust spacing to simulate mouth open/close
+					VStack(spacing: -72) {  // Fixed overlap spacing; we'll move bottom image instead
 						Image("bigbubu_top")
 							.resizable()
 							.aspectRatio(contentMode: .fit)
@@ -222,6 +222,7 @@ struct ChainVisualOverlay: View {
 							.resizable()
 							.aspectRatio(contentMode: .fit)
 							.frame(width: 250, height: 227)
+							.offset(y: mouthOpen ? 42 : 0) // Move bottom lip down to open mouth
 							.zIndex(0)  // Keep bottom behind
 					}
 				}
