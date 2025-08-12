@@ -207,12 +207,18 @@ struct ChainVisualOverlay: View {
             }
             
             // Visual pendant synced with physics
-            if let pendant = scene.pendantNode {
-				Image(.bubucutout)
+            // New pendant anchored to the middle (bottom-most) bead
+            if !scene.beadNodes.isEmpty {
+				Image(.bigbubu)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 540, height: 540)
-                    .position(x: pendant.position.x, y: geometry.size.height - pendant.position.y)
+                    .frame(width: 500, height: 500)   // Fixed pendant size
+                    // Position the pendant so its top-center touches the bead.
+                    // Bead is in SpriteKit (origin bottom-left); convert to SwiftUI coords and offset by half the pendant height.
+                    .position(
+                        x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
+                        y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 250 // 250 = 500 / 2
+                    )
             }
         }
     }
