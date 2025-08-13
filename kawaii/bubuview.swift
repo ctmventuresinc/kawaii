@@ -6,12 +6,8 @@
 //
 
 import SwiftUI
-import Foundation
 import SpriteKit
 import CoreMotion
-
-// Global scale factor to enlarge or shrink Labubu and related physics visuals in one place.
-private let labubuScale: CGFloat = 0.8
 
 struct BallChainBead: View {
 	var body: some View {
@@ -35,13 +31,7 @@ struct BallChainBead: View {
 	}
 }
 
-struct ConnectingWire: View {
-	var body: some View {
-		Rectangle()
-			.fill(Color(red: 0.7, green: 0.7, blue: 0.75))
-			.frame(width: 3, height: 1)
-	}
-}
+
 
 class ChainPhysicsScene: SKScene, ObservableObject {
 	private var motionManager = CMMotionManager()
@@ -112,10 +102,10 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		let middleIndex = beadCount / 2
 		let middleBead = beadNodes[middleIndex]
 		
-		// Create pendant (scaled)
-		let pendantSize = CGSize(width: 40 * labubuScale, height: 40 * labubuScale)
+		// Create pendant
+		let pendantSize = CGSize(width: 32, height: 32)
 		let pendant = SKSpriteNode(color: .clear, size: pendantSize)
-		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
+		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 16)
 		pendant.physicsBody = SKPhysicsBody(rectangleOf: pendantSize)
 		pendant.physicsBody?.mass = 0.2  // Lighter so it doesn't drag chain down
 		pendant.physicsBody?.friction = 0.1
@@ -131,7 +121,7 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 			anchorA: middleBead.position,   // Use actual positions
 			anchorB: pendant.position      // Not zero!
 		)
-		joint.maxLength = 20.0 * labubuScale  // Scaled pendant chain length
+		joint.maxLength = 16.0  // Pendant chain length
 		physicsWorld.add(joint)
 	}
 	
@@ -201,7 +191,6 @@ struct bubuview: View {
 struct ChainVisualOverlay: View {
 	@ObservedObject var scene: ChainPhysicsScene
 	let geometry: GeometryProxy
-	@State private var isTalking: Bool = true // Switch between talking and owl mode
 	
 	var body: some View {
 		ZStack {
@@ -211,63 +200,22 @@ struct ChainVisualOverlay: View {
 					.position(x: bead.position.x, y: geometry.size.height - bead.position.y)
 			}
 			
-			// Visual pendant synced with physics
-			// New pendant anchored to the middle (bottom-most) bead
+			// Simple pendant at middle bead
 			if !scene.beadNodes.isEmpty {
-				PendantAnchor(scale: labubuScale) {
-					TalkingBubuView(
-						labubuScale: labubuScale,
-						isTalking: isTalking
+				Circle()
+					.fill(Color(red: 0.75, green: 0.75, blue: 0.8))
+					.frame(width: 32, height: 32)
+					.position(
+						x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
+						y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y - 16
 					)
-				}
-				.position(
-					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y
-				)
 			}
-			
-			VStack {
-				Spacer()
-				Text("Coming Soon")
-					.padding(.bottom, 50)
-					.foregroundStyle(.white)
-			}
-			
 		}
 	}
 }
 
-struct Triangle: Shape {
-	func path(in rect: CGRect) -> Path {
-		var path = Path()
-		path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-		path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-		path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-		path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
-		return path
-	}
-}
 
-struct Arc: Shape {
-	let startAngle: Double
-	let endAngle: Double
-	
-	func path(in rect: CGRect) -> Path {
-		var path = Path()
-		let center = CGPoint(x: rect.midX, y: rect.midY)
-		let radius = min(rect.width, rect.height) / 2
-		
-		path.addArc(
-			center: center,
-			radius: radius,
-			startAngle: .degrees(startAngle),
-			endAngle: .degrees(endAngle),
-			clockwise: false
-		)
-		return path
-	}
-}
 
-//#Preview {
-//	bubuview()
-//}
+#Preview {
+	bubuview()
+}
