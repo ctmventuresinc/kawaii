@@ -13,12 +13,13 @@ import OneSignalFramework
 
 struct ContentView: View {
 	@State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
-	@State private var testing: Bool = false
+	@State private var testing: Bool = true
 	
 	var body: some View {
 		
 		if testing {
 //			bubuview()
+			BallChainNecklaceView()
 		} else {
 			Group {
 				switch authorizationStatus {

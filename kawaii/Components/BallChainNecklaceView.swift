@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct BallChainNecklaceView: View {
-    let pendantScale: CGFloat = 2.0 // Easy scaling variable
+    let pendantScale: CGFloat = 1 // Easy scaling variable - 10x bigger for stress test
+    @State private var swingAngle: Double = 0
     
     var body: some View {
         GeometryReader { geometry in
@@ -30,13 +31,20 @@ struct BallChainNecklaceView: View {
                         .position(x: x, y: y)
                 }
                 
-                // Purple connecting line from chain to pendant
-                Rectangle()
-                    .fill(Color.purple.opacity(0.8))
-                    .frame(width: 2, height: 40)
-                    .position(x: geometry.size.width/2, y: 120 + 20)
+                // Physics-based pendant attachment
+                let chainLowestPoint = CGPoint(x: geometry.size.width/2, y: 120) // Lowest point of parabola
+                let chainLength: CGFloat = 60
+                let pendantAttachmentX = chainLowestPoint.x + sin(swingAngle * .pi / 180) * chainLength
+                let pendantAttachmentY = chainLowestPoint.y + cos(swingAngle * .pi / 180) * chainLength
                 
-                // Large scalable pendant at the bottom center of the curve
+                // Purple connecting line from lowest chain point to pendant
+                Path { path in
+                    path.move(to: chainLowestPoint)
+                    path.addLine(to: CGPoint(x: pendantAttachmentX, y: pendantAttachmentY))
+                }
+                .stroke(Color.purple.opacity(0.8), lineWidth: 2)
+                
+                // Large scalable pendant hanging from the line
                 ZStack {
                     // Pendant shadow
                     Circle()
@@ -84,7 +92,8 @@ struct BallChainNecklaceView: View {
                             .opacity(0.9)
                     }
                 }
-                .position(x: geometry.size.width/2, y: 120 + 60 * pendantScale)
+                .position(x: pendantAttachmentX, y: pendantAttachmentY + 60 * pendantScale)
+
             }
         }
         .clipped()
