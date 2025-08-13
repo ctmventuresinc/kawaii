@@ -23,24 +23,41 @@ struct TalkingBubuView: View {
 	let isTalking: Bool
 	
 	var body: some View {
-		GeometryReader { geo in
-			let scale = geo.size.width / Asset.width
-			let offsetBottom = (Asset.topHeight - Asset.overlap) * scale + bottomOffset
-			let fullHeight = (Asset.topHeight + Asset.bottomHeight - Asset.overlap) * scale
+		Group {
+			if isTalking {
+				GeometryReader { geo in
+					let scale = geo.size.width / Asset.width
+					let offsetBottom = (Asset.topHeight - Asset.overlap) * scale + bottomOffset
+					let fullHeight = (Asset.topHeight + Asset.bottomHeight - Asset.overlap) * scale
 
-			ZStack(alignment: .top) {
-				// Bottom half underneath, positioned below the top half by the scaled offset
-				Image("bigbubu_bottom")
-					.resizable()
-					.aspectRatio(contentMode: .fit)
-					.offset(y: offsetBottom)
+					ZStack(alignment: .top) {
+						// Bottom half
+						Image("bigbubu_bottom")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+							.offset(y: offsetBottom)
 
-				// Top half on top (drawn later ⇒ visually above)
-				Image("bigbubu_top")
+						// Top half
+						Image("bigbubu_top")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+					}
+					.frame(width: geo.size.width, height: fullHeight, alignment: .top)
+					// Enable tap to toggle mouth
+					.contentShape(Rectangle())
+					.onTapGesture {
+						withAnimation(.easeInOut(duration: 0.25)) {
+							mouthOpen.toggle()
+							let jawDrop: CGFloat = 42 * scale // asset-space drop scaled to current width
+							bottomOffset = mouthOpen ? jawDrop : 0
+						}
+					}
+				}
+			} else {
+				Image("owlcutout")
 					.resizable()
 					.aspectRatio(contentMode: .fit)
 			}
-			.frame(width: geo.size.width, height: fullHeight, alignment: .top)
 		}
 		.scaleEffect(labubuScale)
 	}

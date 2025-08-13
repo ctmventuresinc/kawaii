@@ -201,7 +201,7 @@ struct bubuview: View {
 struct ChainVisualOverlay: View {
 	@ObservedObject var scene: ChainPhysicsScene
 	let geometry: GeometryProxy
-	@State private var isTalking: Bool = false // Switch between talking and owl mode
+	@State private var isTalking: Bool = true // Switch between talking and owl mode
 	
 	var body: some View {
 		ZStack {
