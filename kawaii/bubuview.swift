@@ -214,13 +214,15 @@ struct ChainVisualOverlay: View {
 			// Visual pendant synced with physics
 			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
-				TalkingBubuView(
-					labubuScale: labubuScale,
-					position: CGPoint(
-						x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-						y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale
-					),
-					isTalking: isTalking
+				PendantAnchor(scale: labubuScale) {
+					TalkingBubuView(
+						labubuScale: labubuScale,
+						isTalking: isTalking
+					)
+				}
+				.position(
+					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y
 				)
 			}
 			
