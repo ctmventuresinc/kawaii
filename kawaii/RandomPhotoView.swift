@@ -87,8 +87,8 @@ struct RandomPhotoView: View {
                 
                 // Blue background overlay (above current background, below dock)
                 if isTurtleMode {
-                    TurtleModeBackgroundView()
-                        .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
+                bubuview()
+                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 }
                 
                 // Dock image at bottom of screen - behind ALL buttons
@@ -206,7 +206,7 @@ struct RandomPhotoView: View {
                                  handleRewindAction()
                              }
                          }) {
-                             Text(isTurtleMode ? "Try Now" : "Rewind")
+                             Text(isTurtleMode ? "Coming Soon" : "Rewind")
                          }
                     }
                     .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
@@ -222,7 +222,7 @@ struct RandomPhotoView: View {
                     Button(action: {
                     toggleTurtleMode()
                     }) {
-                    Image(systemName: isTurtleMode ? "xmark.circle.fill" : "tortoise.fill")
+                    Image(systemName: isTurtleMode ? "xmark.circle.fill" : "teddybear.fill")
                     .font(.system(size: 32, weight: .medium))
                     }
                     .buttonStyle(GlossyEnvelopeButtonStyle())
