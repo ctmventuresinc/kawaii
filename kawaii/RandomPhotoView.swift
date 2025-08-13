@@ -87,8 +87,9 @@ struct RandomPhotoView: View {
                 
                 // Blue background overlay (above current background, below dock)
                 if isTurtleMode {
-                bubuview()
-                .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
+                    Color.blue.opacity(0.3)
+                        .ignoresSafeArea()
+                        .animation(.easeInOut(duration: 0.3), value: isTurtleMode)
                 }
                 
                 // Dock image at bottom of screen - behind ALL buttons
