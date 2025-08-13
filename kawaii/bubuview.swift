@@ -251,6 +251,14 @@ struct ChainVisualOverlay: View {
 					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 // Reduced offset to account for the visual centering
 				)
 			}
+			
+			VStack {
+				Spacer()
+				Text("Coming Soon")
+					.padding(.bottom, 50)
+					.foregroundStyle(.white)
+			}
+			
 		}
 	}
 }
