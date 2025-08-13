@@ -7,8 +7,9 @@ import SwiftUI
 ///
 /// Behavioural aspects (live audio levels, elapsed time, etc.) are *not* implemented – this is strictly a design scaffold.
 struct RecordingView: View {
-    /// The timestamp to display. In a future functional implementation this could be bound to a timer.
-    var timestamp: String = "00:16.53"
+    // MARK: - State
+    /// Elapsed time in seconds – increments once per second.
+    @State private var elapsed: TimeInterval = 0
 
     // MARK: - Styling constants
     private let barWidth: CGFloat = 3
@@ -16,19 +17,24 @@ struct RecordingView: View {
     private let minBarHeight: CGFloat = 8
     private let maxBarHeight: CGFloat = 40
 
+    /// Formats `elapsed` into mm:ss.
+    private var formattedElapsed: String {
+        let minutes = Int(elapsed) / 60
+        let seconds = Int(elapsed) % 60
+        let centiseconds = Int((elapsed * 100).truncatingRemainder(dividingBy: 100))
+        return String(format: "%02d:%02d.%02d", minutes, seconds, centiseconds)
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Waveform
-                HStack(alignment: .center, spacing: barSpacing) {
-                    ForEach(0 ..< Int(geometry.size.width / (barWidth + barSpacing)), id: \.self) { _ in
-                        Rectangle()
-                            .fill(Color.red)
-                            .frame(width: barWidth,
-                                   height: CGFloat.random(in: minBarHeight ... maxBarHeight))
-                    }
-                }
-                .frame(height: maxBarHeight)
+                // Animated waveform
+                ScrollingWaveformView(width: geometry.size.width,
+                                      barWidth: barWidth,
+                                      barSpacing: barSpacing,
+                                      minBarHeight: minBarHeight,
+                                      maxBarHeight: maxBarHeight)
+                    .frame(height: maxBarHeight)
 
                 // Center white vertical line
                 Rectangle()
@@ -37,7 +43,7 @@ struct RecordingView: View {
 
                 // Timestamp pill
                 VStack {
-                    Text(timestamp)
+                    Text(formattedElapsed)
                         .font(.system(.footnote, design: .monospaced))
                         .foregroundColor(.black)
                         .padding(.horizontal, 12)
@@ -51,6 +57,61 @@ struct RecordingView: View {
             // Stretch content to entire view bounds
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        // Update elapsed time every second.
+        .onReceive(Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()) { _ in
+            elapsed += 0.01
+        }
+    }
+}
+
+// MARK: - Animated Waveform
+/// Produces a scrolling red waveform by continuously appending random bar heights and
+/// removing the oldest bar, giving the illusion of left-to-right movement.
+private struct ScrollingWaveformView: View {
+    let width: CGFloat
+    let barWidth: CGFloat
+    let barSpacing: CGFloat
+    let minBarHeight: CGFloat
+    let maxBarHeight: CGFloat
+
+    @State private var bars: [CGFloat] = []
+
+    var body: some View {
+        HStack(alignment: .center, spacing: barSpacing) {
+            ForEach(Array(bars.enumerated()), id: \.offset) { _, height in
+                Rectangle()
+                    .fill(Color.red)
+                    .frame(width: barWidth, height: height)
+            }
+        }
+        .onAppear {
+            initializeBars()
+        }
+        .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
+            advanceWave()
+        }
+    }
+
+    // Initial fills the bars to match the available width.
+    private func initializeBars() {
+        let count = barCapacity
+        bars = (0 ..< count).map { _ in randomHeight }
+    }
+
+    // Adds a new random bar at the end and removes the first to create motion.
+    private func advanceWave() {
+        bars.append(randomHeight)
+        if bars.count > barCapacity {
+            bars.removeFirst()
+        }
+    }
+
+    private var barCapacity: Int {
+        max(1, Int(width / (barWidth + barSpacing)) + 2)
+    }
+
+    private var randomHeight: CGFloat {
+        CGFloat.random(in: minBarHeight ... maxBarHeight)
     }
 }
 
@@ -58,15 +119,8 @@ struct RecordingView: View {
 struct RecordingView_Previews: PreviewProvider {
     static var previews: some View {
         RecordingView()
-            .frame(height: 100)
+            .frame(height: 120)
             .padding()
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.95, green: 0.96, blue: 0.97),
-                                                 Color(red: 0.88, green: 0.92, blue: 0.94)]),
-                    startPoint: .top,
-                    endPoint: .bottom)
-            )
             .previewLayout(.sizeThatFits)
     }
 }
