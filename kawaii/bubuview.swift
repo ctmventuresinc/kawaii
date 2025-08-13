@@ -11,7 +11,7 @@ import SpriteKit
 import CoreMotion
 
 // Global scale factor to enlarge or shrink Labubu and related physics visuals in one place.
-private let labubuScale: CGFloat = 1.6
+private let labubuScale: CGFloat = 0.8
 
 struct BallChainBead: View {
 	var body: some View {
@@ -268,6 +268,6 @@ struct Arc: Shape {
 	}
 }
 
-#Preview {
-	bubuview()
-}
+//#Preview {
+//	bubuview()
+//}
