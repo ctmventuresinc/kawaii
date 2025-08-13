@@ -228,16 +228,18 @@ struct ChainVisualOverlay: View {
 					}
 					
 					Text("Recording...")
-											.font(.caption)
-											.bold()
-											.foregroundColor(.red)
-											.opacity(mouthOpen ? 1 : 0)
+						.font(.caption)
+						.bold()
+						.foregroundColor(.red)
+						.opacity(mouthOpen ? 1 : 0)
+						.zIndex(1)
+						.offset(y: bottomOffset + 25)
 
 					// Animated recording waveform shown when mouth is open
 					RecordingView()
 						.frame(width: 240, height: 60)
 						.opacity(mouthOpen ? 1 : 0)
-						.zIndex(0)
+						.zIndex(-1)
 						// Always sit halfway between top and bottom images
 						.offset(y: bottomOffset - 25)
 				}
