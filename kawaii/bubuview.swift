@@ -198,6 +198,7 @@ struct ChainVisualOverlay: View {
 	@ObservedObject var scene: ChainPhysicsScene
 	let geometry: GeometryProxy
 	@State private var mouthOpen: Bool = false
+	@State private var bottomOffset: CGFloat = 0 // controls jaw drop distance
 	
 	var body: some View {
 		ZStack {
@@ -222,13 +223,25 @@ struct ChainVisualOverlay: View {
 							.resizable()
 							.aspectRatio(contentMode: .fit)
 							.frame(width: 250, height: 227)
-							.offset(y: mouthOpen ? 42 : 0) // Move bottom lip down to open mouth
+							.offset(y: bottomOffset) // Move bottom lip down to open mouth
 							.zIndex(0)  // Keep bottom behind
 					}
+
+					// Text that appears between top and bottom when the mouth is open
+					Text("Recording...")
+						.font(.caption)
+						.bold()
+						.foregroundColor(.red)
+						.opacity(mouthOpen ? 1 : 0)
+						.zIndex(2)
+						// Always sit halfway between top and bottom images
+						.offset(y: bottomOffset + 30)
 				}
 				.onTapGesture {
 					withAnimation(.easeInOut(duration: 0.25)) {
 						mouthOpen.toggle()
+						let openGap: CGFloat = 42 // distance the jaw should drop
+						bottomOffset = mouthOpen ? openGap : 0
 					}
 				}
 				// Position the pendant so its top-center touches the bead.
