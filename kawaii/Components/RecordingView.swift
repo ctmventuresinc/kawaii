@@ -64,6 +64,20 @@ struct RecordingView: View {
     }
 }
 
+// MARK: - Convenience Modifier
+public extension View {
+    /// Overlays the `RecordingView` on top of the current view in a single line.
+    /// Usage: `SomeView().recordingOverlay()`
+    /// - Parameter height: Desired height for the waveform component.
+    /// - Returns: A view with the recording overlay applied.
+    func recordingOverlay(height: CGFloat = 120) -> some View {
+        self.overlay(
+            RecordingView()
+                .frame(height: height)
+        )
+    }
+}
+
 // MARK: - Animated Waveform
 /// Produces a scrolling red waveform by continuously appending random bar heights and
 /// removing the oldest bar, giving the illusion of left-to-right movement.

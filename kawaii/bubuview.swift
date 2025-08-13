@@ -226,16 +226,20 @@ struct ChainVisualOverlay: View {
 							.offset(y: bottomOffset) // Move bottom lip down to open mouth
 							.zIndex(0)  // Keep bottom behind
 					}
-
-					// Text that appears between top and bottom when the mouth is open
+					
 					Text("Recording...")
-						.font(.caption)
-						.bold()
-						.foregroundColor(.red)
+											.font(.caption)
+											.bold()
+											.foregroundColor(.red)
+											.opacity(mouthOpen ? 1 : 0)
+
+					// Animated recording waveform shown when mouth is open
+					RecordingView()
+						.frame(width: 240, height: 60)
 						.opacity(mouthOpen ? 1 : 0)
-						.zIndex(2)
+						.zIndex(0)
 						// Always sit halfway between top and bottom images
-						.offset(y: bottomOffset + 30)
+						.offset(y: bottomOffset - 25)
 				}
 				.onTapGesture {
 					withAnimation(.easeInOut(duration: 0.25)) {
