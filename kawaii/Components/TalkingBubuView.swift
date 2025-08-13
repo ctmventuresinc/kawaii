@@ -16,7 +16,7 @@ struct TalkingBubuView: View {
 		static let width: CGFloat = 768
 		static let topHeight: CGFloat = 1022
 		static let bottomHeight: CGFloat = 850
-		static let overlap: CGFloat = 130 // Amount top overhangs bottom
+		static let overlap: CGFloat = 362 // Amount top overhangs bottom
 	}
 
 	let labubuScale: CGFloat
