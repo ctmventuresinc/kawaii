@@ -10,6 +10,9 @@ import Foundation
 import SpriteKit
 import CoreMotion
 
+// Global scale factor to enlarge or shrink Labubu and related physics visuals in one place.
+private let labubuScale: CGFloat = 1.6
+
 struct BallChainBead: View {
 	var body: some View {
 		ZStack {
@@ -109,10 +112,11 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		let middleIndex = beadCount / 2
 		let middleBead = beadNodes[middleIndex]
 		
-		// Create pendant
-		let pendant = SKSpriteNode(color: .clear, size: CGSize(width: 40, height: 40))
-		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20)
-		pendant.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 40, height: 40))
+		// Create pendant (scaled)
+		let pendantSize = CGSize(width: 40 * labubuScale, height: 40 * labubuScale)
+		let pendant = SKSpriteNode(color: .clear, size: pendantSize)
+		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
+		pendant.physicsBody = SKPhysicsBody(rectangleOf: pendantSize)
 		pendant.physicsBody?.mass = 0.2  // Lighter so it doesn't drag chain down
 		pendant.physicsBody?.friction = 0.1
 		pendant.physicsBody?.restitution = 0.2
@@ -127,7 +131,7 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 			anchorA: middleBead.position,   // Use actual positions
 			anchorB: pendant.position      // Not zero!
 		)
-		joint.maxLength = 20.0  // Short pendant chain
+		joint.maxLength = 20.0 * labubuScale  // Scaled pendant chain length
 		physicsWorld.add(joint)
 	}
 	
@@ -212,17 +216,17 @@ struct ChainVisualOverlay: View {
 			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
 				ZStack(alignment: .center) {
-					VStack(spacing: -72) {  // Fixed overlap spacing; we'll move bottom image instead
+					VStack(spacing: -72 * labubuScale) {  // Scaled overlap spacing; we'll move bottom image instead
 						Image("bigbubu_top")
 							.resizable()
 							.aspectRatio(contentMode: .fit)
-							.frame(width: 250, height: 273)
+							.frame(width: 250 * labubuScale, height: 273 * labubuScale)
 							.zIndex(1)  // Bring top to front
 						
 						Image("bigbubu_bottom")
 							.resizable()
 							.aspectRatio(contentMode: .fit)
-							.frame(width: 250, height: 227)
+							.frame(width: 250 * labubuScale, height: 227 * labubuScale)
 							.offset(y: bottomOffset) // Move bottom lip down to open mouth
 							.zIndex(0)  // Keep bottom behind
 					}
@@ -233,20 +237,20 @@ struct ChainVisualOverlay: View {
 						.foregroundColor(.red)
 						.opacity(mouthOpen ? 1 : 0)
 						.zIndex(1)
-						.offset(y: bottomOffset + 25)
+						.offset(y: bottomOffset + 25 * labubuScale)
 
 					// Animated recording waveform shown when mouth is open
 					RecordingView()
-						.frame(width: 240, height: 60)
+						.frame(width: 240 * labubuScale, height: 60 * labubuScale)
 						.opacity(mouthOpen ? 1 : 0)
 						.zIndex(-1)
 						// Always sit halfway between top and bottom images
-						.offset(y: bottomOffset - 25)
+						.offset(y: bottomOffset - 25 * labubuScale)
 				}
 				.onTapGesture {
 					withAnimation(.easeInOut(duration: 0.25)) {
 						mouthOpen.toggle()
-						let openGap: CGFloat = 42 // distance the jaw should drop
+						let openGap: CGFloat = 42 * labubuScale // distance the jaw should drop
 						bottomOffset = mouthOpen ? openGap : 0
 					}
 				}
@@ -254,7 +258,7 @@ struct ChainVisualOverlay: View {
 				// With -71 spacing, the visual center is higher, so we need less offset
 				.position(
 					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 // Reduced offset to account for the visual centering
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale // Adjusted for scale
 				)
 			}
 			
