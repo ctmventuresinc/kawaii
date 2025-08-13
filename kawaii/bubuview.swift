@@ -207,7 +207,7 @@ struct ChainVisualOverlay: View {
 					.frame(width: 32, height: 32)
 					.position(
 						x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-						y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y - 16
+						y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 16
 					)
 			}
 		}
