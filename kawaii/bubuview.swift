@@ -49,6 +49,8 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 	@Published var pendantNode: SKSpriteNode?
 	private let beadCount = 32
 	private var updateTimer: Timer?
+	private var bounceTimer: Timer?
+	private var bouncePhase: Double = 0
 	
 	override func didMove(to view: SKView) {
 		setupPhysics()
@@ -56,6 +58,7 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		createPendant()
 		startMotionUpdates()
 		startPositionUpdates()
+		startBounceAnimation()
 	}
 	
 	private func setupPhysics() {
@@ -140,16 +143,25 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		
 		motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
 		motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, error in
-			guard let motion = motion else { return }
+			guard let motion = motion, let self = self else { return }
 			
 			// Convert device orientation to gravity vector
 			let gravity = motion.gravity
-			let gravityVector = CGVector(
+			let deviceGravityVector = CGVector(
 				dx: gravity.x * 9.8,
 				dy: gravity.y * 9.8
 			)
 			
-			self?.physicsWorld.gravity = gravityVector
+			// Combine device motion with automatic bounce
+			let bounceX = sin(self.bouncePhase) * 3.0
+			let bounceY = cos(self.bouncePhase * 1.3) * 2.0
+			
+			let finalGravity = CGVector(
+				dx: deviceGravityVector.dx + bounceX,
+				dy: deviceGravityVector.dy + bounceY
+			)
+			
+			self.physicsWorld.gravity = finalGravity
 		}
 	}
 	
@@ -161,9 +173,26 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		}
 	}
 	
+	private func startBounceAnimation() {
+		bounceTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
+			guard let self = self else { return }
+			self.bouncePhase += 0.08  // Controls bounce speed
+			
+			// Add random impulses occasionally for more liveliness
+			if Int.random(in: 0...300) == 1 {
+				let randomForce = CGVector(
+					dx: Double.random(in: -15...15),
+					dy: Double.random(in: 5...25)
+				)
+				self.pendantNode?.physicsBody?.applyImpulse(randomForce)
+			}
+		}
+	}
+	
 	deinit {
 		motionManager.stopDeviceMotionUpdates()
 		updateTimer?.invalidate()
+		bounceTimer?.invalidate()
 	}
 }
 
