@@ -207,7 +207,7 @@ class ThirdModal: UIViewController, ModalView {
         
         let buttons = [
             createButton(title: "Go Back", color: .systemGray5, textColor: .label, action: #selector(goBack)),
-            createButton(title: "Close All", color: .systemRed, textColor: .white, action: #selector(closeAll))
+			createButton(title: "Close All", color: .clear, textColor: .white, action: #selector(closeAll))
         ]
         
         stackView.addArrangedSubview(titleLabel)
