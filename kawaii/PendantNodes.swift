@@ -80,15 +80,20 @@ final class CustomImagePendantNode: SKNode, PendantPhysicsNode {
     init(imageName: String, scale: CGFloat) {
         super.init()
         
-        // Create reliable rectangular physics body
-        let physicsSize = CGSize(width: 100, height: 100)
-        physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        // Create reliable rectangular physics body - tall rectangle
+        let physicsSize = CGSize(width: 100, height: 300)
+        // Position physics body so it hangs DOWN from origin (0,0)
+        physicsBody = SKPhysicsBody(
+            rectangleOf: physicsSize,
+            center: CGPoint(x: 0, y: -physicsSize.height / 2)
+        )
         physicsBody?.mass = 0.2
         physicsBody?.friction = 0.1
         physicsBody?.restitution = 0.2
         
-        // Add background color to show frame size
-		let backgroundNode = SKSpriteNode(color: .systemRed, size: physicsSize)
+        // Add background color with top-center anchor so it hangs down like a pendant
+        let backgroundNode = SKSpriteNode(color: .systemRed, size: physicsSize)
+        backgroundNode.anchorPoint = CGPoint(x: 0.5, y: 1.0)  // Top center anchor
         addChild(backgroundNode)
         
         // Add image as visual child on top, scaled to fit within physics bounds
@@ -98,10 +103,11 @@ final class CustomImagePendantNode: SKNode, PendantPhysicsNode {
         // Calculate scale to fit image within physics boundaries
         let imageSize = tex.size()
         let maxDimension = max(imageSize.width, imageSize.height)
-        let targetSize: CGFloat = 90 // Slightly smaller than physics size for padding
+        let targetSize: CGFloat = 280 // Slightly smaller than physics height for padding
         let fitScale = targetSize / maxDimension
         
         imageNode.setScale(fitScale)
+        imageNode.anchorPoint = CGPoint(x: 0.5, y: 1.0)  // Match background anchor
         imageNode.zPosition = 1  // Put image in front of background
         addChild(imageNode)
     }

@@ -114,20 +114,18 @@ class ChainPhysicsScene: SKScene {
 		node.physicsBody?.friction = 0.1
 		node.physicsBody?.restitution = 0.2
 		
-		// Place the node slightly below the supporting bead
-		node.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
+		// Place the node directly at the supporting bead (no gap)
+		node.position = middleBead.position
 		
 		addChild(node)
 		pendantNode = node as? (any PendantPhysicsNode)  // Store if it's a PendantPhysicsNode
 		
-		// Connect pendant to middle bead with limited distance
-		let joint = SKPhysicsJointLimit.joint(
+		// Connect pendant to middle bead with zero-gap pin joint
+		let joint = SKPhysicsJointPin.joint(
 			withBodyA: middleBead.physicsBody!,
 			bodyB: node.physicsBody!,
-			anchorA: middleBead.position,
-			anchorB: node.position
+			anchor: middleBead.position  // Same point for both bodies = zero gap
 		)
-		joint.maxLength = 20.0 * labubuScale
 		physicsWorld.add(joint)
 	}
 	
