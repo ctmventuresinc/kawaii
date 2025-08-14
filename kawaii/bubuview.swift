@@ -212,8 +212,8 @@ struct bubuview: View {
 	let pendantMode: PendantMode
 	@StateObject private var physicsScene = ChainPhysicsScene()
 	
-//	init(pendantMode: PendantMode = .bubu) {
-	init(pendantMode: PendantMode = .customImage("turtle")) {
+	init(pendantMode: PendantMode = .bubu) {
+//	init(pendantMode: PendantMode = .customImage("turtle")) {
 		self.pendantMode = pendantMode
 	}
 	
