@@ -75,17 +75,23 @@ final class BubuPendantNode: SKNode, PendantPhysicsNode {
 /* ──────────────────────────────────────────────────────────────
    Generic custom-image pendant
    ────────────────────────────────────────────────────────────── */
-final class CustomImagePendantNode: SKSpriteNode, PendantPhysicsNode {
+final class CustomImagePendantNode: SKNode, PendantPhysicsNode {
 
     init(imageName: String, scale: CGFloat) {
-        let tex = SKTexture(imageNamed: imageName)
-        super.init(texture: tex, color: .clear, size: tex.size())
-        setScale(scale)
-
-        physicsBody = SKPhysicsBody(texture: tex, size: tex.size())
+        super.init()
+        
+        // Create reliable rectangular physics body
+        let physicsSize = CGSize(width: 100, height: 100)
+        physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
         physicsBody?.mass = 0.2
         physicsBody?.friction = 0.1
         physicsBody?.restitution = 0.2
+        
+        // Add image as visual child on top
+        let tex = SKTexture(imageNamed: imageName)
+        let imageNode = SKSpriteNode(texture: tex)
+        imageNode.setScale(scale * 0.3)
+        addChild(imageNode)
     }
 
     required init?(coder: NSCoder) { fatalError() }

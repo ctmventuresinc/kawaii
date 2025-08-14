@@ -99,9 +99,17 @@ class ChainPhysicsScene: SKScene {
 		let middleIndex = beadCount / 2
 		let middleBead = beadNodes[middleIndex]
 		
-		// TEMPORARY DEBUG: Create a simple colored rectangle to see if pendant appears
-		let node = SKSpriteNode(color: .red, size: CGSize(width: 100, height: 100))
-		node.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 100))
+		// Test custom image pendant first
+		let node: SKNode
+		switch pendantMode {
+		case .bubu:
+			// For now, use red rectangle for bubu too
+			node = SKSpriteNode(color: .blue, size: CGSize(width: 100, height: 100))
+			node.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 100))
+		case .customImage(let name):
+			node = CustomImagePendantNode(imageName: name, scale: labubuScale)
+		}
+		
 		node.physicsBody?.mass = 0.2
 		node.physicsBody?.friction = 0.1
 		node.physicsBody?.restitution = 0.2
@@ -110,7 +118,7 @@ class ChainPhysicsScene: SKScene {
 		node.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
 		
 		addChild(node)
-		// pendantNode = node  // Comment out for debug since node is not PendantPhysicsNode
+		pendantNode = node as? (any PendantPhysicsNode)  // Store if it's a PendantPhysicsNode
 		
 		// Connect pendant to middle bead with limited distance
 		let joint = SKPhysicsJointLimit.joint(
@@ -191,7 +199,7 @@ class ChainPhysicsScene: SKScene {
 struct bubuview: View {
 	let pendantMode: PendantMode
 	
-	init(pendantMode: PendantMode = .bubu) {
+	init(pendantMode: PendantMode = .customImage("bombaclatt")) {
 		self.pendantMode = pendantMode
 	}
 	
