@@ -116,3 +116,72 @@ final class CustomImagePendantNode: SKNode, PendantPhysicsNode {
 
     func handleTap() { /* nothing for now */ }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Two-part image pendant (like bigbubu_top + bigbubu_bottom)
+   ────────────────────────────────────────────────────────────── */
+final class TwoPartImagePendantNode: SKNode, PendantPhysicsNode {
+
+    let topPart: SKNode  // Exposed for connecting to chain
+    private let bottomPart: SKNode
+    private var jawJoint: SKPhysicsJoint?
+
+    init(topImageName: String, bottomImageName: String, scale: CGFloat) {
+        topPart = SKNode()
+        bottomPart = SKNode()
+        super.init()
+        
+        // Create top part with physics body
+        let topImage = SKSpriteNode(imageNamed: topImageName)
+        let topSize = topImage.texture?.size() ?? CGSize.zero
+        let topScale = (140.0 / max(topSize.width, topSize.height)) * scale  // Fit in half the frame
+        topImage.setScale(topScale)
+        topImage.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+        topPart.addChild(topImage)
+        topPart.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: topSize.width * topScale, height: topSize.height * topScale))
+        topPart.physicsBody?.mass = 0.1
+        topPart.physicsBody?.friction = 0.1
+        topPart.physicsBody?.restitution = 0.2
+        addChild(topPart)
+        
+        // Create bottom part with physics body  
+        let bottomImage = SKSpriteNode(imageNamed: bottomImageName)
+        let bottomSize = bottomImage.texture?.size() ?? CGSize.zero
+        let bottomScale = (140.0 / max(bottomSize.width, bottomSize.height)) * scale
+        bottomImage.setScale(bottomScale)
+        bottomImage.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+        bottomPart.addChild(bottomImage)
+        bottomPart.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: bottomSize.width * bottomScale, height: bottomSize.height * bottomScale))
+        bottomPart.physicsBody?.mass = 0.1
+        bottomPart.physicsBody?.friction = 0.1  
+        bottomPart.physicsBody?.restitution = 0.2
+        
+        // Position bottom part below top part
+        bottomPart.position = CGPoint(x: 0, y: -(topSize.height * topScale))
+        addChild(bottomPart)
+        
+        // Connect them with a pin joint at the jaw hinge point
+        let hingePoint = CGPoint(x: 0, y: -(topSize.height * topScale))
+        jawJoint = SKPhysicsJointPin.joint(
+            withBodyA: topPart.physicsBody!,
+            bodyB: bottomPart.physicsBody!,
+            anchor: hingePoint
+        )
+        
+        // We'll add this joint to the scene in a moment when we have access to physicsWorld
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func handleTap() { 
+        // Apply a small impulse to the jaw to make it swing
+        let impulse = CGVector(dx: 0, dy: -20)
+        bottomPart.physicsBody?.applyImpulse(impulse)
+    }
+    
+    func addJointToWorld(_ physicsWorld: SKPhysicsWorld) {
+        if let joint = jawJoint {
+            physicsWorld.add(joint)
+        }
+    }
+}

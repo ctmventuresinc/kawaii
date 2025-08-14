@@ -16,6 +16,7 @@ private let labubuScale: CGFloat = 1.6
 enum PendantMode: Equatable {
 	case bubu
 	case customImage(String)
+	case twoPartImage(String, String)  // topImage, bottomImage
 }
 
 
@@ -99,7 +100,7 @@ class ChainPhysicsScene: SKScene {
 		let middleIndex = beadCount / 2
 		let middleBead = beadNodes[middleIndex]
 		
-		// Test custom image pendant first
+		// Create pendant based on mode
 		let node: SKNode
 		switch pendantMode {
 		case .bubu:
@@ -108,6 +109,8 @@ class ChainPhysicsScene: SKScene {
 			node.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 100))
 		case .customImage(let name):
 			node = CustomImagePendantNode(imageName: name, scale: labubuScale)
+		case .twoPartImage(let topName, let bottomName):
+			node = TwoPartImagePendantNode(topImageName: topName, bottomImageName: bottomName, scale: labubuScale)
 		}
 		
 		node.physicsBody?.mass = 0.2
@@ -120,10 +123,24 @@ class ChainPhysicsScene: SKScene {
 		addChild(node)
 		pendantNode = node as? (any PendantPhysicsNode)  // Store if it's a PendantPhysicsNode
 		
+		// If it's a two-part pendant, add its internal joint to the physics world
+		if let twoPartPendant = node as? TwoPartImagePendantNode {
+			twoPartPendant.addJointToWorld(physicsWorld)
+		}
+		
 		// Connect pendant to middle bead with zero-gap pin joint
+		let pendantPhysicsBody: SKPhysicsBody
+		if let twoPartPendant = node as? TwoPartImagePendantNode {
+			// For two-part pendants, connect the top part to the chain
+			pendantPhysicsBody = twoPartPendant.topPart.physicsBody!
+		} else {
+			// For single pendants, use the node's physics body
+			pendantPhysicsBody = node.physicsBody!
+		}
+		
 		let joint = SKPhysicsJointPin.joint(
 			withBodyA: middleBead.physicsBody!,
-			bodyB: node.physicsBody!,
+			bodyB: pendantPhysicsBody,
 			anchor: middleBead.position  // Same point for both bodies = zero gap
 		)
 		physicsWorld.add(joint)
@@ -143,9 +160,9 @@ class ChainPhysicsScene: SKScene {
 				dy: gravity.y * 9.8
 			)
 			
-			// Combine device motion with automatic bounce
-			let bounceX = sin(self.bouncePhase) * 3.0
-			let bounceY = cos(self.bouncePhase * 1.3) * 2.0
+			// Combine device motion with gentle automatic bounce
+			let bounceX = sin(self.bouncePhase) * 1.0  // Reduced from 3.0
+			let bounceY = cos(self.bouncePhase * 1.3) * 0.8  // Reduced from 2.0
 			
 			// Rotate gravity 180° to match the upside-down UI
 			let finalGravity = CGVector(
@@ -165,13 +182,13 @@ class ChainPhysicsScene: SKScene {
 	private func startBounceAnimation() {
 		bounceTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
 			guard let self = self else { return }
-			self.bouncePhase += 0.08  // Controls bounce speed
+			self.bouncePhase += 0.04  // Reduced from 0.08 - slower bounce
 			
-			// Add random impulses occasionally for more liveliness
-			if Int.random(in: 0...300) == 1 {
+			// Add random impulses less frequently for more liveliness
+			if Int.random(in: 0...600) == 1 {  // Reduced frequency from 300 to 600
 				let randomForce = CGVector(
-					dx: Double.random(in: -15...15),
-					dy: Double.random(in: 5...25)
+					dx: Double.random(in: -8...8),   // Reduced from -15...15
+					dy: Double.random(in: 3...12)    // Reduced from 5...25
 				)
 				self.pendantNode?.physicsBody?.applyImpulse(randomForce)
 			}
@@ -197,7 +214,7 @@ class ChainPhysicsScene: SKScene {
 struct bubuview: View {
 	let pendantMode: PendantMode
 	
-	init(pendantMode: PendantMode = .customImage("bigbubu_top")) {
+	init(pendantMode: PendantMode = .twoPartImage("bigbubu_top", "bigbubu_bottom")) {
 		self.pendantMode = pendantMode
 	}
 	
