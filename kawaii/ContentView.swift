@@ -13,7 +13,7 @@ import OneSignalFramework
 
 struct ContentView: View {
 	@State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
-	@State private var testing: Bool = true
+	@State private var testing: Bool = false
 	
 	var body: some View {
 		

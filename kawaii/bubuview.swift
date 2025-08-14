@@ -123,6 +123,7 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		// Create pendant (scaled)
 		let pendantSize = CGSize(width: 40 * labubuScale, height: 40 * labubuScale)
 		let pendant = SKSpriteNode(color: .clear, size: pendantSize)
+		pendant.isHidden = true // Hide visual; physics body remains active
 		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
 		pendant.physicsBody = SKPhysicsBody(rectangleOf: pendantSize)
 		pendant.physicsBody?.mass = 0.2  // Lighter so it doesn't drag chain down
@@ -340,7 +341,7 @@ struct CustomImagePendant: View {
 		Image(imageName)
 			.resizable()
 			.aspectRatio(contentMode: .fit)
-			.background(Color.pink)
+			.background(Color.clear)
 	}
 }
 
