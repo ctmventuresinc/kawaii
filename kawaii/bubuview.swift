@@ -13,6 +13,11 @@ import CoreMotion
 // Global scale factor to enlarge or shrink Labubu and related physics visuals in one place.
 private let labubuScale: CGFloat = 1.6
 
+enum PendantMode {
+	case bubu
+	case customImage(String)
+}
+
 struct BallChainBead: View {
 	var body: some View {
 		ZStack {
@@ -203,7 +208,13 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 }
 
 struct bubuview: View {
+	let pendantMode: PendantMode
 	@StateObject private var physicsScene = ChainPhysicsScene()
+	
+//	init(pendantMode: PendantMode = .bubu) {
+	init(pendantMode: PendantMode = .customImage("bombaclatt")) {
+		self.pendantMode = pendantMode
+	}
 	
 	var body: some View {
 		ZStack {
@@ -219,7 +230,7 @@ struct bubuview: View {
 						.ignoresSafeArea()
 					
 					// Visual overlay - sync with physics positions
-					ChainVisualOverlay(scene: physicsScene, geometry: geometry)
+					ChainVisualOverlay(scene: physicsScene, geometry: geometry, pendantMode: pendantMode)
 				}
 			}
 			.rotationEffect(.degrees(180))
@@ -237,6 +248,7 @@ struct bubuview: View {
 struct ChainVisualOverlay: View {
 	@ObservedObject var scene: ChainPhysicsScene
 	let geometry: GeometryProxy
+	let pendantMode: PendantMode
 	@State private var mouthOpen: Bool = false
 	@State private var bottomOffset: CGFloat = 0 // controls jaw drop distance
 	
@@ -251,50 +263,24 @@ struct ChainVisualOverlay: View {
 			// Visual pendant synced with physics
 			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
-				ZStack(alignment: .center) {
-					VStack(spacing: -72 * labubuScale) {  // Scaled overlap spacing; we'll move bottom image instead
-						Image("bigbubu_top")
-							.resizable()
-							.aspectRatio(contentMode: .fit)
-							.frame(width: 250 * labubuScale, height: 273 * labubuScale)
-							.zIndex(1)  // Bring top to front
-						
-						Image("bigbubu_bottom")
-							.resizable()
-							.aspectRatio(contentMode: .fit)
-							.frame(width: 250 * labubuScale, height: 227 * labubuScale)
-							.offset(y: bottomOffset) // Move bottom lip down to open mouth
-							.zIndex(0)  // Keep bottom behind
-					}
-					
-					Text("Recording...")
-						.font(.caption)
-						.bold()
-						.foregroundColor(.red)
-						.opacity(mouthOpen ? 1 : 0)
-						.zIndex(1)
-						.offset(y: bottomOffset + 25 * labubuScale)
-
-					// Animated recording waveform shown when mouth is open
-					RecordingView()
-						.frame(width: 240 * labubuScale, height: 60 * labubuScale)
-						.opacity(mouthOpen ? 1 : 0)
-						.zIndex(-1)
-						// Always sit halfway between top and bottom images
-						.offset(y: bottomOffset - 25 * labubuScale)
-				}
-				.onTapGesture {
-					withAnimation(.easeInOut(duration: 0.25)) {
-						mouthOpen.toggle()
-						let openGap: CGFloat = 42 * labubuScale // distance the jaw should drop
-						bottomOffset = mouthOpen ? openGap : 0
+				Group {
+					switch pendantMode {
+					case .bubu:
+						BubuPendant(mouthOpen: mouthOpen, bottomOffset: bottomOffset)
+							.onTapGesture {
+								withAnimation(.easeInOut(duration: 0.25)) {
+									mouthOpen.toggle()
+									let openGap: CGFloat = 42 * labubuScale
+									bottomOffset = mouthOpen ? openGap : 0
+								}
+							}
+					case .customImage(let imageName):
+						CustomImagePendant(imageName: imageName)
 					}
 				}
-				// Position the pendant so its top-center touches the bead.
-				// With -71 spacing, the visual center is higher, so we need less offset
 				.position(
 					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale // Adjusted for scale
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale
 				)
 			}
 			
@@ -306,6 +292,55 @@ struct ChainVisualOverlay: View {
 			}
 			
 		}
+	}
+}
+
+struct BubuPendant: View {
+	let mouthOpen: Bool
+	let bottomOffset: CGFloat
+	
+	var body: some View {
+		ZStack(alignment: .center) {
+			VStack(spacing: -72 * labubuScale) {
+				Image("bigbubu_top")
+					.resizable()
+					.aspectRatio(contentMode: .fit)
+					.frame(width: 250 * labubuScale, height: 273 * labubuScale)
+					.zIndex(1)
+				
+				Image("bigbubu_bottom")
+					.resizable()
+					.aspectRatio(contentMode: .fit)
+					.frame(width: 250 * labubuScale, height: 227 * labubuScale)
+					.offset(y: bottomOffset)
+					.zIndex(0)
+			}
+			
+			Text("Recording...")
+				.font(.caption)
+				.bold()
+				.foregroundColor(.red)
+				.opacity(mouthOpen ? 1 : 0)
+				.zIndex(1)
+				.offset(y: bottomOffset + 25 * labubuScale)
+
+			RecordingView()
+				.frame(width: 240 * labubuScale, height: 60 * labubuScale)
+				.opacity(mouthOpen ? 1 : 0)
+				.zIndex(-1)
+				.offset(y: bottomOffset - 25 * labubuScale)
+		}
+	}
+}
+
+struct CustomImagePendant: View {
+	let imageName: String
+	
+	var body: some View {
+		Image(imageName)
+			.resizable()
+			.aspectRatio(contentMode: .fit)
+			.background(Color.pink)
 	}
 }
 
