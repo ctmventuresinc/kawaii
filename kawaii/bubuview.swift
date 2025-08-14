@@ -201,7 +201,8 @@ struct bubuview: View {
 struct ChainVisualOverlay: View {
 	@ObservedObject var scene: ChainPhysicsScene
 	let geometry: GeometryProxy
-	@State private var isTalking: Bool = false // Switch between talking and owl mode
+	@State private var mouthOpen: Bool = false
+	@State private var bottomOffset: CGFloat = 0 // controls jaw drop distance
 	
 	var body: some View {
 		ZStack {
@@ -214,13 +215,50 @@ struct ChainVisualOverlay: View {
 			// Visual pendant synced with physics
 			// New pendant anchored to the middle (bottom-most) bead
 			if !scene.beadNodes.isEmpty {
-				TalkingBubuView(
-					labubuScale: labubuScale,
-					position: CGPoint(
-						x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-						y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale
-					),
-					isTalking: isTalking
+				ZStack(alignment: .center) {
+					VStack(spacing: -72 * labubuScale) {  // Scaled overlap spacing; we'll move bottom image instead
+						Image("bigbubu_top")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+							.frame(width: 250 * labubuScale, height: 273 * labubuScale)
+							.zIndex(1)  // Bring top to front
+						
+						Image("bigbubu_bottom")
+							.resizable()
+							.aspectRatio(contentMode: .fit)
+							.frame(width: 250 * labubuScale, height: 227 * labubuScale)
+							.offset(y: bottomOffset) // Move bottom lip down to open mouth
+							.zIndex(0)  // Keep bottom behind
+					}
+					
+					Text("Recording...")
+						.font(.caption)
+						.bold()
+						.foregroundColor(.red)
+						.opacity(mouthOpen ? 1 : 0)
+						.zIndex(1)
+						.offset(y: bottomOffset + 25 * labubuScale)
+
+					// Animated recording waveform shown when mouth is open
+					RecordingView()
+						.frame(width: 240 * labubuScale, height: 60 * labubuScale)
+						.opacity(mouthOpen ? 1 : 0)
+						.zIndex(-1)
+						// Always sit halfway between top and bottom images
+						.offset(y: bottomOffset - 25 * labubuScale)
+				}
+				.onTapGesture {
+					withAnimation(.easeInOut(duration: 0.25)) {
+						mouthOpen.toggle()
+						let openGap: CGFloat = 42 * labubuScale // distance the jaw should drop
+						bottomOffset = mouthOpen ? openGap : 0
+					}
+				}
+				// Position the pendant so its top-center touches the bead.
+				// With -71 spacing, the visual center is higher, so we need less offset
+				.position(
+					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale // Adjusted for scale
 				)
 			}
 			
