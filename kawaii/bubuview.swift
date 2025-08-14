@@ -156,12 +156,18 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 			let bounceX = sin(self.bouncePhase) * 3.0
 			let bounceY = cos(self.bouncePhase * 1.3) * 2.0
 			
+			// Rotate gravity 180° to match the upside-down UI
 			let finalGravity = CGVector(
 				dx: deviceGravityVector.dx + bounceX,
 				dy: deviceGravityVector.dy + bounceY
 			)
-			
-			self.physicsWorld.gravity = finalGravity
+
+			let adjustedGravity = CGVector(
+				dx: -finalGravity.dx,
+				dy: -finalGravity.dy
+			)
+
+			self.physicsWorld.gravity = adjustedGravity
 		}
 	}
 	
