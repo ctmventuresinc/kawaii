@@ -87,10 +87,22 @@ final class CustomImagePendantNode: SKNode, PendantPhysicsNode {
         physicsBody?.friction = 0.1
         physicsBody?.restitution = 0.2
         
-        // Add image as visual child on top
+        // Add background color to show frame size
+		let backgroundNode = SKSpriteNode(color: .systemRed, size: physicsSize)
+        addChild(backgroundNode)
+        
+        // Add image as visual child on top, scaled to fit within physics bounds
         let tex = SKTexture(imageNamed: imageName)
         let imageNode = SKSpriteNode(texture: tex)
-        imageNode.setScale(scale * 0.3)
+        
+        // Calculate scale to fit image within physics boundaries
+        let imageSize = tex.size()
+        let maxDimension = max(imageSize.width, imageSize.height)
+        let targetSize: CGFloat = 90 // Slightly smaller than physics size for padding
+        let fitScale = targetSize / maxDimension
+        
+        imageNode.setScale(fitScale)
+        imageNode.zPosition = 1  // Put image in front of background
         addChild(imageNode)
     }
 

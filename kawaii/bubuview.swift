@@ -199,7 +199,7 @@ class ChainPhysicsScene: SKScene {
 struct bubuview: View {
 	let pendantMode: PendantMode
 	
-	init(pendantMode: PendantMode = .customImage("bombaclatt")) {
+	init(pendantMode: PendantMode = .customImage("bigbubu_top")) {
 		self.pendantMode = pendantMode
 	}
 	
