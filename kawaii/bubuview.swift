@@ -216,6 +216,7 @@ struct bubuview: View {
 					ChainVisualOverlay(scene: physicsScene, geometry: geometry)
 				}
 			}
+			.rotationEffect(.degrees(180))
 			.ignoresSafeArea()
 		}
 	}
