@@ -1,5 +1,5 @@
 //
-//  OnboardingView.swift
+//  KawaiiOnboardingView.swift
 //  kawaii
 //
 //  Created by AI Assistant on 6/23/25.
@@ -11,7 +11,7 @@ import AVFoundation
 import Photos
 import OneSignalFramework
 
-struct OnboardingView: View {
+struct KawaiiOnboardingView: View {
 	@State private var player: AVPlayer?
 	@State private var showButton = false
 	@State private var blinkingText = "this is your life"
@@ -195,5 +195,5 @@ class PlayerView: UIView {
 }
 
 #Preview {
-	OnboardingView()
+	KawaiiOnboardingView()
 }

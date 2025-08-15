@@ -10,16 +10,27 @@ import Photos
 import UserNotifications
 import OneSignalFramework
 
+enum AppMode {
+	case testing
+	case kawaiiapp
+	case bubuapp
+}
 
 struct ContentView: View {
 	@State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
-	@State private var testing: Bool = true
+	@State private var currentApp: AppMode = .testing
 	
 	var body: some View {
 		
-		if testing {
+		switch currentApp {
+		case .testing:
 			bubuview()
-		} else {
+		case .bubuapp:
+			// Add bubuapp view here
+			Text("BubuApp Coming Soon")
+				.font(.title)
+				.foregroundColor(.purple)
+		case .kawaiiapp:
 			Group {
 				switch authorizationStatus {
 				case .authorized:
@@ -27,9 +38,9 @@ struct ContentView: View {
 				case .denied, .restricted, .limited:
 					PermissionDeniedView()
 				case .notDetermined:
-					OnboardingView()
+					KawaiiOnboardingView()
 				@unknown default:
-					OnboardingView()
+					KawaiiOnboardingView()
 				}
 			}
 			.onAppear {
