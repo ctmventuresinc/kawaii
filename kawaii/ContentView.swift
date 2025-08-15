@@ -20,14 +20,14 @@ enum AppMode {
 struct ContentView: View {
 	@State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
 	@State private var currentApp: AppMode?
-	@State private var isConfigLoading: Bool = true
+	@ObservedObject private var rcStore = RemoteConfigStore.shared
 	
 	var body: some View {
 		Group {
-			if isConfigLoading || currentApp == nil {
+			if !rcStore.isLoaded {
 				ProgressView("Loading configuration…")
-			} else {
-				switch currentApp! {
+			} else if let current = currentApp {
+				switch current {
 				case .bubuapp:
 					BubuOnboardingView()
 				case .kawaiiapp:
@@ -52,10 +52,19 @@ struct ContentView: View {
 				case .testing:
 					EmptyView()
 				}
+			} else {
+				ProgressView()
 			}
 		}
 		.onAppear {
-			fetchRemoteConfig()
+			if !rcStore.isLoaded {
+				rcStore.refresh()
+			}
+			// determine app once store updates
+			currentApp = rcStore.bubuEnabled ? .bubuapp : .kawaiiapp
+		}
+		.onReceive(rcStore.$bubuEnabled) { value in
+			currentApp = value ? .bubuapp : .kawaiiapp
 		}
 	}
 	
@@ -63,21 +72,7 @@ struct ContentView: View {
 		authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
 	}
 	
-	private func fetchRemoteConfig() {
-		let remoteConfig = RemoteConfig.remoteConfig()
-#if DEBUG
-		let settings = RemoteConfigSettings()
-		settings.minimumFetchInterval = 0
-		remoteConfig.configSettings = settings
-#endif
-		remoteConfig.fetchAndActivate { status, error in
-			DispatchQueue.main.async {
-				let isBubu = remoteConfig.configValue(forKey: "bubucheck").boolValue
-				self.currentApp = isBubu ? .bubuapp : .kawaiiapp
-				self.isConfigLoading = false
-			}
-		}
-	}
+	// removed local fetchRemoteConfig (now using RemoteConfigStore)
 }
 
 #Preview {

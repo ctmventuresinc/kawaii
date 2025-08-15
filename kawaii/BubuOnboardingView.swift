@@ -1,11 +1,15 @@
 import SwiftUI
 import AVKit
 import AVFoundation
+import FirebaseRemoteConfig
 
 struct BubuOnboardingView: View {
     @State private var inviteCode: String = ""
     @State private var navigate: Bool = false
     @State private var player: AVPlayer?
+    @State private var showWrongCode = false
+
+    @ObservedObject private var rcStore = RemoteConfigStore.shared
 
     var body: some View {
         NavigationStack {
@@ -13,29 +17,25 @@ struct BubuOnboardingView: View {
                 Color(red: 20/255, green: 20/255, blue: 26/255) // dark background
                     .ignoresSafeArea()
 
+                // Video layer similar to Kawaii onboarding
+                // background remains solid; video will be in VStack below
+
                 VStack(spacing: 24) {
                     Spacer(minLength: 40)
 
-                    // Video panel replacing logo
+                    // Video panel
                     if let player = player {
                         VideoPlayerView(player: player)
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 220, height: 160)
-                            .clipShape(RoundedRectangle(cornerRadius: 60))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: UIScreen.main.bounds.height * 0.35)
+                            .clipShape(RoundedRectangle(cornerRadius: 40))
                             .allowsHitTesting(false)
-                            .onAppear {
-                                player.play()
-                            }
+                            .onAppear { player.play() }
                     } else {
                         ProgressView("Loading…")
-                            .frame(width: 220, height: 160)
+                            .frame(height: UIScreen.main.bounds.height * 0.35)
                     }
-
-                    // Tagline
-                    Text("badbubu")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(Color.gray.opacity(0.7))
-                        .padding(.top, 8)
 
                     // Invite input + button
                     VStack(spacing: 16) {
@@ -57,7 +57,12 @@ struct BubuOnboardingView: View {
                         }
 
                         Button(action: {
-                            navigate = true
+                            if rcStore.inviteCodes.contains(inviteCode) {
+                                showWrongCode = false
+                                navigate = true
+                            } else {
+                                showWrongCode = true
+                            }
                         }) {
                             Text("let's go")
                                 .font(.system(size: 22, weight: .semibold))
@@ -67,7 +72,12 @@ struct BubuOnboardingView: View {
                                 .foregroundColor(inviteCode.isEmpty ? Color.white.opacity(0.8) : Color.black)
                                 .cornerRadius(8)
                         }
-                        .disabled(inviteCode.isEmpty)
+                        .disabled(inviteCode.isEmpty || !rcStore.isLoaded)
+
+                        if showWrongCode {
+                            Text("Wrong code")
+                                .foregroundColor(.red)
+                        }
                     }
                     .padding(.horizontal, 24)
 
@@ -102,6 +112,7 @@ struct BubuOnboardingView: View {
         }
         .onAppear {
             setupPlayer()
+            if !rcStore.isLoaded { rcStore.refresh() }
         }
     }
 
@@ -127,31 +138,8 @@ struct BubuOnboardingView: View {
             player?.play()
         }
     }
-}
 
-private struct LogoPanel: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 60)
-                .fill(Color.black)
-                .frame(width: 220, height: 160)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 60)
-                        .stroke(Color.black, lineWidth: 2)
-                )
-
-            HStack(spacing: 0) {
-                Text("status")
-                    .font(.system(size: 60, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 14, height: 14)
-                    .offset(x: -8, y: -20)
-            }
-        }
-    }
+    // removed fetchInviteCodes (handled globally)
 }
 
 #Preview {
