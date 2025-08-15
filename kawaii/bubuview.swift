@@ -10,8 +10,8 @@ import Foundation
 import SpriteKit
 import CoreMotion
 
-// Global scale factor to enlarge or shrink Labubu and related physics visuals in one place.
-private let labubuScale: CGFloat = 1.6
+// Global scale factor to enlarge or shrink dog and related physics visuals in one place.
+private let dogScale: CGFloat = 1.6
 
 enum PendantMode {
 	case bubu
@@ -121,10 +121,10 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 		let middleBead = beadNodes[middleIndex]
 		
 		// Create pendant (scaled)
-		let pendantSize = CGSize(width: 40 * labubuScale, height: 40 * labubuScale)
+		let pendantSize = CGSize(width: 40 * dogScale, height: 40 * dogScale)
 		let pendant = SKSpriteNode(color: .clear, size: pendantSize)
 		pendant.isHidden = true // Hide visual; physics body remains active
-		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * labubuScale)
+		pendant.position = CGPoint(x: middleBead.position.x, y: middleBead.position.y - 20 * dogScale)
 		pendant.physicsBody = SKPhysicsBody(rectangleOf: pendantSize)
 		pendant.physicsBody?.mass = 0.2  // Lighter so it doesn't drag chain down
 		pendant.physicsBody?.friction = 0.1
@@ -140,7 +140,7 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 			anchorA: middleBead.position,   // Use actual positions
 			anchorB: pendant.position      // Not zero!
 		)
-		joint.maxLength = 20.0 * labubuScale  // Scaled pendant chain length
+		joint.maxLength = 20.0 * dogScale  // Scaled pendant chain length
 		physicsWorld.add(joint)
 	}
 	
@@ -271,7 +271,7 @@ struct ChainVisualOverlay: View {
 							.onTapGesture {
 								withAnimation(.easeInOut(duration: 0.25)) {
 									mouthOpen.toggle()
-									let openGap: CGFloat = 42 * labubuScale
+									let openGap: CGFloat = 42 * dogScale
 									bottomOffset = mouthOpen ? openGap : 0
 								}
 							}
@@ -281,7 +281,7 @@ struct ChainVisualOverlay: View {
 				}
 				.position(
 					x: scene.beadNodes[scene.beadNodes.count / 2].position.x,
-					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * labubuScale
+					y: geometry.size.height - scene.beadNodes[scene.beadNodes.count / 2].position.y + 180 * dogScale
 				)
 			}
 			
@@ -302,17 +302,17 @@ struct BubuPendant: View {
 	
 	var body: some View {
 		ZStack(alignment: .center) {
-			VStack(spacing: -72 * labubuScale) {
+			VStack(spacing: -72 * dogScale) {
 				Image("bigbubu_top")
 					.resizable()
 					.aspectRatio(contentMode: .fit)
-					.frame(width: 250 * labubuScale, height: 273 * labubuScale)
+					.frame(width: 250 * dogScale, height: 273 * dogScale)
 					.zIndex(1)
 				
 				Image("bigbubu_bottom")
 					.resizable()
 					.aspectRatio(contentMode: .fit)
-					.frame(width: 250 * labubuScale, height: 227 * labubuScale)
+					.frame(width: 250 * dogScale, height: 227 * dogScale)
 					.offset(y: bottomOffset)
 					.zIndex(0)
 			}
@@ -323,13 +323,13 @@ struct BubuPendant: View {
 				.foregroundColor(.red)
 				.opacity(mouthOpen ? 1 : 0)
 				.zIndex(1)
-				.offset(y: bottomOffset + 25 * labubuScale)
+				.offset(y: bottomOffset + 25 * dogScale)
 
 			RecordingView()
-				.frame(width: 240 * labubuScale, height: 60 * labubuScale)
+				.frame(width: 240 * dogScale, height: 60 * dogScale)
 				.opacity(mouthOpen ? 1 : 0)
 				.zIndex(-1)
-				.offset(y: bottomOffset - 25 * labubuScale)
+				.offset(y: bottomOffset - 25 * dogScale)
 		}
 	}
 }

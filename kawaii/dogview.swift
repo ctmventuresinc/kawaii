@@ -1,5 +1,5 @@
 //
-//  labubuview.swift
+//  dogview.swift
 //  kawaii
 //
 //  Created by ai on 8/11/25.
@@ -206,7 +206,7 @@ struct MonsterView: View {
 }
 
 // MARK: - Preview
-struct labubuview: View {
+struct dogview: View {
     @State private var eyeTarget = CGPoint(x: 0.5, y: 0.45)
     @State private var mouthOpen: CGFloat = 0
     
@@ -244,5 +244,5 @@ struct labubuview: View {
 }
 
 #Preview {
-    labubuview()
+    dogview()
 }
