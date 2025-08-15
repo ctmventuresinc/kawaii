@@ -14,6 +14,7 @@
 		193CDDDB2E1ABAB100C047D6 /* MorphModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 193CDDDA2E1ABAB100C047D6 /* MorphModalKit */; };
 		196B90822E4F7E6100BCF73E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 196B90812E4F7E6100BCF73E /* FirebaseCore */; };
 		196B90842E4F7E6100BCF73E /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 196B90832E4F7E6100BCF73E /* FirebaseRemoteConfig */; };
+		196B90862E4F7EFD00BCF73E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 196B90852E4F7EFC00BCF73E /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		1930E2702E0A52230037DD06 /* kawaiiapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = kawaiiapp.entitlements; sourceTree = "<group>"; };
 		1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		195A410D2E0922960017536C /* kawaiiapp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "kawaiiapp-Info.plist"; sourceTree = "<group>"; };
+		196B90852E4F7EFC00BCF73E /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -160,6 +162,7 @@
 			children = (
 				1930E2702E0A52230037DD06 /* kawaiiapp.entitlements */,
 				195A410D2E0922960017536C /* kawaiiapp-Info.plist */,
+				196B90852E4F7EFC00BCF73E /* GoogleService-Info.plist */,
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 				191FDEAF2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB92E030FCD00D2AF6D /* kawaiiUITests */,
@@ -338,6 +341,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				196B90862E4F7EFD00BCF73E /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

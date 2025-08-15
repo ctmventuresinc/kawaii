@@ -7,6 +7,7 @@
 
 import SwiftUI
 import OneSignalFramework
+import FirebaseCore
 
 @main
 struct kawaiiApp: App {
@@ -21,7 +22,8 @@ struct kawaiiApp: App {
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-      
+       FirebaseApp.configure()
+       
        // Enable verbose logging for debugging (remove in production)
        OneSignal.Debug.setLogLevel(.LL_VERBOSE)     
        // Initialize with your OneSignal App ID
