@@ -39,13 +39,22 @@ struct BubuOnboardingView: View {
 
                     // Invite input + button
                     VStack(spacing: 16) {
-                        TextField("Please enter the invite code", text: $inviteCode)
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(Color.gray.opacity(0.25))
-                            .cornerRadius(8)
-                            .disableAutocorrection(true)
-                            .textInputAutocapitalization(.never)
+                        ZStack(alignment: .leading) {
+                            if inviteCode.isEmpty {
+                                Text("please enter the invite code")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(Color.white.opacity(0.6))
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+
+                            TextField("", text: $inviteCode)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color.gray.opacity(0.25))
+                                .cornerRadius(8)
+                                .disableAutocorrection(true)
+                                .textInputAutocapitalization(.never)
+                        }
 
                         Button(action: {
                             navigate = true
@@ -62,29 +71,28 @@ struct BubuOnboardingView: View {
                     }
                     .padding(.horizontal, 24)
 
-                    // Terms text
-                    Text("By continuing, you agree to our Terms of Use and Privacy Policy")
+                    // Terms text link (blue)
+                    Link("By continuing, you agree to our Terms of Use and Privacy Policy", destination: URL(string: "https://www.notion.so/Legal-250f451e369c8090988cf0b241803e7f?source=copy_link")!)
                         .font(.footnote)
-                        .foregroundColor(Color.gray.opacity(0.7))
+                        .foregroundColor(Color.gray)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
 
-                    // Discord link
-                    Link("join our discord server for the code", destination: URL(string: "https://discord.gg")!)
-                        .font(.footnote.bold())
-                        .foregroundColor(Color.yellow)
+                    // Discord link bigger, underlined
+                    Link(destination: URL(string: "https://discord.gg/AEvEcDXd")!) {
+                        Text("join our discord server for the code")
+                            .font(.title3)
+                            .underline()
+                            .foregroundColor(Color.yellow)
+                    }
 
                     Spacer()
 
-                    // Login link button
-                    Button(action: {
-                        // TODO: handle login flow
-                    }) {
-                        Text("already have an account? log in here")
-                            .font(.footnote)
-                            .foregroundColor(Color.gray)
-                    }
-                    .padding(.bottom, 24)
+                    // Bottom link
+                    Link("dangertesting.com", destination: URL(string: "https://dangertesting.com")!)
+                        .font(.footnote)
+                        .foregroundColor(Color.gray)
+                        .padding(.bottom, 24)
                 }
             }
             .navigationDestination(isPresented: $navigate) {
