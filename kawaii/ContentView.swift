@@ -29,7 +29,7 @@ struct ContentView: View {
 			} else {
 				switch currentApp! {
 				case .bubuapp:
-					bubuview()
+					BubuOnboardingView()
 				case .kawaiiapp:
 					Group {
 						switch authorizationStatus {
