@@ -26,7 +26,10 @@ struct ContentView: View {
 	var body: some View {
 		Group {
 			if !rcStore.isLoaded {
-				ProgressView("Loading configuration…")
+				VStack{
+					Text("Loading")
+					ProgressView("Loading configuration…")
+				}
 			} else if let current = currentApp {
 				switch current {
 				case .bubuapp:
