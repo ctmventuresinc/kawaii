@@ -287,7 +287,7 @@ struct ChainVisualOverlay: View {
 			
 			VStack {
 				Spacer()
-				Text("Coming Soon")
+				Text("dangertesting.com")
 					.padding(.bottom, 50)
 					.foregroundStyle(.white)
 			}

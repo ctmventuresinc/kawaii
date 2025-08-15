@@ -20,6 +20,7 @@ enum AppMode {
 struct ContentView: View {
 	@State private var authorizationStatus: PHAuthorizationStatus = .notDetermined
 	@State private var currentApp: AppMode?
+	@State private var hasBubuAccess = false
 	@ObservedObject private var rcStore = RemoteConfigStore.shared
 	
 	var body: some View {
@@ -29,7 +30,13 @@ struct ContentView: View {
 			} else if let current = currentApp {
 				switch current {
 				case .bubuapp:
-					BubuOnboardingView()
+					if hasBubuAccess {
+						bubuview()
+					} else {
+						BubuOnboardingView {
+							hasBubuAccess = true
+						}
+					}
 				case .kawaiiapp:
 					Group {
 						switch authorizationStatus {
