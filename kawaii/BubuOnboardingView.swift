@@ -1,8 +1,11 @@
 import SwiftUI
+import AVKit
+import AVFoundation
 
 struct BubuOnboardingView: View {
     @State private var inviteCode: String = ""
     @State private var navigate: Bool = false
+    @State private var player: AVPlayer?
 
     var body: some View {
         NavigationStack {
@@ -13,11 +16,23 @@ struct BubuOnboardingView: View {
                 VStack(spacing: 24) {
                     Spacer(minLength: 40)
 
-                    // Logo panel
-                    LogoPanel()
+                    // Video panel replacing logo
+                    if let player = player {
+                        VideoPlayerView(player: player)
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 220, height: 160)
+                            .clipShape(RoundedRectangle(cornerRadius: 60))
+                            .allowsHitTesting(false)
+                            .onAppear {
+                                player.play()
+                            }
+                    } else {
+                        ProgressView("Loading…")
+                            .frame(width: 220, height: 160)
+                    }
 
                     // Tagline
-                    Text("sims for social media")
+                    Text("badbubu")
                         .font(.system(size: 20, weight: .medium))
                         .foregroundColor(Color.gray.opacity(0.7))
                         .padding(.top, 8)
@@ -76,6 +91,32 @@ struct BubuOnboardingView: View {
                 bubuview()
                     .navigationBarBackButtonHidden()
             }
+        }
+        .onAppear {
+            setupPlayer()
+        }
+    }
+
+    private func setupPlayer() {
+        guard let videoURL = Bundle.main.url(forResource: "los_facetime", withExtension: "mp4") else {
+            print("Could not find los_facetime.mp4 in bundle")
+            return
+        }
+
+        player = AVPlayer(url: videoURL)
+
+        // Configure for auto-play audio category
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set audio session: \(error)")
+        }
+
+        // Loop video
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem, queue: .main) { _ in
+            player?.seek(to: .zero)
+            player?.play()
         }
     }
 }
