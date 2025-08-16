@@ -33,13 +33,7 @@ struct ContentView: View {
 			} else if let current = currentApp {
 				switch current {
 				case .bubuapp:
-					if hasBubuAccess {
-						bubuview()
-					} else {
-						BubuOnboardingView {
-							hasBubuAccess = true
-						}
-					}
+					bubuview()
 				case .kawaiiapp:
 					Group {
 						switch authorizationStatus {
