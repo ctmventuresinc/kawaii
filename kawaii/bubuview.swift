@@ -216,6 +216,7 @@ struct bubuview: View {
 	@State private var showEnjoymentAlert = false
 	@State private var alertTitle = ""
 	@State private var alertMessage = ""
+	@State private var showingSplash = true
 	
 	init(pendantMode: PendantMode = .bubu) {
 //	init(pendantMode: PendantMode = .customImage("turtle")) {
@@ -224,34 +225,45 @@ struct bubuview: View {
 	
 	var body: some View {
 		ZStack {
-			// Background
-			Color.black.opacity(0.05)
-				.ignoresSafeArea()
-			
-			// Physics-enabled chain
-			GeometryReader { geometry in
+			if showingSplash {
+				BubuSplashScreen()
+			} else {
 				ZStack {
-					// SpriteKit physics scene (invisible beads)
-					SpriteView(scene: configureScene(geometry: geometry))
+					// Background
+					Color.black.opacity(0.05)
 						.ignoresSafeArea()
 					
-					// Visual overlay - sync with physics positions
-					ChainVisualOverlay(scene: physicsScene, geometry: geometry, pendantMode: pendantMode)
+					// Physics-enabled chain
+					GeometryReader { geometry in
+						ZStack {
+							// SpriteKit physics scene (invisible beads)
+							SpriteView(scene: configureScene(geometry: geometry))
+								.ignoresSafeArea()
+							
+							// Visual overlay - sync with physics positions
+							ChainVisualOverlay(scene: physicsScene, geometry: geometry, pendantMode: pendantMode)
+						}
+					}
+					.rotationEffect(.degrees(180))
+					.ignoresSafeArea()
+				}
+				.onAppear {
+					// Show notification prompt when view appears
+					if FeatureFlags.shared.showAppLaunchNotificationPrompt 
+						&& !hasShownAppLaunchNotificationPrompt {
+						hasShownAppLaunchNotificationPrompt = true
+						// Small delay to let the view render
+						DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+							showNotificationAlert(title: "See When We Drop New Bubus", message: "push notifications for updates")
+						}
+					}
 				}
 			}
-			.rotationEffect(.degrees(180))
-			.ignoresSafeArea()
 		}
-		.onAppear {
-			// Show notification prompt when view appears
-			if FeatureFlags.shared.showAppLaunchNotificationPrompt 
-				&& !hasShownAppLaunchNotificationPrompt {
-				hasShownAppLaunchNotificationPrompt = true
-				// Small delay to let the view render
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-					showNotificationAlert(title: "See When We Drop New Bubus", message: "push notifications for updates")
-				}
-			}
+		.task {
+			// Show splash screen for 2.5 seconds to mirror RandomPhotoView
+			try? await Task.sleep(for: .seconds(2.5))
+			showingSplash = false
 		}
 		.alert(alertTitle, isPresented: $showEnjoymentAlert) {
 			Button("Enable Notifications") {
