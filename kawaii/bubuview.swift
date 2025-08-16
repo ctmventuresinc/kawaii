@@ -9,6 +9,7 @@ import SwiftUI
 import Foundation
 import SpriteKit
 import CoreMotion
+import OneSignalFramework
 
 // Global scale factor to enlarge or shrink dog and related physics visuals in one place.
 private let dogScale: CGFloat = 1.6
@@ -211,6 +212,10 @@ class ChainPhysicsScene: SKScene, ObservableObject {
 struct bubuview: View {
 	let pendantMode: PendantMode
 	@StateObject private var physicsScene = ChainPhysicsScene()
+	@State private var hasShownAppLaunchNotificationPrompt = false
+	@State private var showEnjoymentAlert = false
+	@State private var alertTitle = ""
+	@State private var alertMessage = ""
 	
 	init(pendantMode: PendantMode = .bubu) {
 //	init(pendantMode: PendantMode = .customImage("turtle")) {
@@ -237,12 +242,47 @@ struct bubuview: View {
 			.rotationEffect(.degrees(180))
 			.ignoresSafeArea()
 		}
+		.onAppear {
+			// Show notification prompt when view appears
+			if FeatureFlags.shared.showAppLaunchNotificationPrompt 
+				&& !hasShownAppLaunchNotificationPrompt {
+				hasShownAppLaunchNotificationPrompt = true
+				// Small delay to let the view render
+				DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+					showNotificationAlert(title: "See When We Drop New Bubus", message: "push notifications for updates")
+				}
+			}
+		}
+		.alert(alertTitle, isPresented: $showEnjoymentAlert) {
+			Button("Enable Notifications") {
+				requestNotificationPermission()
+			}
+			Button("Not Now", role: .cancel) { }
+		} message: {
+			Text(alertMessage)
+		}
 	}
 	
 	private func configureScene(geometry: GeometryProxy) -> ChainPhysicsScene {
 		physicsScene.size = CGSize(width: geometry.size.width, height: geometry.size.height)
 		physicsScene.scaleMode = .resizeFill
 		return physicsScene
+	}
+	
+	private func showNotificationAlert(title: String, message: String) {
+		// Check if notifications are already authorized
+		let permissionState = OneSignal.Notifications.permission
+		if permissionState != true {
+			alertTitle = title
+			alertMessage = message
+			showEnjoymentAlert = true
+		}
+	}
+	
+	private func requestNotificationPermission() {
+		OneSignal.Notifications.requestPermission({ accepted in
+			print("User accepted notifications: \(accepted)")
+		}, fallbackToSettings: false)
 	}
 }
 
