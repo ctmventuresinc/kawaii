@@ -14,7 +14,7 @@ class FeatureFlags {
     // FEATURE FLAGS - EDIT THESE
 	
 	// developer/testing
-	var testing: Bool = true
+	var testing: Bool = false
 	
 	//app store
 	var appStoreReviewMode: Bool = false

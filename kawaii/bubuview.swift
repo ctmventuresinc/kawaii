@@ -339,7 +339,7 @@ struct ChainVisualOverlay: View {
 			
 			VStack {
 				Spacer()
-				Link(destination: URL(string: "https://www.dangertesting.com/")!) {
+				Link(destination: URL(string: "https://www.instagram.com/downloadlos/")!) {
 					Text("more apps")
 						.padding(.bottom, 60)
 						.foregroundStyle(.white)
