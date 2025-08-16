@@ -25,7 +25,7 @@ struct ContentView: View {
 	
 	var body: some View {
 		Group {
-			if !rcStore.isLoaded {
+			if !rcStore.isLoaded && !FeatureFlags.shared.testing {
 				VStack{
 					Text("Loading")
 					ProgressView("Loading configuration…")
@@ -54,13 +54,17 @@ struct ContentView: View {
 						checkPhotoPermission()
 					}
 				case .testing:
-					EmptyView()
+					bubuview()
 				}
 			} else {
 				ProgressView()
 			}
 		}
 		.onAppear {
+			if FeatureFlags.shared.testing {
+				currentApp = .testing
+				return
+			}
 			if !rcStore.isLoaded {
 				rcStore.refresh()
 			}
@@ -68,7 +72,11 @@ struct ContentView: View {
 			currentApp = rcStore.bubuEnabled ? .bubuapp : .kawaiiapp
 		}
 		.onReceive(rcStore.$bubuEnabled) { value in
-			currentApp = value ? .bubuapp : .kawaiiapp
+			if FeatureFlags.shared.testing {
+				currentApp = .testing
+			} else {
+				currentApp = value ? .bubuapp : .kawaiiapp
+			}
 		}
 	}
 	

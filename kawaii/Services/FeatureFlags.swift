@@ -13,6 +13,9 @@ class FeatureFlags {
     
     // FEATURE FLAGS - EDIT THESE
 	
+	// developer/testing
+	var testing: Bool = true
+	
 	//app store
 	var appStoreReviewMode: Bool = false
 	
@@ -50,6 +53,7 @@ class FeatureFlags {
     
     func logAllFlags() {
         print("🚩 FEATURE FLAGS:")
+        print("🚩 testing: \(testing)")
         print("🚩 appStoreReviewMode: \(appStoreReviewMode)")
         print("🚩 requireNotificationForRewind: \(requireNotificationForRewind)")
         print("🚩 showAppLaunchNotificationPrompt: \(showAppLaunchNotificationPrompt)")
