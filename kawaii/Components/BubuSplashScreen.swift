@@ -24,34 +24,11 @@ struct BubuSplashScreen: View {
     var body: some View {
         Group {
             ZStack {
-                Image(.blankwallpaper)
-                    .resizable()
-                    .ignoresSafeArea()
-                
-                if showBigStar {
-                    StarShapeView(size: 320)
-                }
-                
-                if showSmallStar {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            StarShapeView(size: 120)
-                                .offset(x: -20, y: -50)
-                            Spacer()
-                        }
-                    }
-                    .padding(.leading, 10)
-                    .padding(.bottom, 40)
-                }
-                
-                ForEach(randomStars.filter(\.isVisible), id: \.id) { star in
-                    StarShapeView(size: star.size)
-                        .offset(x: star.x, y: star.y)
-                }
+				Color(hex: "FE2B92")
+						.ignoresSafeArea()
                 
                 // Absolutely centered app name
-                Text("badbubu")
+                Text("performative")
                     .font(.system(size: 48, weight: .bold))
                     .foregroundColor(.black)
                 
@@ -61,10 +38,10 @@ struct BubuSplashScreen: View {
                     
                     // Build section
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("build")
+                        Text("season 3")
                             .font(.system(size: 16, design: .monospaced))
                             .foregroundColor(.black)
-                        Text("los, bunny, marc, mihir")
+                        Text("drop 1")
                             .font(.system(size: 24, design: .monospaced))
                             .foregroundColor(.black)
                     }
@@ -75,10 +52,10 @@ struct BubuSplashScreen: View {
                     
                     // Release section
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("release")
+                        Text("dangertesting.com")
                             .font(.system(size: 16, design: .monospaced))
                             .foregroundColor(.black)
-                        Text("danger testing")
+                        Text("new apps every week")
                             .font(.system(size: 24, design: .monospaced))
                             .foregroundColor(.black)
                     }
