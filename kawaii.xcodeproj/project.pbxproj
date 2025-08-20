@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1930E27C2E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		1930E2852E0A56600037DD06 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2842E0A56600037DD06 /* OneSignalExtension */; };
-		1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2862E0A56600037DD06 /* OneSignalFramework */; };
-		1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 1930E2882E0A56600037DD06 /* OneSignalInAppMessages */; };
 		193CDDDB2E1ABAB100C047D6 /* MorphModalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 193CDDDA2E1ABAB100C047D6 /* MorphModalKit */; };
 		196B90822E4F7E6100BCF73E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 196B90812E4F7E6100BCF73E /* FirebaseCore */; };
 		196B90842E4F7E6100BCF73E /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 196B90832E4F7E6100BCF73E /* FirebaseRemoteConfig */; };
@@ -32,13 +28,6 @@
 			remoteGlobalIDString = 191FDE9B2E030FCC00D2AF6D;
 			remoteInfo = kawaii;
 		};
-		1930E27A2E0A52D40037DD06 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 191FDE942E030FCC00D2AF6D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 1930E2742E0A52D40037DD06;
-			remoteInfo = OneSignalNotificationServiceExtension;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,7 +37,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				1930E27C2E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,32 +48,17 @@
 		191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kawaiiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1930E2702E0A52230037DD06 /* kawaiiapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = kawaiiapp.entitlements; sourceTree = "<group>"; };
-		1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		195A410D2E0922960017536C /* kawaiiapp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "kawaiiapp-Info.plist"; sourceTree = "<group>"; };
 		196B90852E4F7EFC00BCF73E /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		1930E27D2E0A52D40037DD06 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */;
-		};
 		196EEAF92E4BD52A00BD606D /* Exceptions for "kawaii" folder in "kawaiiapp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				TestBuViewq.swift,
 			);
 			target = 191FDE9B2E030FCC00D2AF6D /* kawaiiapp */;
-		};
-		196EEAFA2E4BD52A00BD606D /* Exceptions for "kawaii" folder in "OneSignalNotificationServiceExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				TestBuViewq.swift,
-			);
-			target = 1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -94,7 +67,6 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				196EEAF92E4BD52A00BD606D /* Exceptions for "kawaii" folder in "kawaiiapp" target */,
-				196EEAFA2E4BD52A00BD606D /* Exceptions for "kawaii" folder in "OneSignalNotificationServiceExtension" target */,
 			);
 			path = kawaii;
 			sourceTree = "<group>";
@@ -109,14 +81,6 @@
 			path = kawaiiUITests;
 			sourceTree = "<group>";
 		};
-		1930E2762E0A52D40037DD06 /* OneSignalNotificationServiceExtension */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				1930E27D2E0A52D40037DD06 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */,
-			);
-			path = OneSignalNotificationServiceExtension;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,9 +89,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				193CDDDB2E1ABAB100C047D6 /* MorphModalKit in Frameworks */,
-				1930E2892E0A56600037DD06 /* OneSignalInAppMessages in Frameworks */,
 				196B90822E4F7E6100BCF73E /* FirebaseCore in Frameworks */,
-				1930E2872E0A56600037DD06 /* OneSignalFramework in Frameworks */,
 				196B90842E4F7E6100BCF73E /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -146,14 +108,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1930E2722E0A52D40037DD06 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1930E2852E0A56600037DD06 /* OneSignalExtension in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -166,7 +120,6 @@
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 				191FDEAF2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB92E030FCD00D2AF6D /* kawaiiUITests */,
-				1930E2762E0A52D40037DD06 /* OneSignalNotificationServiceExtension */,
 				191FDE9D2E030FCC00D2AF6D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -177,7 +130,6 @@
 				191FDE9C2E030FCC00D2AF6D /* kawaiiapp.app */,
 				191FDEAC2E030FCD00D2AF6D /* kawaiiTests.xctest */,
 				191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */,
-				1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -197,15 +149,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				1930E27B2E0A52D40037DD06 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				191FDE9E2E030FCC00D2AF6D /* kawaii */,
 			);
 			name = kawaiiapp;
 			packageProductDependencies = (
-				1930E2862E0A56600037DD06 /* OneSignalFramework */,
-				1930E2882E0A56600037DD06 /* OneSignalInAppMessages */,
 				193CDDDA2E1ABAB100C047D6 /* MorphModalKit */,
 				196B90812E4F7E6100BCF73E /* FirebaseCore */,
 				196B90832E4F7E6100BCF73E /* FirebaseRemoteConfig */,
@@ -260,29 +209,6 @@
 			productReference = 191FDEB62E030FCD00D2AF6D /* kawaiiUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1930E27E2E0A52D40037DD06 /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */;
-			buildPhases = (
-				1930E2712E0A52D40037DD06 /* Sources */,
-				1930E2722E0A52D40037DD06 /* Frameworks */,
-				1930E2732E0A52D40037DD06 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				1930E2762E0A52D40037DD06 /* OneSignalNotificationServiceExtension */,
-			);
-			name = OneSignalNotificationServiceExtension;
-			packageProductDependencies = (
-				1930E2842E0A56600037DD06 /* OneSignalExtension */,
-			);
-			productName = OneSignalNotificationServiceExtension;
-			productReference = 1930E2752E0A52D40037DD06 /* OneSignalNotificationServiceExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -304,9 +230,6 @@
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = 191FDE9B2E030FCC00D2AF6D;
 					};
-					1930E2742E0A52D40037DD06 = {
-						CreatedOnToolsVersion = 16.0;
-					};
 				};
 			};
 			buildConfigurationList = 191FDE972E030FCC00D2AF6D /* Build configuration list for PBXProject "kawaii" */;
@@ -319,7 +242,6 @@
 			mainGroup = 191FDE932E030FCC00D2AF6D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
 				193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */,
 				196B90802E4F7E6100BCF73E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
@@ -331,7 +253,6 @@
 				191FDE9B2E030FCC00D2AF6D /* kawaiiapp */,
 				191FDEAB2E030FCD00D2AF6D /* kawaiiTests */,
 				191FDEB52E030FCD00D2AF6D /* kawaiiUITests */,
-				1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -353,13 +274,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		191FDEB42E030FCD00D2AF6D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1930E2732E0A52D40037DD06 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -390,13 +304,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1930E2712E0A52D40037DD06 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -409,11 +316,6 @@
 			isa = PBXTargetDependency;
 			target = 191FDE9B2E030FCC00D2AF6D /* kawaiiapp */;
 			targetProxy = 191FDEB72E030FCD00D2AF6D /* PBXContainerItemProxy */;
-		};
-		1930E27B2E0A52D40037DD06 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 1930E2742E0A52D40037DD06 /* OneSignalNotificationServiceExtension */;
-			targetProxy = 1930E27A2E0A52D40037DD06 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -544,13 +446,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = kawaiiapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 85;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"kawaii/Preview Content\"";
 				DEVELOPMENT_TEAM = 852G82KW89;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kawaiiapp-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Performative;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kawaii 2";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow access to your photos so the app can create a personalized collage using images from your library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -562,8 +464,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -580,13 +482,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = kawaiiapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 85;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"kawaii/Preview Content\"";
 				DEVELOPMENT_TEAM = 852G82KW89;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kawaiiapp-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Performative;
+				INFOPLIST_KEY_CFBundleDisplayName = "Kawaii 2";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow access to your photos so the app can create a personalized collage using images from your library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -598,8 +500,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -681,60 +583,6 @@
 			};
 			name = Release;
 		};
-		1930E27F2E0A52D40037DD06 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 852G82KW89;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNotificationServiceExtension;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii.OneSignalNotificationServiceExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		1930E2802E0A52D40037DD06 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 852G82KW89;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNotificationServiceExtension;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.CTMVenturesInc.kawaii.OneSignalNotificationServiceExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -774,26 +622,9 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1930E27E2E0A52D40037DD06 /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1930E27F2E0A52D40037DD06 /* Debug */,
-				1930E2802E0A52D40037DD06 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.2.14;
-			};
-		};
 		193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jsmmth/MorphModalKit.git";
@@ -813,21 +644,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1930E2842E0A56600037DD06 /* OneSignalExtension */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
-			productName = OneSignalExtension;
-		};
-		1930E2862E0A56600037DD06 /* OneSignalFramework */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
-			productName = OneSignalFramework;
-		};
-		1930E2882E0A56600037DD06 /* OneSignalInAppMessages */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1930E2832E0A56600037DD06 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
-			productName = OneSignalInAppMessages;
-		};
 		193CDDDA2E1ABAB100C047D6 /* MorphModalKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 193CDDD92E1ABAB100C047D6 /* XCRemoteSwiftPackageReference "MorphModalKit" */;

@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 import AVFoundation
 import Vision
-import OneSignalFramework
+// import OneSignalFramework
 
 
 
@@ -691,7 +691,7 @@ struct RandomPhotoView: View {
         }
         
         // Check if notifications are already authorized
-        let permissionState = OneSignal.Notifications.permission
+        let permissionState = false // OneSignal removed
         if permissionState == true {
             // Notifications approved, do time travel immediately
             soundService.playSound(.timetravel)
@@ -705,7 +705,7 @@ struct RandomPhotoView: View {
     
     private func showNotificationAlert(title: String, message: String) {
         // Check if notifications are already authorized
-        let permissionState = OneSignal.Notifications.permission
+        let permissionState = false // OneSignal removed
         if permissionState != true {
             alertTitle = title
             alertMessage = message
@@ -715,24 +715,26 @@ struct RandomPhotoView: View {
     
     private func checkAndShowEnjoymentAlert() {
         // Check if notifications are already authorized
-        let permissionState = OneSignal.Notifications.permission
+        let permissionState = false // OneSignal removed
         if permissionState != true {
             showEnjoymentAlert = true
         }
     }
     
     private func requestNotificationPermission() {
-        OneSignal.Notifications.requestPermission({ accepted in
-            print("User accepted notifications: \(accepted)")
-            DispatchQueue.main.async {
-                if accepted && hasPendingTimeTravel {
-                    // User approved notifications and we have pending time travel
-                    soundService.playSound(.timetravel)
-                    showTravelMessage()
-                    hasPendingTimeTravel = false
-                }
-            }
-        }, fallbackToSettings: false)
+        // OneSignal removed; notification permission request is disabled for now.
+// Previously:
+// OneSignal.Notifications.requestPermission({ accepted in
+//     print("User accepted notifications: \\ (accepted)")
+//     DispatchQueue.main.async {
+//         if accepted && hasPendingTimeTravel {
+//             // User approved notifications and we have pending time travel
+//             soundService.playSound(.timetravel)
+//             showTravelMessage()
+//             hasPendingTimeTravel = false
+//         }
+//     }
+// }, fallbackToSettings: false)
     }
     
     private func toggleTurtleMode() {

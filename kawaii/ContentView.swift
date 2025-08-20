@@ -8,7 +8,7 @@
 import SwiftUI
 import Photos
 import UserNotifications
-import OneSignalFramework
+// import OneSignalFramework
 import FirebaseRemoteConfig
 
 enum AppMode {
@@ -54,7 +54,24 @@ struct ContentView: View {
 						checkPhotoPermission()
 					}
 				case .testing:
-					bubuview()
+					Group {
+						switch authorizationStatus {
+						case .authorized:
+							RandomPhotoView()
+						case .denied, .restricted, .limited:
+							PermissionDeniedView()
+						case .notDetermined:
+							KawaiiOnboardingView()
+						@unknown default:
+							KawaiiOnboardingView()
+						}
+					}
+					.onAppear {
+						checkPhotoPermission()
+					}
+					.onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+						checkPhotoPermission()
+					}
 				}
 			} else {
 				ProgressView()

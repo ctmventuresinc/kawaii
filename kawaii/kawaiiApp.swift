@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import OneSignalFramework
+// import OneSignalFramework
 import FirebaseCore
 
 @main
@@ -25,9 +25,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
        FirebaseApp.configure()
        
        // Enable verbose logging for debugging (remove in production)
-       OneSignal.Debug.setLogLevel(.LL_VERBOSE)     
-       // Initialize with your OneSignal App ID
-       OneSignal.initialize("dcbcd501-d44c-46ad-84ca-e7aca9c02a0c", withLaunchOptions: launchOptions)
+       // OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+// // Initialize with your OneSignal App ID
+// OneSignal.initialize("dcbcd501-d44c-46ad-84ca-e7aca9c02a0c", withLaunchOptions: launchOptions)
        // Push notification permission will be requested after photo access is granted
       
        return true

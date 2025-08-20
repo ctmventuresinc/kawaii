@@ -9,7 +9,7 @@ import SwiftUI
 import AVKit
 import AVFoundation
 import Photos
-import OneSignalFramework
+// import OneSignalFramework
 
 struct KawaiiOnboardingView: View {
 	@State private var player: AVPlayer?
@@ -161,10 +161,12 @@ struct KawaiiOnboardingView: View {
 	}
 	
 	private func requestNotificationPermission() {
-		OneSignal.Notifications.requestPermission({ accepted in
-			print("User accepted notifications: \(accepted)")
-			// Navigation will be handled by ContentView observing the change
-		}, fallbackToSettings: false)
+		// OneSignal removed; notification permission request is disabled for now.
+// Previously:
+// OneSignal.Notifications.requestPermission({ accepted in
+//     print("User accepted notifications: \\ (accepted)")
+//     // Navigation will be handled by ContentView observing the change
+// }, fallbackToSettings: false)
 	}
 }
 

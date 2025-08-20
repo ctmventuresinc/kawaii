@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import SpriteKit
 import CoreMotion
-import OneSignalFramework
+// import OneSignalFramework
 
 // Global scale factor to enlarge or shrink dog and related physics visuals in one place.
 private let dogScale: CGFloat = 1.6
@@ -283,7 +283,7 @@ struct bubuview: View {
 	
 	private func showNotificationAlert(title: String, message: String) {
 		// Check if notifications are already authorized
-		let permissionState = OneSignal.Notifications.permission
+		let permissionState = false // OneSignal removed
 		if permissionState != true {
 			alertTitle = title
 			alertMessage = message
@@ -292,9 +292,11 @@ struct bubuview: View {
 	}
 	
 	private func requestNotificationPermission() {
-		OneSignal.Notifications.requestPermission({ accepted in
-			print("User accepted notifications: \(accepted)")
-		}, fallbackToSettings: false)
+		// OneSignal removed; notification permission request is disabled for now.
+// Previously:
+// OneSignal.Notifications.requestPermission({ accepted in
+//     print("User accepted notifications: \(accepted)")
+// }, fallbackToSettings: false)
 	}
 }
 
