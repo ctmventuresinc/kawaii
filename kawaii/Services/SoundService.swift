@@ -46,43 +46,45 @@ class SoundService: ObservableObject {
     @Published var pulseScale: CGFloat = 1.0
     @Published var isMuted: Bool = false // Temporarily muted
     
-    private let soundImagePairs: [SoundImagePair] = [
-        SoundImagePair(soundName: "kawaii", imageName: "gay3"),
-        SoundImagePair(soundName: "saiyonara", imageName: "gay2"),
-        SoundImagePair(soundName: "bombaclatt", imageName: "bomboclaat2"),
-        SoundImagePair(soundName: "nandeska", imageName: "gay1"),
-		SoundImagePair(soundName: "kawaii", imageName: "unemployed"),
-    ]
+    private let sounds = ["kawaii", "saiyonara", "bombaclatt", "nandeska"]
+    private let images = ["gay", "bomboclaat2", "unemployed"]
+    private let gayImages = ["gay1", "gay2", "gay3"]
     
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]
     
     func playMarioSuccessSound() {
         guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
-        
-        let randomPair = soundImagePairs.randomElement() ?? soundImagePairs[0]
-        
-        guard let path = Bundle.main.path(forResource: randomPair.soundName, ofType: "mp3") else {
-            print("Could not find sound file: \(randomPair.soundName).mp3")
+
+        let randomSound = sounds.randomElement() ?? sounds[0]
+        var randomImage = images.randomElement() ?? images[0]
+
+        // If "gay" is selected, choose a random gay image
+        if randomImage == "gay" {
+            randomImage = gayImages.randomElement() ?? gayImages[0]
+        }
+
+        guard let path = Bundle.main.path(forResource: randomSound, ofType: "mp3") else {
+            print("Could not find sound file: \(randomSound).mp3")
             return
         }
-        
+
         let url = URL(fileURLWithPath: path)
-        
+
         do {
             // Configure audio session for mixing multiple sounds
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
-            
+
             // Create and store the main audio player
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
-            
+
             // Play random background sound simultaneously
             playRandomBackgroundSound()
-            
+
             // Show image overlay
-            showImageOverlay(for: randomPair.imageName)
+            showImageOverlay(for: randomImage)
         } catch {
             print("Could not play sound: \(error)")
         }
