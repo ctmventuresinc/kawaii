@@ -45,6 +45,10 @@ struct RandomPhotoView: View {
     // State to control turtle mode
     @State private var isTurtleMode = false
     
+    // State for sticker toast
+    @State private var showStickerToast = false
+    @State private var currentStickerImageName = ""
+    
     init() {
         let shareService = ShareService()
         let soundService = SoundService()
@@ -449,6 +453,30 @@ struct RandomPhotoView: View {
                     pulseScale: soundService.pulseScale
                 )
                 
+                // Sticker button below celebration image
+                if showStickerToast && soundService.showImageOverlay {
+                    VStack(spacing: 0) {
+                        Spacer()
+                            .frame(height: 120) // Position below the 200px image (with some spacing)
+                        
+                        Button(action: {
+                            addStickerToScreen()
+                        }) {
+                            Text("add sticker?")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(Color.black.opacity(0.85))
+                                .cornerRadius(25)
+                                .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                        }
+                        .transition(.opacity)
+                        
+                        Spacer()
+                    }
+                }
+                
                 // Screen center loading indicator
                 LoadingOverlay(isLoading: photoItemsViewModel.isLoading)
                 
@@ -511,6 +539,21 @@ struct RandomPhotoView: View {
             dragViewModel.deletePhotoItem = deletePhotoItem
             dragViewModel.sharePhotoItem = shareService.sharePhotoItem
             dragViewModel.convertToFramedPhoto = convertToFramedPhoto
+            
+            // Setup sound service callback for sticker toast
+            soundService.onCelebrationImageShown = { imageName in
+                self.currentStickerImageName = imageName
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.showStickerToast = true
+                }
+                
+                // Auto-hide button after 2 seconds (same as celebration image)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        self.showStickerToast = false
+                    }
+                }
+            }
             
             // Blinking animation now starts after splash screen in .task
             
@@ -749,6 +792,39 @@ struct RandomPhotoView: View {
         if isTurtleMode {
             soundService.playSound(.japan3, delay: 0.3)
         }
+    }
+    
+    private func addStickerToScreen() {
+        // Hide toast
+        withAnimation(.easeOut(duration: 0.2)) {
+            showStickerToast = false
+        }
+        
+        // Load the celebration image and add it to screen
+        guard let stickerImage = UIImage(named: currentStickerImageName) else {
+            print("Could not load sticker image: \(currentStickerImageName)")
+            return
+        }
+        
+        // Play click sound
+        soundService.playSound(.click)
+        
+        // Create a PhotoItem with the sticker at a random position
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let randomX = CGFloat.random(in: 100...(screenWidth - 100))
+        let randomY = CGFloat.random(in: 150...(screenHeight - 200))
+        let size: CGFloat = CGFloat.random(in: 120...200)
+        
+        let photoItem = PhotoItem(
+            image: stickerImage,
+            position: CGPoint(x: randomX, y: randomY),
+            frameShape: nil,
+            size: size,
+            customFilter: .none  // No color filters on stickers
+        )
+        
+        photoItemsViewModel.photoItems.append(photoItem)
     }
 
 }

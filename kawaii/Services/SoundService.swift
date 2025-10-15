@@ -52,6 +52,9 @@ class SoundService: ObservableObject {
     
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]
     
+    // Callback for when celebration image is shown
+    var onCelebrationImageShown: ((String) -> Void)?
+    
     func playMarioSuccessSound() {
         guard !isMuted && !FeatureFlags.shared.appStoreReviewMode else { return } // Skip if muted or in app store review mode
 
@@ -117,6 +120,9 @@ class SoundService: ObservableObject {
         currentImageName = imageName
         showImageOverlay = true
         startPulsing()
+        
+        // Notify callback that celebration image is shown
+        onCelebrationImageShown?(imageName)
         
         // Hide the image after 2 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {

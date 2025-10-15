@@ -154,7 +154,7 @@ struct PhotoItem: Identifiable {
     let shapeName: String // Store the selected shape name
     let photoFilter: PhotoFilter
     
-    init(image: UIImage, position: CGPoint, frameShape: FaceFrameShape? = nil, size: CGFloat = 300) {
+    init(image: UIImage, position: CGPoint, frameShape: FaceFrameShape? = nil, size: CGFloat = 300, customFilter: PhotoFilter? = nil) {
         self.image = image
         self.position = position
         self.frameShape = frameShape
@@ -173,8 +173,10 @@ struct PhotoItem: Identifiable {
         // Keep burst shape creation for later use
         self.burstShape = frameShape != nil ? IrregularBurstShape() : nil
         
-        // Assign filter based on frame type
-        if frameShape != nil {
+        // Use custom filter if provided, otherwise assign based on frame type
+        if let customFilter = customFilter {
+            self.photoFilter = customFilter
+        } else if frameShape != nil {
             // Framed photos - only apply color filter for specific combinations (2, 8, 11, 13)
             if colorManager.shouldApplyColorFilter(for: comboIndex) {
                 self.photoFilter = .customColor(selectedCombo.inviteButtonColor)
@@ -183,12 +185,11 @@ struct PhotoItem: Identifiable {
                 self.photoFilter = Bool.random() ? .none : .blackAndWhite
             }
         } else {
-            // Regular photos without frames - 50% none, 50% split between 4 filter options
+            // Regular photos without frames - 50% none, 50% split between 2 filter options (removed yellow)
             let shouldApplyFilter = Bool.random()
             if shouldApplyFilter {
                 let filterOptions: [PhotoFilter] = [
                     .blackAndWhite,
-                    .customColor("#FFEA00"),  // Yellow
                     .customColor("#FBECCF"),  // Cream  
                     .customColor("#FA7921")   // Orange
                 ]
