@@ -29,7 +29,7 @@ struct SplashScreen: View {
 //                Color.clear
 //                    .ignoresSafeArea()
 				
-				Image(.blankwallpaper)
+				Image(.blankwallpaper2)
 					.resizable()
 					.ignoresSafeArea()
                 

@@ -61,7 +61,7 @@ struct RandomPhotoView: View {
                     Color.blue
                         .ignoresSafeArea()
                 } else {
-					Image(.blankwallpaper)
+					Image(.blankwallpaper2)
                         .resizable()
                         .ignoresSafeArea()
                 }

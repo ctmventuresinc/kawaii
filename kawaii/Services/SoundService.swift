@@ -47,11 +47,11 @@ class SoundService: ObservableObject {
     @Published var isMuted: Bool = false // Temporarily muted
     
     private let soundImagePairs: [SoundImagePair] = [
-        SoundImagePair(soundName: "kawaii", imageName: "kawaii"),
-        SoundImagePair(soundName: "saiyonara", imageName: "saiyonara"),
-        SoundImagePair(soundName: "bombaclatt", imageName: "bombaclatt"),
-        SoundImagePair(soundName: "nandeska", imageName: "nandeska"),
-		SoundImagePair(soundName: "kawaii", imageName: "gay"),
+        SoundImagePair(soundName: "kawaii", imageName: "gay3"),
+        SoundImagePair(soundName: "saiyonara", imageName: "gay2"),
+        SoundImagePair(soundName: "bombaclatt", imageName: "bomboclaat2"),
+        SoundImagePair(soundName: "nandeska", imageName: "gay1"),
+		SoundImagePair(soundName: "kawaii", imageName: "unemployed"),
     ]
     
     private let backgroundSounds = ["japan1", "japan2", "japan3", "boom"]
