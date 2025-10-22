@@ -575,6 +575,8 @@ struct RandomPhotoView: View {
             print("🔍 DEBUG: Date selection changed from \(oldDate) to \(newDate)")
             photoItemsViewModel.handleDateChange(newDate)
         }
+        // TEMPORARILY COMMENTED OUT - Nostalgia reminders notification prompt
+        /*
         .onChange(of: photoItemsViewModel.photoItems.count) { oldCount, newCount in
             // Show notification prompt after first photo is added
             if FeatureFlags.shared.showAppLaunchNotificationPrompt 
@@ -587,6 +589,7 @@ struct RandomPhotoView: View {
                 }
             }
         }
+        */
     }
     
     private var buttonTitle: String {
