@@ -11,6 +11,11 @@ import AVFoundation
 import Vision
 // import OneSignalFramework
 
+//i dont like to be dehydrated
+//i wanna be hydrated
+
+//
+//i need to be heartbroken to create art
 
 
 struct RandomPhotoView: View {
@@ -191,7 +196,7 @@ struct RandomPhotoView: View {
                     
                     // Button layout with centered main button and right-aligned envelope
                     ZStack {
-                    // Centered rewind button
+                    // Centered add photo button
                     ZStack {
                         // Lock icon behind the button - offset to be visible
                         Image(systemName: "lock.fill")
@@ -199,18 +204,11 @@ struct RandomPhotoView: View {
                             .foregroundColor(.gray)
                             .offset(x: -60, y: 0)
                         
-                        // Rewind button on top
+                        // Add Photo button on top
                         Button(action: {
-                        soundService.playSound(.click)
-                        if isTurtleMode {
-                                photoItemsViewModel.addTestPhotoItem(backgroundRemover: photoViewModel.backgroundRemover, soundService: soundService, dateSelection: dateSelectionViewModel, photoMode: photoModeManager.currentMode) { success in
-                                print("Photo added via try now: \(success)")
-                                }
-                             } else {
-                                 handleRewindAction()
-                             }
+                        handleScreenTap()
                          }) {
-                             Text(isTurtleMode ? "Coming Soon" : "Rewind")
+                             Text("Add Photo")
                          }
                     }
                     .buttonStyle(LoadingGlossyButtonStyle(isLoading: false))
