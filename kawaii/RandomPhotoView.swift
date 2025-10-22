@@ -221,12 +221,12 @@ struct RandomPhotoView: View {
                     .animation(.easeInOut(duration: 0.3), value: animationViewModel.addButtonOpacity)
                     .animation(.easeInOut(duration: 0.3), value: shareManager.areButtonsHidden)
                     
-                    // Face button aligned to far left and Share button aligned to far right
+                    // Rewind button aligned to far left and Share button aligned to far right
                     HStack {
                     Button(action: {
-                    toggleTurtleMode()
+                    handleRewindAction()
                     }) {
-                    Image(systemName: isTurtleMode ? "xmark.circle.fill" : "teddybear.fill")
+                    Image(systemName: "gobackward")
                     .font(.system(size: 32, weight: .medium))
                     }
                     .buttonStyle(GlossyEnvelopeButtonStyle())
